@@ -25,7 +25,7 @@ function EmptyState({
 export function AppShell() {
   return (
     <div className="h-screen w-screen overflow-hidden">
-      <ResizablePanelGroup direction="horizontal">
+      <ResizablePanelGroup orientation="horizontal">
         {/* Sidebar — feed list */}
         <ResizablePanel
           defaultSize={20}
