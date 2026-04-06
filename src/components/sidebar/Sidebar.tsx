@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { AddFeedDialog } from "./AddFeedDialog";
 import { FeedItem } from "./FeedItem";
+import { OpmlActions } from "./OpmlActions";
 
 export interface FeedWithCount {
   id: string;
@@ -60,6 +61,7 @@ export function Sidebar({
             />
           </Button>
           <AddFeedDialog onFeedAdded={onFeedAdded} />
+          <OpmlActions onImportComplete={onFeedAdded} />
         </div>
       </div>
 
