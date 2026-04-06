@@ -408,23 +408,24 @@ These are things we are **intentionally avoiding**:
 
 **Goal:** Subscribe to feeds, read articles, mark read, star favorites.
 
-- [ ] Project scaffolding (Next.js 15, TypeScript, Tailwind v4, Prisma + SQLite)
-- [ ] Database schema (Feed, Article models)
-- [ ] `npm run setup` script (install + prisma generate + prisma migrate dev)
-- [ ] Feed parser service (fetch URL → parse RSS/Atom → return structured data)
-- [ ] API route: `POST /api/feeds` — add a new feed (fetch, parse, store)
-- [ ] Server actions: `refreshFeed`, `refreshAllFeeds`
-- [ ] Server actions: `markRead`, `markUnread`, `toggleStar`, `markAllRead`
-- [ ] Dark-mode-first CSS variables and global styles
-- [ ] Three-pane resizable layout shell (`AppShell.tsx`)
-- [ ] Sidebar component with feed list and unread counts
-- [ ] Article list component (title, feed name, date, read state)
-- [ ] Reading pane with sanitized HTML rendering
-- [ ] Add Feed dialog (URL input → auto-discover → save)
-- [ ] Delete feed (with confirmation)
-- [ ] Keyboard shortcuts (j/k/s/m/r)
-- [ ] Empty states for all panes
-- [ ] CLAUDE.md for the new repo
+- [x] Project scaffolding (Next.js 15, TypeScript, Tailwind v4, Prisma + SQLite)
+- [x] Database schema (Feed, Article models)
+- [x] `npm run setup` script (install + prisma generate + prisma migrate dev)
+- [x] Feed parser service (fetch URL → parse RSS/Atom → return structured data)
+- [x] API route: `POST /api/feeds` — add a new feed (fetch, parse, store)
+- [x] Server actions: `refreshFeed`, `refreshAllFeeds`
+- [x] Server actions: `markRead`, `markUnread`, `toggleStar`, `markAllRead`
+- [x] Dark-mode-first CSS variables and global styles
+- [x] Three-pane resizable layout shell (`AppShell.tsx`)
+- [x] Sidebar component with feed list and unread counts
+- [x] Article list component (title, feed name, date, read state)
+- [x] Reading pane with sanitized HTML rendering
+- [x] Add Feed dialog (URL input → auto-discover → save)
+- [x] Delete feed (with confirmation)
+- [ ] Keyboard shortcuts (j/k/s/m/r) — deferred, not needed for MVP
+- [x] Empty states for all panes
+- [x] CLAUDE.md for the new repo
+- [ ] Dark/light mode toggle — deferred, dark mode is default and sufficient
 
 ### Phase 2 — Organization & Search
 
