@@ -422,7 +422,7 @@ These are things we are **intentionally avoiding**:
 - [x] Reading pane with sanitized HTML rendering
 - [x] Add Feed dialog (URL input → auto-discover → save)
 - [x] Delete feed (with confirmation)
-- [ ] Keyboard shortcuts (j/k/s/m/r) — deferred, not needed for MVP
+- [x] Keyboard shortcuts (j/k/s/m/r/o/Enter)
 - [x] Empty states for all panes
 - [x] CLAUDE.md for the new repo
 - [ ] Dark/light mode toggle — deferred, dark mode is default and sufficient
@@ -442,11 +442,11 @@ These are things we are **intentionally avoiding**:
 ### Phase 3 — Reading Experience
 
 - [ ] Content extraction / reader mode (strip ads, nav, extract article body)
-- [ ] Reading time estimates
-- [ ] Article typography settings (font size, line height, width)
+- [x] Reading time estimates
+- [x] Article typography settings (font size, line height, width)
 - [ ] Image proxy for broken/blocked images
 - [ ] Code block syntax highlighting in articles
-- [ ] "Open in browser" action
+- [x] "Open in browser" action (existed from Phase 1, keyboard shortcut o/Enter added)
 - [ ] Mobile-responsive layout (collapsible sidebar, stacked panes)
 - [ ] Swipe gestures on mobile
 
