@@ -1,8 +1,14 @@
 import Parser from "rss-parser";
 import { sanitizeHtml } from "./sanitize";
 
-const parser = new Parser({
+type CustomItem = { "content:encoded"?: string };
+type FeedItem = Parser.Item & CustomItem;
+
+const parser = new Parser<Record<string, unknown>, CustomItem>({
   timeout: 10000,
+  customFields: {
+    item: ["content:encoded"],
+  },
   headers: {
     "User-Agent": "Feed/1.0 (Local RSS Reader)",
     Accept: "application/rss+xml, application/atom+xml, application/xml, text/xml",
@@ -27,7 +33,7 @@ export interface ParsedArticle {
   publishedAt: Date;
 }
 
-function extractImageUrl(item: Parser.Item): string | null {
+function extractImageUrl(item: FeedItem): string | null {
   if (item.enclosure?.url && item.enclosure.type?.startsWith("image/")) {
     return item.enclosure.url;
   }
@@ -62,7 +68,7 @@ export async function parseFeed(
       link: item.link || "",
       content,
       summary,
-      author: item.creator || item.author || null,
+      author: item.creator || null,
       imageUrl: extractImageUrl(item),
       publishedAt: item.isoDate ? new Date(item.isoDate) : new Date(),
     };

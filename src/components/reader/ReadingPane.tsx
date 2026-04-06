@@ -43,10 +43,7 @@ export function ReadingPane({ article, onToggleStar }: ReadingPaneProps) {
           onToggleStar={() => onToggleStar(article.id)}
         />
         <div
-          className="prose prose-neutral dark:prose-invert mt-6 max-w-none
-            prose-headings:font-semibold prose-headings:tracking-tight
-            prose-a:text-primary prose-a:no-underline hover:prose-a:underline
-            prose-img:rounded-lg prose-pre:bg-card prose-pre:border"
+          className="article-content mt-6"
           dangerouslySetInnerHTML={{ __html: article.content }}
         />
       </article>

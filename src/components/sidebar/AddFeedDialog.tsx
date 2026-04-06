@@ -53,10 +53,12 @@ export function AddFeedDialog({ onFeedAdded }: AddFeedDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7">
-          <Plus className="h-4 w-4" />
-        </Button>
+      <DialogTrigger
+        render={
+          <Button variant="ghost" size="icon" className="h-7 w-7" />
+        }
+      >
+        <Plus className="h-4 w-4" />
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

@@ -1,4 +1,9 @@
-import DOMPurify from "isomorphic-dompurify";
+import { JSDOM } from "jsdom";
+import DOMPurify from "dompurify";
+
+const { window } = new JSDOM("");
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const purify = DOMPurify(window as any);
 
 const ALLOWED_TAGS = [
   "a", "abbr", "b", "blockquote", "br", "code", "del", "em",
@@ -13,7 +18,7 @@ const ALLOWED_ATTR = [
 ];
 
 export function sanitizeHtml(dirty: string): string {
-  return DOMPurify.sanitize(dirty, {
+  return purify.sanitize(dirty, {
     ALLOWED_TAGS,
     ALLOWED_ATTR,
     ADD_ATTR: ["target"],
