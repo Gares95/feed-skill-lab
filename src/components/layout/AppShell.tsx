@@ -31,6 +31,7 @@ import {
 } from "@/actions/articles";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import type { DateRange } from "@/lib/date-range";
+import { CommandPalette } from "@/components/CommandPalette";
 
 interface AppShellProps {
   feeds: FeedWithCount[];
@@ -55,6 +56,7 @@ export function AppShell({
   const [selectedFeedId, setSelectedFeedId] = useState<string | null>(null);
   const [isStarredView, setIsStarredView] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange>(initialDateRange);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(
     initialArticle?.id ?? null
   );
@@ -98,6 +100,18 @@ export function AppShell({
     return () => {
       if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     };
+  }, []);
+
+  // Cmd/Ctrl+K opens the command palette
+  useEffect(() => {
+    function handler(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPaletteOpen((open) => !open);
+      }
+    }
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
   }, []);
 
   // Auto-refresh: poll every minute, server decides which feeds are due
@@ -352,6 +366,16 @@ export function AppShell({
           />
         </ResizablePanel>
       </ResizablePanelGroup>
+      <CommandPalette
+        open={paletteOpen}
+        onOpenChange={setPaletteOpen}
+        feeds={feeds}
+        onSelectAll={() => handleSelectFeed(null)}
+        onSelectStarred={handleSelectStarred}
+        onSelectFeed={(id) => handleSelectFeed(id)}
+        onRefreshAll={handleRefreshAll}
+        onMarkAllRead={handleMarkAllRead}
+      />
     </div>
   );
 }
