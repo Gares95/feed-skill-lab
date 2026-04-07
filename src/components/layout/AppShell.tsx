@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useTransition, useRef, useEffect } from "react";
+import { useState, useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   ResizablePanelGroup,
@@ -19,7 +19,6 @@ import {
 import {
   deleteFeed,
   refreshAllFeeds,
-  refreshDueFeeds,
   refreshFeed,
 } from "@/actions/feeds";
 import {
@@ -27,9 +26,11 @@ import {
   markRead,
   markUnread,
   toggleStar,
-  searchArticles,
 } from "@/actions/articles";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { useArticleSearch } from "@/hooks/use-article-search";
+import { useAutoRefresh } from "@/hooks/use-auto-refresh";
+import { useCommandPalette } from "@/hooks/use-command-palette";
 import type { DateRange } from "@/lib/date-range";
 import { CommandPalette } from "@/components/CommandPalette";
 
@@ -56,7 +57,6 @@ export function AppShell({
   const [selectedFeedId, setSelectedFeedId] = useState<string | null>(null);
   const [isStarredView, setIsStarredView] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange>(initialDateRange);
-  const [paletteOpen, setPaletteOpen] = useState(false);
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(
     initialArticle?.id ?? null
   );
@@ -65,82 +65,17 @@ export function AppShell({
     initialArticle
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<ArticleWithFeed[] | null>(
-    null,
-  );
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchError, setSearchError] = useState<string | null>(null);
-  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  function handleSearchChange(query: string) {
-    setSearchQuery(query);
-
-    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-
-    if (!query.trim()) {
-      setSearchResults(null);
-      setSearchError(null);
-      setIsSearching(false);
-      return;
-    }
-
-    setIsSearching(true);
-    setSearchError(null);
-    searchTimerRef.current = setTimeout(async () => {
-      try {
-        const results = await searchArticles(query);
-        setSearchResults(results);
-        setSearchError(null);
-      } catch (error) {
-        setSearchResults(null);
-        setSearchError(
-          error instanceof Error ? error.message : "Search failed",
-        );
-      } finally {
-        setIsSearching(false);
-      }
-    }, 300);
-  }
-
-  useEffect(() => {
-    return () => {
-      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-    };
-  }, []);
-
-  // Cmd/Ctrl+K opens the command palette
-  useEffect(() => {
-    function handler(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setPaletteOpen((open) => !open);
-      }
-    }
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, []);
-
-  // Auto-refresh: poll every minute, server decides which feeds are due
-  useEffect(() => {
-    const interval = window.setInterval(async () => {
-      try {
-        const result = await refreshDueFeeds();
-        if (result.refreshed > 0) {
-          startTransition(() => router.refresh());
-        }
-      } catch (error) {
-        console.error("Auto-refresh failed:", error);
-      }
-    }, 60_000);
-    return () => window.clearInterval(interval);
-  }, [router]);
+  const search = useArticleSearch();
+  const { open: paletteOpen, setOpen: setPaletteOpen } = useCommandPalette();
 
   const refresh = useCallback(() => {
     startTransition(() => {
       router.refresh();
     });
   }, [router, startTransition]);
+
+  useAutoRefresh(refresh);
 
   function buildUrl(opts: {
     feedId?: string | null;
@@ -262,7 +197,7 @@ export function AppShell({
     }
   }
 
-  const displayedArticles = searchResults ?? articles;
+  const displayedArticles = search.results ?? articles;
 
   useKeyboardShortcuts({
     onNextArticle: () => {
@@ -355,13 +290,13 @@ export function AppShell({
             selectedArticleId={selectedArticleId}
             onSelectArticle={handleSelectArticle}
             heading={heading}
-            searchQuery={searchQuery}
-            onSearchChange={handleSearchChange}
-            isSearching={isSearching}
+            searchQuery={search.query}
+            onSearchChange={search.onChange}
+            isSearching={search.isSearching}
             dateRange={dateRange}
             onDateRangeChange={handleDateRangeChange}
             onMarkAllRead={handleMarkAllRead}
-            searchError={searchError}
+            searchError={search.error}
             hasFeeds={feeds.length > 0}
             onRefreshAll={handleRefreshAll}
           />

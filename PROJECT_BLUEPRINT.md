@@ -432,12 +432,12 @@ These are things we are **intentionally avoiding**:
 - [ ] Feed folders / categories (drag feeds into folders)
 - [x] OPML import and export
 - [x] Full-text search via SQLite FTS5
-- [ ] Command palette (`cmdk`) for quick navigation
-- [ ] Auto-refresh on configurable interval (per-feed or global)
-- [ ] Mark all as read (per feed, per folder, all)
-- [ ] Article date range filters
-- [ ] Feed settings (custom name, refresh interval)
-- [ ] Feed error handling UI (show fetch failures, retry)
+- [x] Command palette (Cmd/Ctrl+K) for quick navigation
+- [x] Auto-refresh on configurable interval (per-feed with 60-min default)
+- [x] Mark all as read (per feed or across current view)
+- [x] Article date range filters (today / week / month / all)
+- [x] Feed settings (custom name, refresh interval)
+- [x] Feed error handling UI (inline error indicator + retry button)
 
 ### Phase 3 — Reading Experience
 
