@@ -18,10 +18,24 @@ const ALLOWED_ATTR = [
 ];
 
 export function sanitizeHtml(dirty: string): string {
-  return purify.sanitize(dirty, {
+  const clean = purify.sanitize(dirty, {
     ALLOWED_TAGS,
     ALLOWED_ATTR,
     ADD_ATTR: ["target"],
     ALLOW_DATA_ATTR: false,
   });
+  return rewriteImagesToProxy(clean);
+}
+
+/**
+ * Rewrites <img src="http(s)://..."> to route through our local image proxy,
+ * sidestepping mixed-content / hotlink-blocking issues. Relative and data: URLs
+ * are left untouched.
+ */
+function rewriteImagesToProxy(html: string): string {
+  return html.replace(
+    /<img\b([^>]*?)\bsrc=("|')(https?:\/\/[^"']+)\2/gi,
+    (_match, attrs, quote, url) =>
+      `<img${attrs}src=${quote}/api/image-proxy?url=${encodeURIComponent(url)}${quote}`,
+  );
 }
