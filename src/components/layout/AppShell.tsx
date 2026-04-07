@@ -70,6 +70,7 @@ export function AppShell({
     null,
   );
   const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function handleSearchChange(query: string) {
@@ -79,17 +80,23 @@ export function AppShell({
 
     if (!query.trim()) {
       setSearchResults(null);
+      setSearchError(null);
       setIsSearching(false);
       return;
     }
 
     setIsSearching(true);
+    setSearchError(null);
     searchTimerRef.current = setTimeout(async () => {
       try {
         const results = await searchArticles(query);
         setSearchResults(results);
-      } catch {
-        setSearchResults([]);
+        setSearchError(null);
+      } catch (error) {
+        setSearchResults(null);
+        setSearchError(
+          error instanceof Error ? error.message : "Search failed",
+        );
       } finally {
         setIsSearching(false);
       }
@@ -354,6 +361,9 @@ export function AppShell({
             dateRange={dateRange}
             onDateRangeChange={handleDateRangeChange}
             onMarkAllRead={handleMarkAllRead}
+            searchError={searchError}
+            hasFeeds={feeds.length > 0}
+            onRefreshAll={handleRefreshAll}
           />
         </ResizablePanel>
 

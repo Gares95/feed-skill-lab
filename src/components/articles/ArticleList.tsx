@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCheck, FileText, Search, X } from "lucide-react";
+import { AlertCircle, CheckCheck, FileText, Inbox, RefreshCw, Search, X } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,9 @@ interface ArticleListProps {
   dateRange: DateRange;
   onDateRangeChange: (range: DateRange) => void;
   onMarkAllRead: () => void;
+  searchError: string | null;
+  hasFeeds: boolean;
+  onRefreshAll: () => void;
 }
 
 export function ArticleList({
@@ -41,6 +44,9 @@ export function ArticleList({
   dateRange,
   onDateRangeChange,
   onMarkAllRead,
+  searchError,
+  hasFeeds,
+  onRefreshAll,
 }: ArticleListProps) {
   const hasUnread = articles.some((a) => !a.isRead);
   return (
@@ -105,12 +111,40 @@ export function ArticleList({
         )}
       </div>
 
-      {articles.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
-          <FileText className="h-8 w-8" />
-          <p className="text-sm">
-            {searchQuery ? "No results found" : "No articles"}
-          </p>
+      {searchError ? (
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center text-muted-foreground">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+          <p className="text-sm text-destructive">{searchError}</p>
+          <p className="text-xs">Try a different query.</p>
+        </div>
+      ) : articles.length === 0 ? (
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center text-muted-foreground">
+          {searchQuery ? (
+            <>
+              <Search className="h-8 w-8" />
+              <p className="text-sm">No results for &ldquo;{searchQuery}&rdquo;</p>
+            </>
+          ) : !hasFeeds ? (
+            <>
+              <Inbox className="h-8 w-8" />
+              <p className="text-sm">No feeds yet</p>
+              <p className="text-xs">Add a feed from the sidebar to get started.</p>
+            </>
+          ) : (
+            <>
+              <FileText className="h-8 w-8" />
+              <p className="text-sm">No articles to show</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onRefreshAll}
+                className="h-7"
+              >
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                Refresh feeds
+              </Button>
+            </>
+          )}
         </div>
       ) : (
         <ScrollArea className="flex-1">
