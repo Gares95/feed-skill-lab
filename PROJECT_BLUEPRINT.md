@@ -429,7 +429,7 @@ These are things we are **intentionally avoiding**:
 
 ### Phase 2 — Organization & Search
 
-- [ ] Feed folders / categories (drag feeds into folders)
+- [x] Feed folders / categories (group feeds; rename/delete; move via Feed Settings)
 - [x] OPML import and export
 - [x] Full-text search via SQLite FTS5
 - [x] Command palette (Cmd/Ctrl+K) for quick navigation

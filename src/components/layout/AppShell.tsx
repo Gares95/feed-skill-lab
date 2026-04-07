@@ -7,7 +7,7 @@ import {
   ResizablePanel,
   ResizableHandle,
 } from "@/components/ui/resizable";
-import { Sidebar, type FeedWithCount } from "@/components/sidebar/Sidebar";
+import { Sidebar, type FeedWithCount, type FolderRef } from "@/components/sidebar/Sidebar";
 import {
   ArticleList,
   type ArticleWithFeed,
@@ -36,6 +36,7 @@ import { CommandPalette } from "@/components/CommandPalette";
 
 interface AppShellProps {
   feeds: FeedWithCount[];
+  folders: FolderRef[];
   totalUnread: number;
   starredCount: number;
   initialArticles: ArticleWithFeed[];
@@ -45,6 +46,7 @@ interface AppShellProps {
 
 export function AppShell({
   feeds,
+  folders,
   totalUnread,
   starredCount,
   initialArticles,
@@ -262,6 +264,7 @@ export function AppShell({
         >
           <Sidebar
             feeds={feeds}
+            folders={folders}
             selectedFeedId={selectedFeedId}
             totalUnread={totalUnread}
             starredCount={starredCount}

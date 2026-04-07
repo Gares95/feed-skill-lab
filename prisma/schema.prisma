@@ -8,6 +8,16 @@ datasource db {
   url      = "file:./dev.db"
 }
 
+model Folder {
+  id        String   @id @default(cuid())
+  name      String
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  feeds Feed[]
+}
+
 model Feed {
   id          String    @id @default(cuid())
   title       String
@@ -18,10 +28,14 @@ model Feed {
   lastFetched DateTime?
   errorCount  Int       @default(0)
   refreshInterval Int?  // minutes; null = use global default
+  folderId    String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  folder   Folder?   @relation(fields: [folderId], references: [id], onDelete: SetNull)
   articles Article[]
+
+  @@index([folderId])
 }
 
 model Article {

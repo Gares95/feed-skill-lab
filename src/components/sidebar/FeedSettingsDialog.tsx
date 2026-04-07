@@ -17,23 +17,30 @@ interface FeedSettingsDialogProps {
   feedId: string;
   initialTitle: string;
   initialRefreshInterval: number | null;
+  initialFolderId: string | null;
+  folders: { id: string; name: string }[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSaved: () => void;
+  onMove: (feedId: string, folderId: string | null) => void;
 }
 
 export function FeedSettingsDialog({
   feedId,
   initialTitle,
   initialRefreshInterval,
+  initialFolderId,
+  folders,
   open,
   onOpenChange,
   onSaved,
+  onMove,
 }: FeedSettingsDialogProps) {
   const [title, setTitle] = useState(initialTitle);
   const [interval, setInterval] = useState<string>(
     initialRefreshInterval?.toString() ?? "",
   );
+  const [folderId, setFolderId] = useState<string>(initialFolderId ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,6 +63,10 @@ export function FeedSettingsDialog({
     setSaving(true);
     try {
       await updateFeed(feedId, { title, refreshInterval: parsed });
+      const nextFolderId = folderId || null;
+      if (nextFolderId !== (initialFolderId ?? null)) {
+        onMove(feedId, nextFolderId);
+      }
       onSaved();
       onOpenChange(false);
     } catch (e) {
@@ -106,6 +117,25 @@ export function FeedSettingsDialog({
             <p className="text-xs text-muted-foreground">
               Leave blank to use the global default.
             </p>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="feed-folder" className="text-xs text-muted-foreground">
+              Folder
+            </label>
+            <select
+              id="feed-folder"
+              value={folderId}
+              onChange={(e) => setFolderId(e.target.value)}
+              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs"
+            >
+              <option value="">Uncategorized</option>
+              {folders.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           {error && <p className="text-xs text-destructive">{error}</p>}

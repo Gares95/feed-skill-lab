@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/layout/AppShell";
 import {
   getFeedsWithCounts,
+  getFolders,
   getArticles,
   getStarredCount,
   getTotalUnread,
@@ -16,8 +17,9 @@ export default async function Home({ searchParams }: PageProps) {
   const range: DateRange = isDateRange(params.range) ? params.range : "all";
   const since = dateRangeToSince(range);
 
-  const [feeds, totalUnread, starredCount, articles] = await Promise.all([
+  const [feeds, folders, totalUnread, starredCount, articles] = await Promise.all([
     getFeedsWithCounts(),
+    getFolders(),
     getTotalUnread(),
     getStarredCount(),
     params.starred === "true"
@@ -28,6 +30,7 @@ export default async function Home({ searchParams }: PageProps) {
   return (
     <AppShell
       feeds={feeds}
+      folders={folders}
       totalUnread={totalUnread}
       starredCount={starredCount}
       initialArticles={articles}

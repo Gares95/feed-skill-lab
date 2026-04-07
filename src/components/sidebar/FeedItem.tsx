@@ -23,11 +23,14 @@ interface FeedItemProps {
   favicon: string | null;
   errorCount: number;
   refreshInterval: number | null;
+  folderId: string | null;
+  folders: { id: string; name: string }[];
   isSelected: boolean;
   onSelect: (feedId: string) => void;
   onDelete: (feedId: string) => void;
   onRefresh: (feedId: string) => void;
   onUpdated: () => void;
+  onMove: (feedId: string, folderId: string | null) => void;
 }
 
 export function FeedItem({
@@ -37,11 +40,14 @@ export function FeedItem({
   favicon,
   errorCount,
   refreshInterval,
+  folderId,
+  folders,
   isSelected,
   onSelect,
   onDelete,
   onRefresh,
   onUpdated,
+  onMove,
 }: FeedItemProps) {
   const [open, setOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -107,9 +113,12 @@ export function FeedItem({
         feedId={id}
         initialTitle={title}
         initialRefreshInterval={refreshInterval}
+        initialFolderId={folderId}
+        folders={folders}
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
         onSaved={onUpdated}
+        onMove={onMove}
       />
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogTrigger

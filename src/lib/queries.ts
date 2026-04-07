@@ -20,7 +20,15 @@ export async function getFeedsWithCounts() {
     errorCount: feed.errorCount,
     lastFetched: feed.lastFetched,
     refreshInterval: feed.refreshInterval,
+    folderId: feed.folderId,
   }));
+}
+
+export async function getFolders() {
+  const folders = await prisma.folder.findMany({
+    orderBy: [{ position: "asc" }, { name: "asc" }],
+  });
+  return folders.map((f) => ({ id: f.id, name: f.name }));
 }
 
 export async function getArticles(options?: {
