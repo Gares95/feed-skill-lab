@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { parseFeed } from "@/lib/feed-parser";
+import { isFeedDue } from "@/lib/feed-schedule";
 
 export async function refreshFeed(feedId: string) {
   const feed = await prisma.feed.findUnique({ where: { id: feedId } });
@@ -52,17 +53,10 @@ export async function refreshFeed(feedId: string) {
   revalidatePath("/");
 }
 
-const DEFAULT_REFRESH_MINUTES = 60;
-
 export async function refreshDueFeeds() {
   const feeds = await prisma.feed.findMany();
   const now = Date.now();
-  const due = feeds.filter((feed) => {
-    const intervalMin = feed.refreshInterval ?? DEFAULT_REFRESH_MINUTES;
-    if (!feed.lastFetched) return true;
-    const elapsedMin = (now - feed.lastFetched.getTime()) / 60000;
-    return elapsedMin >= intervalMin;
-  });
+  const due = feeds.filter((feed) => isFeedDue(feed, now));
 
   if (due.length === 0) return { refreshed: 0 };
 

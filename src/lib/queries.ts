@@ -1,5 +1,6 @@
 import { Prisma } from "@/generated/prisma";
 import { prisma } from "./prisma";
+import { buildFtsQuery } from "./fts-query";
 
 export async function getFeedsWithCounts() {
   const feeds = await prisma.feed.findMany({
@@ -72,16 +73,8 @@ export async function getArticleById(id: string) {
 }
 
 export async function searchArticles(query: string) {
-  if (!query.trim()) return [];
-
-  // Escape FTS5 special characters and add prefix matching
-  const sanitized = query.replace(/['"*^~(){}[\]]/g, "").trim();
-  if (!sanitized) return [];
-
-  const ftsQuery = sanitized
-    .split(/\s+/)
-    .map((term) => `"${term}"*`)
-    .join(" ");
+  const ftsQuery = buildFtsQuery(query);
+  if (!ftsQuery) return [];
 
   const results = await prisma.$queryRaw<
     {
