@@ -16,7 +16,12 @@ import {
   ReadingPane,
   type ArticleFull,
 } from "@/components/reader/ReadingPane";
-import { deleteFeed, refreshAllFeeds, refreshFeed } from "@/actions/feeds";
+import {
+  deleteFeed,
+  refreshAllFeeds,
+  refreshDueFeeds,
+  refreshFeed,
+} from "@/actions/feeds";
 import {
   markAllRead,
   markRead,
@@ -94,6 +99,21 @@ export function AppShell({
       if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     };
   }, []);
+
+  // Auto-refresh: poll every minute, server decides which feeds are due
+  useEffect(() => {
+    const interval = window.setInterval(async () => {
+      try {
+        const result = await refreshDueFeeds();
+        if (result.refreshed > 0) {
+          startTransition(() => router.refresh());
+        }
+      } catch (error) {
+        console.error("Auto-refresh failed:", error);
+      }
+    }, 60_000);
+    return () => window.clearInterval(interval);
+  }, [router]);
 
   const refresh = useCallback(() => {
     startTransition(() => {

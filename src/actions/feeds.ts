@@ -52,6 +52,31 @@ export async function refreshFeed(feedId: string) {
   revalidatePath("/");
 }
 
+const DEFAULT_REFRESH_MINUTES = 60;
+
+export async function refreshDueFeeds() {
+  const feeds = await prisma.feed.findMany();
+  const now = Date.now();
+  const due = feeds.filter((feed) => {
+    const intervalMin = feed.refreshInterval ?? DEFAULT_REFRESH_MINUTES;
+    if (!feed.lastFetched) return true;
+    const elapsedMin = (now - feed.lastFetched.getTime()) / 60000;
+    return elapsedMin >= intervalMin;
+  });
+
+  if (due.length === 0) return { refreshed: 0 };
+
+  const results = await Promise.allSettled(
+    due.map((feed) => refreshFeed(feed.id)),
+  );
+  const failed = results.filter((r) => r.status === "rejected").length;
+  if (failed > 0) {
+    console.error(`${failed}/${due.length} due feeds failed to refresh`);
+  }
+  revalidatePath("/");
+  return { refreshed: due.length };
+}
+
 export async function refreshAllFeeds() {
   const feeds = await prisma.feed.findMany();
   const results = await Promise.allSettled(
