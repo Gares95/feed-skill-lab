@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Rss, Trash2 } from "lucide-react";
+import { Rss, Trash2, RefreshCw, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   AlertDialog,
@@ -20,9 +20,11 @@ interface FeedItemProps {
   title: string;
   unreadCount: number;
   favicon: string | null;
+  errorCount: number;
   isSelected: boolean;
   onSelect: (feedId: string) => void;
   onDelete: (feedId: string) => void;
+  onRefresh: (feedId: string) => void;
 }
 
 export function FeedItem({
@@ -30,11 +32,14 @@ export function FeedItem({
   title,
   unreadCount,
   favicon,
+  errorCount,
   isSelected,
   onSelect,
   onDelete,
+  onRefresh,
 }: FeedItemProps) {
   const [open, setOpen] = useState(false);
+  const hasError = errorCount > 0;
 
   return (
     <div
@@ -60,10 +65,27 @@ export function FeedItem({
       ) : (
         <Rss className="h-4 w-4 shrink-0 text-muted-foreground" />
       )}
-      <span className="flex-1 truncate">{title}</span>
+      <span className={cn("flex-1 truncate", hasError && "text-destructive")}>{title}</span>
+      {hasError && (
+        <AlertTriangle
+          className="h-3.5 w-3.5 shrink-0 text-destructive group-hover:hidden"
+          aria-label={`Failed to fetch (${errorCount} errors)`}
+        />
+      )}
       <span className="text-xs text-muted-foreground tabular-nums group-hover:hidden">
-        {unreadCount > 0 ? unreadCount : ""}
+        {!hasError && unreadCount > 0 ? unreadCount : ""}
       </span>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onRefresh(id);
+        }}
+        className="hidden shrink-0 rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground group-hover:block"
+        title={hasError ? "Retry feed" : "Refresh feed"}
+      >
+        <RefreshCw className="h-4 w-4" />
+      </button>
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogTrigger
           onClick={(e: React.MouseEvent) => {

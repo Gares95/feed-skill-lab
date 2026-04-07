@@ -16,16 +16,20 @@ export async function getFeedsWithCounts() {
     title: feed.title,
     favicon: feed.favicon,
     unreadCount: feed._count.articles,
+    errorCount: feed.errorCount,
+    lastFetched: feed.lastFetched,
   }));
 }
 
 export async function getArticles(options?: {
   feedId?: string;
   starredOnly?: boolean;
+  since?: Date;
 }) {
   const where: Record<string, unknown> = {};
   if (options?.feedId) where.feedId = options.feedId;
   if (options?.starredOnly) where.isStarred = true;
+  if (options?.since) where.publishedAt = { gte: options.since };
 
   const articles = await prisma.article.findMany({
     where,

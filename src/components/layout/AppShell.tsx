@@ -16,15 +16,16 @@ import {
   ReadingPane,
   type ArticleFull,
 } from "@/components/reader/ReadingPane";
-import { deleteFeed } from "@/actions/feeds";
-import { refreshAllFeeds } from "@/actions/feeds";
+import { deleteFeed, refreshAllFeeds, refreshFeed } from "@/actions/feeds";
 import {
+  markAllRead,
   markRead,
   markUnread,
   toggleStar,
   searchArticles,
 } from "@/actions/articles";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import type { DateRange } from "@/lib/date-range";
 
 interface AppShellProps {
   feeds: FeedWithCount[];
@@ -32,6 +33,7 @@ interface AppShellProps {
   starredCount: number;
   initialArticles: ArticleWithFeed[];
   initialArticle: ArticleFull | null;
+  initialDateRange: DateRange;
 }
 
 export function AppShell({
@@ -40,12 +42,14 @@ export function AppShell({
   starredCount,
   initialArticles,
   initialArticle,
+  initialDateRange,
 }: AppShellProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const [selectedFeedId, setSelectedFeedId] = useState<string | null>(null);
   const [isStarredView, setIsStarredView] = useState(false);
+  const [dateRange, setDateRange] = useState<DateRange>(initialDateRange);
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(
     initialArticle?.id ?? null
   );
@@ -97,17 +101,28 @@ export function AppShell({
     });
   }, [router, startTransition]);
 
+  function buildUrl(opts: {
+    feedId?: string | null;
+    starred?: boolean;
+    range?: DateRange;
+  }) {
+    const params = new URLSearchParams();
+    if (opts.feedId) params.set("feedId", opts.feedId);
+    if (opts.starred) params.set("starred", "true");
+    const r = opts.range ?? dateRange;
+    if (r !== "all") params.set("range", r);
+    const qs = params.toString();
+    return qs ? `/?${qs}` : "/";
+  }
+
   function handleSelectFeed(feedId: string | null) {
     setSelectedFeedId(feedId);
     setIsStarredView(false);
     setSelectedArticleId(null);
     setCurrentArticle(null);
 
-    const params = new URLSearchParams();
-    if (feedId) params.set("feedId", feedId);
-
     startTransition(() => {
-      router.push(`/?${params.toString()}`);
+      router.push(buildUrl({ feedId }));
     });
   }
 
@@ -118,7 +133,20 @@ export function AppShell({
     setCurrentArticle(null);
 
     startTransition(() => {
-      router.push("/?starred=true");
+      router.push(buildUrl({ starred: true }));
+    });
+  }
+
+  function handleDateRangeChange(range: DateRange) {
+    setDateRange(range);
+    startTransition(() => {
+      router.push(
+        buildUrl({
+          feedId: selectedFeedId,
+          starred: isStarredView,
+          range,
+        }),
+      );
     });
   }
 
@@ -165,6 +193,20 @@ export function AppShell({
       setSelectedFeedId(null);
       setSelectedArticleId(null);
       setCurrentArticle(null);
+    }
+    refresh();
+  }
+
+  async function handleMarkAllRead() {
+    await markAllRead(selectedFeedId ?? undefined);
+    refresh();
+  }
+
+  async function handleRefreshFeed(feedId: string) {
+    try {
+      await refreshFeed(feedId);
+    } catch (error) {
+      console.error("Failed to refresh feed:", error);
     }
     refresh();
   }
@@ -250,6 +292,7 @@ export function AppShell({
             onSelectFeed={handleSelectFeed}
             onSelectStarred={handleSelectStarred}
             onDeleteFeed={handleDeleteFeed}
+            onRefreshFeed={handleRefreshFeed}
             onRefreshAll={handleRefreshAll}
             onFeedAdded={refresh}
             isStarredView={isStarredView}
@@ -273,6 +316,9 @@ export function AppShell({
             searchQuery={searchQuery}
             onSearchChange={handleSearchChange}
             isSearching={isSearching}
+            dateRange={dateRange}
+            onDateRangeChange={handleDateRangeChange}
+            onMarkAllRead={handleMarkAllRead}
           />
         </ResizablePanel>
 
