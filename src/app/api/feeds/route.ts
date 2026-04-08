@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { parseFeed } from "@/lib/feed-parser";
+import { discoverFeedUrl } from "@/lib/discover-feed";
+import { explainFeedError } from "@/lib/feed-error";
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,9 +29,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Discover the actual feed URL (handles homepages with <link rel="alternate">)
+    let resolvedUrl: string;
+    try {
+      resolvedUrl = await discoverFeedUrl(feedUrl.href);
+    } catch (err) {
+      return NextResponse.json({ error: explainFeedError(err) }, { status: 400 });
+    }
+
     // Check if feed already exists
     const existing = await prisma.feed.findUnique({
-      where: { url: feedUrl.href },
+      where: { url: resolvedUrl },
     });
 
     if (existing) {
@@ -40,7 +50,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch and parse the feed
-    const { feed: parsedFeed, articles } = await parseFeed(feedUrl.href);
+    let parsedFeed;
+    let articles;
+    try {
+      const result = await parseFeed(resolvedUrl);
+      parsedFeed = result.feed;
+      articles = result.articles;
+    } catch (err) {
+      return NextResponse.json({ error: explainFeedError(err) }, { status: 400 });
+    }
 
     // Store feed and articles in a transaction
     const feed = await prisma.feed.create({
@@ -73,8 +91,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ feed }, { status: 201 });
   } catch (error) {
     console.error("Failed to add feed:", error);
-    const message =
-      error instanceof Error ? error.message : "Failed to add feed";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: explainFeedError(error) }, { status: 500 });
   }
 }

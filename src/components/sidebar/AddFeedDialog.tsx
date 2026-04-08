@@ -52,7 +52,17 @@ export function AddFeedDialog({ onFeedAdded }: AddFeedDialogProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) {
+          setUrl("");
+          setError(null);
+          setLoading(false);
+        }
+      }}
+    >
       <DialogTrigger
         render={
           <Button variant="ghost" size="icon" className="h-7 w-7" />
@@ -66,7 +76,7 @@ export function AddFeedDialog({ onFeedAdded }: AddFeedDialogProps) {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <Input
-            placeholder="https://example.com/feed.xml"
+            placeholder="https://site.url/feed.xml"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             disabled={loading}
