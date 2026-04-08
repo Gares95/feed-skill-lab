@@ -85,7 +85,7 @@ export default async function StatsPage() {
                 return (
                   <div
                     key={d.date}
-                    className="group relative flex-1"
+                    className="flex h-full flex-1 flex-col justify-end"
                     title={`${d.date}: ${d.count}`}
                   >
                     <div
