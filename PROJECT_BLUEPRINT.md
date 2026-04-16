@@ -42,7 +42,7 @@ The MVP must deliver a complete, usable reading experience:
 7. **Unread counts** — per-feed and total in sidebar
 8. **Manual refresh** — button to re-fetch all feeds or a single feed
 9. **Basic keyboard shortcuts** — j/k (next/prev article), s (star), m (toggle read), r (refresh)
-10. **Dark mode by default** — with light mode toggle
+10. **Dark mode by default** — primary experience; light mode toggle deferred beyond v1
 
 ### What is Explicitly Out of Scope for v1
 
@@ -480,7 +480,7 @@ These are things we are **intentionally avoiding**:
 | **M3: Reading** | +1 session | Click an article → see rendered content in reading pane, mark-read on open |
 | **M4: Core Interactions** | +1 session | Star/unstar, mark read/unread, keyboard shortcuts, unread counts |
 | **M5: Polish** | +1 session | Empty states, error handling, loading states, visual polish pass |
-| **M6: MVP Complete** | +1 session | Add/delete feeds, full reading flow, keyboard nav, dark/light mode toggle |
+| **M6: MVP Complete** | +1 session | Add/delete feeds, full reading flow, keyboard nav, dark mode polished (light toggle deferred) |
 
 ---
 
@@ -672,11 +672,11 @@ Concrete proposals to evaluate when the relevant phase is active. Each one captu
 
 #### Execution model
 
-Three layers, to be added incrementally. Each is useful on its own; later layers close smaller and smaller gaps.
+Three layers, ordered smallest-gap to largest. Each is useful on its own.
 
-1. **On focus / on app open (Phase 2, default on).** When the tab becomes visible after being idle for more than N minutes, trigger `refreshDueFeeds`. Zero background cost — refresh happens only when the user is actually present. Closes the "just opened the app" freshness gap.
-2. **Interval while app is open (Phase 2, default on).** A timer inside the client polls `refreshDueFeeds` every 30 minutes while the tab is focused. Pauses when the tab is hidden or the laptop sleeps. Keeps a long reading session fresh without the user hitting a refresh button.
-3. **Out-of-process refresher (Open Proposal, opt-in).** For the "closed for a week" case only — needs something running when the app isn't. Options in increasing footprint:
+1. **Interval while app is open (shipped in Phase 2).** `useAutoRefresh` polls `refreshDueFeeds` every 60s while the tab is mounted; the server filters to feeds that are actually due based on per-feed `refreshInterval`. Closes the "long reading session" freshness gap.
+2. **On focus / on app open (proposed).** When the tab becomes visible after being idle for more than N minutes, trigger `refreshDueFeeds` once immediately instead of waiting for the next poll tick. Zero extra background cost. Closes the "just opened the app after lunch" gap.
+3. **Out-of-process refresher (proposed, opt-in).** For the "closed for a week" case only — needs something running when the app isn't. Options in increasing footprint:
    - **OS cron / systemd timer** — a small script hitting `refreshDueFeeds` hourly. Zero infra, user-installed, documented in `README.md`.
    - **Long-running Node process** — `npm run daemon` that stays up and polls on per-feed intervals. Same process model as `npm run dev` but headless.
    - **Electron-style wrapper** — ships Feed as a menu-bar app so the refresher lives with the user's session. Largest change, best UX.
