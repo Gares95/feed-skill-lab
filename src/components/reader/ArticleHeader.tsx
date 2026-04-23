@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { Clock, ExternalLink, Star } from "lucide-react";
+import { Clock, ExternalLink, Loader2, Sparkles, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { estimateReadingTime } from "@/lib/reading-time";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,9 @@ interface ArticleHeaderProps {
   content: string;
   isStarred: boolean;
   onToggleStar: () => void;
+  readerMode: boolean;
+  readerLoading: boolean;
+  onToggleReader: () => void;
 }
 
 export function ArticleHeader({
@@ -26,6 +29,9 @@ export function ArticleHeader({
   content,
   isStarred,
   onToggleStar,
+  readerMode,
+  readerLoading,
+  onToggleReader,
 }: ArticleHeaderProps) {
   const readingTime = estimateReadingTime(content);
   return (
@@ -55,7 +61,31 @@ export function ArticleHeader({
           </>
         )}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          variant={readerMode ? "secondary" : "outline"}
+          size="sm"
+          className="h-8 gap-1.5"
+          onClick={onToggleReader}
+          disabled={readerLoading}
+          title={
+            readerMode
+              ? "Show the original feed content"
+              : "Extract the full article in reader mode"
+          }
+        >
+          {readerLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Sparkles
+              className={cn(
+                "h-4 w-4",
+                readerMode ? "text-foreground" : "text-muted-foreground",
+              )}
+            />
+          )}
+          {readerMode ? "Exit reader mode" : "Reader mode"}
+        </Button>
         <Button
           variant="ghost"
           size="sm"
