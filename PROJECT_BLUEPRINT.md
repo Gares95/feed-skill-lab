@@ -53,7 +53,7 @@ The MVP must deliver a complete, usable reading experience:
 - Feed folders/categories (Phase 2)
 - Auto-refresh / background polling (Phase 2)
 - Content extraction / reader mode (Phase 3)
-- Any AI/LLM features (Phase 4+)
+- Any AI/LLM features
 - Mobile-responsive layout (Phase 3)
 - Browser extension for subscribing
 - Push notifications
@@ -384,39 +384,6 @@ Unread articles: `font-weight: 500`, white text. Read articles: `font-weight: 40
 
 ---
 
-## LLM Options — Honest Assessment
-
-### v1 Recommendation: No LLM
-
-The core product is a reading experience. LLMs add zero value to subscribing, reading, starring, or organizing feeds. Every LLM integration adds setup friction, latency, and failure modes. Ship v1 without any LLM dependency.
-
-### Deterministic Alternatives Used Instead
-
-| Feature | Approach | Why it's better than LLM for v1 |
-|---|---|---|
-| Reading time | `wordCount / 200` WPM | Instant, deterministic, no API call |
-| Content extraction | `@extractus/article-extractor` or DOM heuristics | Reliable, fast, well-tested |
-| Search | SQLite FTS5 full-text search | Instant, local, zero setup |
-| Categorization | Folder-based manual organization | User has full control |
-| Excerpts | First 200 chars of stripped HTML | Simple, fast, predictable |
-
-### Future AI Enhancements (Phase 4+, Optional)
-
-When the core product is solid, AI features can be added as opt-in:
-
-1. **Ollama integration** — Article summarization via local model. User installs Ollama + a small model (e.g., Llama 3.2 3B). Summaries generated on demand, cached in SQLite. Feasible but adds setup complexity and requires decent hardware.
-
-2. **User-provided API key** — Support pasting an OpenAI/Anthropic key in settings. Enables cloud-quality summarization, semantic search, smart digests. User pays their own API costs. Clean opt-in, no free-tier fragility.
-
-3. **Rule-based "smart" features** — Keyword highlighting, duplicate detection, reading pattern stats. No LLM needed, deterministic, reliable.
-
-**What to avoid:**
-- Free hosted inference (Hugging Face, etc.) — too unreliable and rate-limited for a reading app that processes many articles
-- Bundling a model with the app — too large, too slow, too complex
-- Making any LLM feature load-bearing in the core UX
-
----
-
 ## Non-Negotiable Constraints
 
 1. **Zero external API keys required** — The app must work out of the box after `npm run setup && npm run dev`
@@ -497,16 +464,7 @@ These are things we are **intentionally avoiding**:
 - [x] Mobile-responsive layout (stacked single-pane below md breakpoint)
 - [x] Swipe gestures on mobile (left = next article, right = back to list)
 
-### Phase 4 — Intelligence (Optional AI)
-
-- [ ] Ollama integration for article summarization (opt-in)
-- [ ] User-provided API key support (OpenAI/Anthropic) for cloud-quality AI
-- [ ] Smart digest: daily/weekly summary of top articles
-- [ ] Semantic search (vector embeddings of articles)
-- [ ] Auto-categorization suggestions
-- [ ] Duplicate/similar article detection
-
-### Phase 5 — Power User
+### Phase 4 — Power User
 
 - [ ] Multiple view modes (three-pane, two-pane, card grid)
 - [ ] Theme customization (accent colors, reader background)
@@ -634,7 +592,7 @@ Concrete proposals to evaluate when the relevant phase is active. Each one captu
 - Con: reader extraction per article at ingest time is network + CPU overhead; must be throttled and failure-tolerant.
 - Con: migration touches existing rows; backfill pass needed.
 
-### ~~Retention policy~~ — shipped (see Phase 5)
+### ~~Retention policy~~ — shipped (see Phase 4)
 
 Default is **off** (not on as originally proposed) to avoid destructive-by-default behavior. Configurable period, dry-run preview, auto-prune during refresh cycle with 23-hour cooldown.
 
