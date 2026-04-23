@@ -1,9 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BookOpen, Highlighter, Loader2, Pencil, Sparkles, Trash2 } from "lucide-react";
+import { BookOpen, Highlighter, Pencil, Trash2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
 import { ArticleHeader } from "./ArticleHeader";
 import {
   TypographySettings,
@@ -194,21 +193,6 @@ export function ReadingPane({ article, onToggleStar }: ReadingPaneProps) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-8 items-center justify-end gap-1 border-b px-3">
-        <Button
-          variant={readerMode ? "secondary" : "ghost"}
-          size="sm"
-          className="h-6 gap-1.5 px-2 text-xs"
-          onClick={toggleReaderMode}
-          disabled={readerLoading}
-          title={readerMode ? "Show original feed content" : "Reader mode"}
-        >
-          {readerLoading ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
-          ) : (
-            <Sparkles className="h-3 w-3" />
-          )}
-          Reader
-        </Button>
         <TypographySettings config={config} onUpdate={update} />
       </div>
       <ScrollArea className="flex-1">
@@ -225,6 +209,9 @@ export function ReadingPane({ article, onToggleStar }: ReadingPaneProps) {
             content={article.content}
             isStarred={article.isStarred}
             onToggleStar={() => onToggleStar(article.id)}
+            readerMode={readerMode}
+            readerLoading={readerLoading}
+            onToggleReader={toggleReaderMode}
           />
           {readerError && (
             <p className="mt-6 text-sm text-destructive">
