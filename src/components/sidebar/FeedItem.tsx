@@ -94,7 +94,7 @@ export function FeedItem({
             e.stopPropagation();
             onRefresh(id);
           }}
-          className="hidden rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground group-hover:block"
+          className="hidden rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground group-hover:block"
           title={hasError ? "Retry feed" : "Refresh feed"}
         >
           <RefreshCw className="h-4 w-4" />
@@ -105,7 +105,7 @@ export function FeedItem({
             e.stopPropagation();
             setSettingsOpen(true);
           }}
-          className="hidden rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground group-hover:block"
+          className="hidden rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground group-hover:block"
           title="Feed settings"
         >
           <Settings className="h-4 w-4" />
@@ -115,7 +115,7 @@ export function FeedItem({
             onClick={(e: React.MouseEvent) => {
               e.stopPropagation();
             }}
-            className="hidden rounded p-1 text-muted-foreground hover:bg-destructive/20 hover:text-destructive group-hover:block"
+            className="hidden rounded p-0.5 text-muted-foreground hover:bg-destructive/20 hover:text-destructive group-hover:block"
             title="Delete feed"
           >
             <Trash2 className="h-4 w-4" />
