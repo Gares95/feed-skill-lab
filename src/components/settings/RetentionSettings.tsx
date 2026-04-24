@@ -14,6 +14,8 @@ import {
 import { cn } from "@/lib/utils";
 
 const PERIOD_OPTIONS = [
+  { label: "7 days", value: 7 },
+  { label: "14 days", value: 14 },
   { label: "30 days", value: 30 },
   { label: "60 days", value: 60 },
   { label: "90 days", value: 90 },
