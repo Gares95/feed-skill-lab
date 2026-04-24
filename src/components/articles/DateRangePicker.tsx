@@ -59,22 +59,26 @@ export function DateRangePicker({
     setOpen(false);
   }
 
-  function handleRangeSelect(
-    value: { from?: Date; to?: Date } | undefined,
-  ) {
-    const next = value ?? {};
-    setDraftFrom(next.from);
-    setDraftTo(next.to);
-    const nextCount = clickCount + 1;
-    setClickCount(nextCount);
-    if (nextCount >= 2 && next.from && next.to) {
-      const [lo, hi] =
-        next.from.getTime() <= next.to.getTime()
-          ? [next.from, next.to]
-          : [next.to, next.from];
-      onChange({ range: "custom", from: lo, to: hi });
-      setOpen(false);
+  function handleDayClick(day: Date) {
+    if (clickCount === 0) {
+      // First click of this session — start a new range from scratch,
+      // ignoring any pre-existing from/to carried over from the previous
+      // selection (otherwise RDP's range-extend behavior would anchor
+      // the highlight to the stale start).
+      setDraftFrom(day);
+      setDraftTo(undefined);
+      setClickCount(1);
+      return;
     }
+    // Second click — commit the range in chronological order.
+    const start = draftFrom ?? day;
+    const [lo, hi] =
+      day.getTime() >= start.getTime() ? [start, day] : [day, start];
+    setDraftFrom(lo);
+    setDraftTo(hi);
+    setClickCount(0);
+    onChange({ range: "custom", from: lo, to: hi });
+    setOpen(false);
   }
 
   return (
@@ -121,7 +125,8 @@ export function DateRangePicker({
             <DayPicker
               mode="range"
               selected={{ from: draftFrom, to: draftTo }}
-              onSelect={handleRangeSelect}
+              onSelect={() => {}}
+              onDayClick={handleDayClick}
               defaultMonth={from ?? to ?? new Date()}
               disabled={{ after: new Date() }}
               showOutsideDays
@@ -174,6 +179,7 @@ export function DateRangePicker({
                 onClick={() => {
                   setDraftFrom(undefined);
                   setDraftTo(undefined);
+                  setClickCount(0);
                 }}
                 disabled={!draftFrom && !draftTo}
               >
