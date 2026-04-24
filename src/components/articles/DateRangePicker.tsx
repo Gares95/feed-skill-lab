@@ -35,6 +35,10 @@ export function DateRangePicker({
   const [open, setOpen] = useState(false);
   const [draftFrom, setDraftFrom] = useState<Date | undefined>(from);
   const [draftTo, setDraftTo] = useState<Date | undefined>(to);
+  // Track clicks inside the current open session so we can close after the
+  // user has picked BOTH start and end, not after the first click (which
+  // react-day-picker reports as { from: day, to: day } in range mode).
+  const [clickCount, setClickCount] = useState(0);
 
   const label =
     range === "custom" && (from || to)
@@ -46,6 +50,7 @@ export function DateRangePicker({
     if (next) {
       setDraftFrom(from);
       setDraftTo(to);
+      setClickCount(0);
     }
   }
 
@@ -60,8 +65,14 @@ export function DateRangePicker({
     const next = value ?? {};
     setDraftFrom(next.from);
     setDraftTo(next.to);
-    if (next.from && next.to) {
-      onChange({ range: "custom", from: next.from, to: next.to });
+    const nextCount = clickCount + 1;
+    setClickCount(nextCount);
+    if (nextCount >= 2 && next.from && next.to) {
+      const [lo, hi] =
+        next.from.getTime() <= next.to.getTime()
+          ? [next.from, next.to]
+          : [next.to, next.from];
+      onChange({ range: "custom", from: lo, to: hi });
       setOpen(false);
     }
   }
@@ -115,16 +126,16 @@ export function DateRangePicker({
               disabled={{ after: new Date() }}
               showOutsideDays
               classNames={{
-                root: "text-sm",
+                root: "relative text-sm",
                 months: "flex flex-col gap-2",
                 month: "space-y-2",
                 month_caption: "flex items-center justify-center px-8 py-1 text-sm font-medium",
                 caption_label: "text-sm font-medium",
                 nav: "flex items-center gap-1",
                 button_previous:
-                  "absolute left-2 top-1 inline-flex h-6 w-6 items-center justify-center rounded hover:bg-accent hover:text-accent-foreground",
+                  "absolute left-1 top-1 inline-flex h-6 w-6 items-center justify-center rounded hover:bg-accent hover:text-accent-foreground",
                 button_next:
-                  "absolute right-2 top-1 inline-flex h-6 w-6 items-center justify-center rounded hover:bg-accent hover:text-accent-foreground",
+                  "absolute right-1 top-1 inline-flex h-6 w-6 items-center justify-center rounded hover:bg-accent hover:text-accent-foreground",
                 chevron: "h-3.5 w-3.5 fill-current",
                 month_grid: "w-full border-collapse",
                 weekdays: "flex",
