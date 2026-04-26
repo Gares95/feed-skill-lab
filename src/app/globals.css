@@ -8,9 +8,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-geist-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -85,42 +85,55 @@
   --sidebar-accent-foreground: oklch(0.15 0 0);
   --sidebar-border: oklch(0.90 0 0);
   --sidebar-ring: oklch(0.50 0.18 250);
+
+  /* Motion tokens — defined at :root so both modes inherit. Reserved for
+     later branches; not yet applied broadly. */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-quint: cubic-bezier(0.83, 0, 0.17, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --motion-slow: 360ms;
 }
 
-/* Dark mode (primary — default experience) */
+/* Dark mode (primary — default experience). Surfaces carry a subtle cool
+   tint (chroma ~0.005 at hue 250) and widened lightness deltas so the
+   sidebar / list / reader / popover read as distinct planes instead of
+   one flat charcoal. Accent saturation pulled in from 0.15 → 0.10 to
+   step away from the default shadcn indigo. */
 .dark {
-  --background: oklch(0.13 0 0);
-  --foreground: oklch(0.93 0 0);
-  --card: oklch(0.17 0 0);
-  --card-foreground: oklch(0.93 0 0);
-  --popover: oklch(0.21 0 0);
-  --popover-foreground: oklch(0.93 0 0);
-  --primary: oklch(0.65 0.15 250);
+  --background: oklch(0.135 0.005 250);
+  --foreground: oklch(0.94 0.003 250);
+  --card: oklch(0.175 0.006 250);
+  --card-foreground: oklch(0.94 0.003 250);
+  --popover: oklch(0.215 0.007 250);
+  --popover-foreground: oklch(0.94 0.003 250);
+  --primary: oklch(0.68 0.10 250);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.21 0 0);
-  --secondary-foreground: oklch(0.93 0 0);
-  --muted: oklch(0.21 0 0);
-  --muted-foreground: oklch(0.55 0 0);
-  --accent: oklch(0.21 0 0);
-  --accent-foreground: oklch(0.93 0 0);
-  --destructive: oklch(0.65 0.2 25);
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 10%);
-  --ring: oklch(0.65 0.15 250);
-  --star: oklch(0.75 0.15 85);
-  --chart-1: oklch(0.65 0.15 250);
-  --chart-2: oklch(0.65 0.2 25);
-  --chart-3: oklch(0.75 0.15 85);
-  --chart-4: oklch(0.70 0.15 150);
-  --chart-5: oklch(0.65 0.15 300);
-  --sidebar: oklch(0.17 0 0);
-  --sidebar-foreground: oklch(0.93 0 0);
-  --sidebar-primary: oklch(0.65 0.15 250);
+  --secondary: oklch(0.21 0.006 250);
+  --secondary-foreground: oklch(0.94 0.003 250);
+  --muted: oklch(0.21 0.006 250);
+  --muted-foreground: oklch(0.58 0.008 250);
+  --accent: oklch(0.235 0.008 250);
+  --accent-foreground: oklch(0.94 0.003 250);
+  --destructive: oklch(0.65 0.18 25);
+  --border: oklch(1 0 0 / 7%);
+  --input: oklch(1 0 0 / 9%);
+  --ring: oklch(0.68 0.10 250);
+  --star: oklch(0.78 0.13 85);
+  --chart-1: oklch(0.68 0.10 250);
+  --chart-2: oklch(0.65 0.18 25);
+  --chart-3: oklch(0.78 0.13 85);
+  --chart-4: oklch(0.70 0.12 150);
+  --chart-5: oklch(0.65 0.13 300);
+  --sidebar: oklch(0.16 0.006 250);
+  --sidebar-foreground: oklch(0.94 0.003 250);
+  --sidebar-primary: oklch(0.68 0.10 250);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.21 0 0);
-  --sidebar-accent-foreground: oklch(0.93 0 0);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.65 0.15 250);
+  --sidebar-accent: oklch(0.235 0.008 250);
+  --sidebar-accent-foreground: oklch(0.94 0.003 250);
+  --sidebar-border: oklch(1 0 0 / 7%);
+  --sidebar-ring: oklch(0.68 0.10 250);
 }
 
 @layer base {
