@@ -16,6 +16,64 @@ npx prisma studio   # Browse database in GUI
 npx prisma migrate dev --name <name>  # Create a new migration after schema changes
 ```
 
+## Lineage
+
+This repo is a design-skill experimentation lab seeded from
+[Feed v1.0.0](https://github.com/Gares95/Feed) (canonical repo at
+`~/projects/Feed`). It is **not** a fork: GitHub does not allow forking a
+repo into the same owner account, so it was seeded by `git clone` + reset
+to `v1.0.0` + new origin.
+
+Divergence is **design-only**: visual styling, layout, component structure,
+spacing, hierarchy, motion, polish, micro-interactions. Everything else —
+data layer, Prisma schema, server actions, API routes, lib/ utilities,
+sanitization, safe-fetch, dependency choices for non-UI packages — is
+intentionally identical to canonical and stays in sync with it.
+
+Canonical is reachable via the `upstream` remote
+(`git@github.com:Gares95/Feed.git`).
+
+### Where to fix a bug — decision rule
+
+The default is **fix in canonical, pull here**. Only fix locally if the
+bug is genuinely design-surface.
+
+1. **Bug is in non-design code** (server actions, lib/, schema, API
+   routes, sanitizer, safe-fetch, retention, feed parsing, search, any
+   dependency canonical also uses):
+   → Fix in canonical (`~/projects/Feed`) on a `fix/...` branch.
+   → Tag a patch release there (e.g., `v1.0.1`).
+   → `git fetch upstream --tags && git cherry-pick v1.0.1` here.
+   → Rationale: this repo is supposed to mirror canonical on those
+     surfaces. Fixing locally would create silent drift.
+
+2. **Bug is design-surface only** (a hover state misbehaves, a transition
+   janks, spacing collapses at a breakpoint, a recently applied design
+   skill produced something inaccessible or visually broken):
+   → Fix here directly. Do not touch canonical.
+
+3. **Mixed — design change broke or misuses canonical logic** (e.g., a
+   redesigned component drops a required ARIA attribute the canonical
+   logic depends on, or wires up a server action incorrectly):
+   → Fix here. The canonical logic is fine; the integration in this repo
+     is what regressed.
+
+When unsure, check `git diff upstream/main -- <file>`. If the file is
+identical to upstream, the bug almost certainly belongs to case 1 — fix
+upstream.
+
+### Pulling canonical updates
+
+For non-emergency canonical changes (refactors, dep bumps, new shared
+features), periodically:
+git fetch upstream
+git log --oneline HEAD..upstream/main   # see what's new
+git cherry-pick <sha>...                # pick what applies
+
+
+Avoid `git merge upstream/main` wholesale — it will pull canonical's
+design too, which defeats the purpose of this repo.
+
 ## Architecture
 
 Feed is a local-first RSS/Atom reader. No auth, no cloud, no API keys. SQLite stores everything. Single-user, localhost only.
