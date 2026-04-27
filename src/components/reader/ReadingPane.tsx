@@ -34,10 +34,11 @@ export interface ArticleFull {
 
 interface ReadingPaneProps {
   article: ArticleFull | null;
+  isLoading?: boolean;
   onToggleStar: (articleId: string) => void;
 }
 
-export function ReadingPane({ article, onToggleStar }: ReadingPaneProps) {
+export function ReadingPane({ article, isLoading = false, onToggleStar }: ReadingPaneProps) {
   const { config, update } = useTypography();
   const [readerMode, setReaderMode] = useState(false);
   const [readerContent, setReaderContent] = useState<string | null>(null);
@@ -182,10 +183,16 @@ export function ReadingPane({ article, onToggleStar }: ReadingPaneProps) {
   }
 
   if (!article) {
+    if (isLoading) {
+      return <ReadingPaneSkeleton maxWidth={config.maxWidth} />;
+    }
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
-        <BookOpen className="h-8 w-8" />
-        <p className="text-sm">Select an article to read</p>
+      <div className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center text-muted-foreground">
+        <BookOpen className="h-8 w-8" aria-hidden="true" />
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-foreground">Nothing selected</p>
+          <p className="text-xs">Pick an article from the list to start reading.</p>
+        </div>
       </div>
     );
   }
@@ -267,6 +274,58 @@ export function ReadingPane({ article, onToggleStar }: ReadingPaneProps) {
           Highlight
         </button>
       )}
+    </div>
+  );
+}
+
+function ReadingPaneSkeleton({ maxWidth }: { maxWidth: number }) {
+  return (
+    <div
+      className="flex h-full flex-col"
+      role="status"
+      aria-busy="true"
+      aria-live="polite"
+    >
+      <span className="sr-only">Loading article…</span>
+      <div className="flex h-8 items-center justify-end gap-1 border-b px-3" />
+      <div className="flex-1 overflow-hidden">
+        <div
+          className="mx-auto animate-pulse px-8 py-8"
+          style={{ maxWidth: `${maxWidth}px` }}
+        >
+          <div className="space-y-4 border-b pb-6">
+            <div className="space-y-2">
+              <div className="h-3 w-24 rounded bg-muted" />
+              <div className="space-y-2">
+                <div className="h-7 w-11/12 rounded bg-muted" />
+                <div className="h-7 w-3/5 rounded bg-muted" />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <div className="h-3 w-20 rounded bg-muted/70" />
+              <div className="h-3 w-24 rounded bg-muted/70" />
+              <div className="h-3 w-16 rounded bg-muted/70" />
+            </div>
+            <div className="flex gap-2">
+              <div className="h-8 w-28 rounded-md bg-muted/80" />
+              <div className="h-8 w-16 rounded-md bg-muted/60" />
+              <div className="h-8 w-28 rounded-md bg-muted/40" />
+            </div>
+          </div>
+          <div className="mt-6 space-y-3">
+            <div className="h-4 w-full rounded bg-muted/70" />
+            <div className="h-4 w-11/12 rounded bg-muted/70" />
+            <div className="h-4 w-10/12 rounded bg-muted/70" />
+            <div className="h-4 w-full rounded bg-muted/70" />
+            <div className="h-4 w-9/12 rounded bg-muted/70" />
+          </div>
+          <div className="mt-6 space-y-3">
+            <div className="h-4 w-full rounded bg-muted/70" />
+            <div className="h-4 w-11/12 rounded bg-muted/70" />
+            <div className="h-4 w-7/12 rounded bg-muted/70" />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
