@@ -181,7 +181,7 @@ export function Sidebar({
           <button
             onClick={() => onSelectFeed(null)}
             className={cn(
-              "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
+              "flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
               !selectedFeedId && !isStarredView
                 ? "bg-accent text-accent-foreground"
                 : "hover:bg-accent/50 text-foreground"
@@ -200,7 +200,7 @@ export function Sidebar({
           <button
             onClick={onSelectStarred}
             className={cn(
-              "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
+              "flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
               isStarredView
                 ? "bg-accent text-accent-foreground"
                 : "hover:bg-accent/50 text-foreground"
@@ -234,7 +234,9 @@ export function Sidebar({
                       <button
                         type="button"
                         onClick={() => toggleCollapsed(folderId)}
-                        className="flex flex-1 items-center gap-1 rounded px-1 py-1 hover:bg-accent/50"
+                        className="flex flex-1 cursor-pointer items-center gap-1 rounded px-1 py-1 outline-none hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring/60"
+                        aria-expanded={!isCollapsed}
+                        aria-label={`${isCollapsed ? "Expand" : "Collapse"} ${label}`}
                       >
                         {isCollapsed ? (
                           <ChevronRight className="h-3 w-3" />
@@ -266,18 +268,20 @@ export function Sidebar({
                               setRenamingId(group.folder!.id);
                               setRenameValue(group.folder!.name);
                             }}
-                            className="hidden rounded p-0.5 hover:bg-accent group-hover:block"
+                            className="hidden cursor-pointer rounded p-0.5 outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/60 group-hover:block focus-visible:block"
+                            aria-label={`Rename folder ${group.folder.name}`}
                             title="Rename folder"
                           >
-                            <Pencil className="h-3 w-3" />
+                            <Pencil className="h-3 w-3" aria-hidden="true" />
                           </button>
                           <button
                             type="button"
                             onClick={() => handleDeleteFolder(group.folder!.id)}
-                            className="hidden rounded p-0.5 hover:bg-destructive/20 hover:text-destructive group-hover:block"
+                            className="hidden cursor-pointer rounded p-0.5 outline-none hover:bg-destructive/20 hover:text-destructive focus-visible:ring-2 focus-visible:ring-destructive/40 group-hover:block focus-visible:block"
+                            aria-label={`Delete folder ${group.folder.name}`}
                             title="Delete folder"
                           >
-                            <Trash2 className="h-3 w-3" />
+                            <Trash2 className="h-3 w-3" aria-hidden="true" />
                           </button>
                         </>
                       )}

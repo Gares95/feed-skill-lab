@@ -65,7 +65,7 @@ export function FeedItem({
         }
       }}
       className={cn(
-        "group flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
+        "group flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/60",
         isSelected
           ? "bg-accent text-accent-foreground"
           : "hover:bg-accent/50 text-foreground"
@@ -94,7 +94,7 @@ export function FeedItem({
             e.stopPropagation();
             onRefresh(id);
           }}
-          className="hidden rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground group-hover:block"
+          className="hidden cursor-pointer rounded p-0.5 text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 group-hover:block focus-visible:block"
           aria-label={hasError ? "Retry feed" : "Refresh feed"}
           title={hasError ? "Retry feed" : "Refresh feed"}
         >
@@ -106,7 +106,7 @@ export function FeedItem({
             e.stopPropagation();
             setSettingsOpen(true);
           }}
-          className="hidden rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground group-hover:block"
+          className="hidden cursor-pointer rounded p-0.5 text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60 group-hover:block focus-visible:block"
           aria-label="Feed settings"
           title="Feed settings"
         >
@@ -117,7 +117,7 @@ export function FeedItem({
             onClick={(e: React.MouseEvent) => {
               e.stopPropagation();
             }}
-            className="hidden rounded p-0.5 text-muted-foreground hover:bg-destructive/20 hover:text-destructive group-hover:block"
+            className="hidden cursor-pointer rounded p-0.5 text-muted-foreground outline-none hover:bg-destructive/20 hover:text-destructive focus-visible:ring-2 focus-visible:ring-destructive/40 group-hover:block focus-visible:block"
             aria-label="Delete feed"
             title="Delete feed"
           >

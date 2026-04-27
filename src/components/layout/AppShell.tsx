@@ -349,9 +349,10 @@ export function AppShell({
               size="icon"
               className="h-8 w-8"
               onClick={() => setMobileView("list")}
+              aria-label="Back to article list"
               title="Back"
             >
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </Button>
           ) : mobileView === "reader" ? (
             <Button
@@ -359,9 +360,10 @@ export function AppShell({
               size="icon"
               className="h-8 w-8"
               onClick={() => setMobileView("list")}
+              aria-label="Back to article list"
               title="Back to list"
             >
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </Button>
           ) : (
             <Button
@@ -369,9 +371,10 @@ export function AppShell({
               size="icon"
               className="h-8 w-8"
               onClick={() => setMobileView("sidebar")}
+              aria-label="Open feeds sidebar"
               title="Open feeds"
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-5 w-5" aria-hidden="true" />
             </Button>
           )}
           <h1 className="truncate text-sm font-semibold">{heading}</h1>
