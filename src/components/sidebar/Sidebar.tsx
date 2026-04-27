@@ -11,6 +11,25 @@ import { FeedItem } from "./FeedItem";
 import { OpmlActions } from "./OpmlActions";
 import { groupFeedsByFolder } from "@/lib/group-feeds";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import {
   createFolder,
   renameFolder,
   deleteFolder,
@@ -69,6 +88,11 @@ export function Sidebar({
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const [newFolderOpen, setNewFolderOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [creatingFolder, setCreatingFolder] = useState(false);
+  const [folderToDelete, setFolderToDelete] = useState<FolderRef | null>(null);
+  const [deletingFolder, setDeletingFolder] = useState(false);
 
   const groups = groupFeedsByFolder(feeds, folders);
 
@@ -81,17 +105,40 @@ export function Sidebar({
     });
   }
 
-  async function handleNewFolder() {
-    const name = window.prompt("Folder name?");
-    if (!name?.trim()) return;
-    await createFolder(name);
-    onFeedAdded();
+  function handleNewFolder() {
+    setNewFolderName("");
+    setNewFolderOpen(true);
   }
 
-  async function handleDeleteFolder(folderId: string) {
-    if (!window.confirm("Delete this folder? Feeds inside will become uncategorized.")) return;
-    await deleteFolder(folderId);
-    onFeedAdded();
+  async function submitNewFolder(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = newFolderName.trim();
+    if (!trimmed) return;
+    setCreatingFolder(true);
+    try {
+      await createFolder(trimmed);
+      onFeedAdded();
+      setNewFolderOpen(false);
+      setNewFolderName("");
+    } finally {
+      setCreatingFolder(false);
+    }
+  }
+
+  function requestDeleteFolder(folder: FolderRef) {
+    setFolderToDelete(folder);
+  }
+
+  async function confirmDeleteFolder() {
+    if (!folderToDelete) return;
+    setDeletingFolder(true);
+    try {
+      await deleteFolder(folderToDelete.id);
+      onFeedAdded();
+      setFolderToDelete(null);
+    } finally {
+      setDeletingFolder(false);
+    }
   }
 
   async function commitRename(folderId: string) {
@@ -242,7 +289,7 @@ export function Sidebar({
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleDeleteFolder(group.folder!.id)}
+                            onClick={() => requestDeleteFolder(group.folder!)}
                             className="hidden cursor-pointer rounded p-0.5 outline-none hover:bg-destructive/20 hover:text-destructive focus-visible:ring-2 focus-visible:ring-destructive/40 group-hover:block focus-visible:block"
                             aria-label={`Delete folder ${group.folder.name}`}
                             title="Delete folder"
@@ -324,6 +371,72 @@ export function Sidebar({
           <Settings className="h-4 w-4" aria-hidden="true" />
         </Link>
       </div>
+
+      <Dialog
+        open={newFolderOpen}
+        onOpenChange={(next) => {
+          if (creatingFolder) return;
+          setNewFolderOpen(next);
+          if (!next) setNewFolderName("");
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>New folder</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={submitNewFolder} className="flex flex-col gap-3">
+            <Input
+              placeholder="Folder name"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              disabled={creatingFolder}
+              autoFocus
+              aria-label="Folder name"
+            />
+            <DialogFooter>
+              <DialogClose
+                render={
+                  <Button type="button" variant="outline" disabled={creatingFolder}>
+                    Cancel
+                  </Button>
+                }
+              />
+              <Button type="submit" disabled={creatingFolder || !newFolderName.trim()}>
+                {creatingFolder ? "Creating…" : "Create folder"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog
+        open={folderToDelete !== null}
+        onOpenChange={(next) => {
+          if (deletingFolder) return;
+          if (!next) setFolderToDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete {folderToDelete ? `“${folderToDelete.name}”` : "folder"}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Feeds inside will become uncategorized. This can&apos;t be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingFolder}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={confirmDeleteFolder}
+              disabled={deletingFolder}
+            >
+              {deletingFolder ? "Deleting…" : "Delete folder"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
