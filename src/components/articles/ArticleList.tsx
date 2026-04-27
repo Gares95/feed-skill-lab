@@ -125,34 +125,66 @@ export function ArticleList({
 
       {searchError ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center text-muted-foreground">
-          <AlertCircle className="h-8 w-8 text-destructive" />
-          <p className="text-sm text-destructive">{searchError}</p>
-          <p className="text-xs">Try a different query.</p>
+          <AlertCircle className="h-8 w-8 text-destructive" aria-hidden="true" />
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-destructive">{searchError}</p>
+            <p className="text-xs">Try a different query or clear the search.</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onSearchChange("")}
+            className="h-7"
+          >
+            Clear search
+          </Button>
         </div>
       ) : articles.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center text-muted-foreground">
           {searchQuery ? (
             <>
-              <Search className="h-8 w-8" />
-              <p className="text-sm">No results for &ldquo;{searchQuery}&rdquo;</p>
+              <Search className="h-8 w-8" aria-hidden="true" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-foreground">
+                  No results for &ldquo;{searchQuery}&rdquo;
+                </p>
+                <p className="text-xs">Try different keywords, or clear the search.</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onSearchChange("")}
+                className="h-7"
+              >
+                Clear search
+              </Button>
             </>
           ) : !hasFeeds ? (
             <>
-              <Inbox className="h-8 w-8" />
-              <p className="text-sm">No feeds yet</p>
-              <p className="text-xs">Add a feed from the sidebar to get started.</p>
+              <Inbox className="h-8 w-8" aria-hidden="true" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-foreground">No feeds yet</p>
+                <p className="text-xs">
+                  Add your first feed from the sidebar to start reading.
+                </p>
+              </div>
             </>
           ) : (
             <>
-              <FileText className="h-8 w-8" />
-              <p className="text-sm">No articles to show</p>
+              <FileText className="h-8 w-8" aria-hidden="true" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-foreground">All caught up</p>
+                <p className="text-xs">
+                  No articles in this view. Refresh to check for new items.
+                </p>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={onRefreshAll}
                 className="h-7"
               >
-                <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
                 Refresh feeds
               </Button>
             </>

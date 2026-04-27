@@ -104,6 +104,7 @@ export function AppShell({
   const [currentArticle, setCurrentArticle] = useState<ArticleFull | null>(
     initialArticle
   );
+  const [isArticleLoading, setIsArticleLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [mobileView, setMobileView] = useState<"sidebar" | "list" | "reader">(
     "list",
@@ -187,6 +188,13 @@ export function AppShell({
     setSelectedArticleId(articleId);
     setMobileView("reader");
 
+    // Clear previous article so the reader doesn't show stale content while
+    // the next article fetches.
+    if (currentArticle?.id !== articleId) {
+      setCurrentArticle(null);
+    }
+    setIsArticleLoading(true);
+
     // Mark as read optimistically
     setArticles((prev) =>
       prev.map((a) => (a.id === articleId && !a.isRead ? { ...a, isRead: true } : a)),
@@ -201,6 +209,8 @@ export function AppShell({
       }
     } catch (error) {
       console.error("Failed to fetch article:", error);
+    } finally {
+      setIsArticleLoading(false);
     }
 
     // Persist read state
@@ -424,6 +434,7 @@ export function AppShell({
             <div className="h-full" {...readerSwipe}>
               <ReadingPane
                 article={currentArticle}
+                isLoading={isArticleLoading}
                 onToggleStar={handleToggleStar}
               />
             </div>
@@ -497,6 +508,7 @@ export function AppShell({
         <ResizablePanel id="reading-pane" defaultSize="50%" minSize="400px" className="bg-background">
           <ReadingPane
             article={currentArticle}
+            isLoading={isArticleLoading}
             onToggleStar={handleToggleStar}
           />
         </ResizablePanel>

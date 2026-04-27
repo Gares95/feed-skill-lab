@@ -69,9 +69,16 @@ Completed:
   - Refined `ArticleHeader`: feed title promoted to eyebrow, h1 enlarged with balance + tighter tracking, meta row demoted to `text-xs`, reading time uses `tabular-nums`, all action buttons normalized to `h-8`.
   - Validation passed: lint, test, build, audit.
 
+- `design/06-empty-and-loading`
+  - Reader now clears the previous article on selection and renders a skeleton matching the final article geometry while `/api/articles/[id]` is in flight; eliminates the stale-content flash flagged in audit item 1.8.
+  - Empty `ReadingPane` state ("Nothing selected") rewritten with two-line copy and a clearer affordance.
+  - `ArticleList` empty states polished: stronger title/description hierarchy, "All caught up" copy when feeds exist but no articles match, "Add your first feed" guidance when no feeds exist, and "Clear search" button on no-results / search-error states. Refresh CTA preserved.
+  - No data-fetching, sanitization, persistence, or route changes. Optimistic mark-as-read behavior unchanged.
+  - Validation passed: lint, test, build, audit, browser verification.
+
 Next:
 
-- `design/06-empty-and-loading`
+- `design/07-confirm-dialogs`
 
 # 1. High-Impact Quick Wins
 
@@ -291,7 +298,9 @@ Use existing primitives:
 
 ---
 
-## 1.8 Reader Shows Before Content Arrives
+## 1.8 Reader Shows Before Content Arrives — DONE (`design/06-empty-and-loading`)
+
+Resolved on `design/06-empty-and-loading`: `AppShell` clears `currentArticle` when a new article is selected and tracks `isArticleLoading`; `ReadingPane` renders a skeleton (eyebrow + title + meta + action stubs + body lines) sized to `config.maxWidth` while the fetch is in flight. Optimistic mark-as-read on selection preserved.
 
 **Issue**
 
@@ -515,7 +524,9 @@ Also, `minSize="200px"` on a `240-280px` sidebar means the title row wraps below
 
 ---
 
-## Empty and Zero-State Polish
+## Empty and Zero-State Polish — DONE (`design/06-empty-and-loading`)
+
+Resolved on `design/06-empty-and-loading`: each `ArticleList` empty state now leads with a two-line title/description block (e.g., "All caught up" when feeds exist but no articles match, "No feeds yet" with sidebar guidance when none exist, "No results for…" with Clear-search affordance for searches). Search-error state gains a Clear-search button. `ReadingPane` empty state rewritten as "Nothing selected" with a one-line description. AddFeedDialog was not wired as an external CTA — it owns its open state and lifting it would exceed branch scope per the audit's "bind only if a safe flow exists" caveat.
 
 **Issue**
 
@@ -792,7 +803,7 @@ design/02-article-row-typography   # 1.4, 1.5                                   
 design/03-focus-and-a11y-basics    # 1.9 + cursor + initial aria sweep              [DONE]
 design/04-app-chrome               # 1.6, sidebar header overflow, separator, h-dvh [DONE]
 design/05-reading-pane-typography  # Reader scale, balance/pretty           [DONE]
-design/06-empty-and-loading        # 1.8, empty-state polish
+design/06-empty-and-loading        # 1.8, empty-state polish                       [DONE]
 design/07-confirm-dialogs          # 1.7
 design/08-motion-pass              # Rows, panels, star, reader toggle
 design/09-a11y-pass                # Skip link, full aria audit, contrast check
