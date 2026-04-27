@@ -39,7 +39,7 @@ Completed:
   - Added motion timing/easing variables for future branches.
   - Validation passed: lint, test, build, audit.
 
-- `design/02-article-row-typography-typography`
+- `design/02-article-row-typography`
   - Polished article row hierarchy.
   - Added selected/hover indicator.
   - Added focus-visible state.
@@ -176,7 +176,7 @@ This breaks up the digital flatness.
 
 ## 1.4 Article Row Needs Better Interaction Feedback
 
-**Status:** Completed in `design/02-article-row-typography-typography`.
+**Status:** Completed in `design/02-article-row-typography`.
 
 **Issue**
 
@@ -204,7 +204,7 @@ Also add a `1px` left border on hover and selected states to telegraph the selec
 
 ## 1.5 Article Row Typography Is Flat
 
-**Status:** Completed in `design/02-article-row-typography-typography`.
+**Status:** Completed in `design/02-article-row-typography`.
 
 **Issue**
 
