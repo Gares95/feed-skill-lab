@@ -155,7 +155,7 @@ export function Sidebar({
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <nav aria-label="Feeds" className="flex h-full flex-col">
       <div className="flex h-11 items-center justify-between gap-2 border-b px-4">
         <h1 className="text-sm font-semibold tracking-tight">Feed</h1>
         <div className="flex items-center gap-0.5">
@@ -437,6 +437,6 @@ export function Sidebar({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </nav>
   );
 }

@@ -70,7 +70,7 @@ export function ArticleList({
 }: ArticleListProps) {
   const hasUnread = articles.some((a) => !a.isRead);
   return (
-    <div className="flex h-full flex-col">
+    <section aria-label="Article list" className="flex h-full flex-col">
       <div className="flex h-11 items-center gap-2 px-4">
         <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         <Input
@@ -227,6 +227,6 @@ export function ArticleList({
           )}
         </ScrollArea>
       )}
-    </div>
+    </section>
   );
 }

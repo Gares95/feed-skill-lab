@@ -90,6 +90,8 @@ export function ArticleHeader({
           size="sm"
           className="h-8 gap-1.5 active:scale-95"
           onClick={onToggleStar}
+          aria-pressed={isStarred}
+          aria-label={isStarred ? "Unstar article" : "Star article"}
         >
           <Star
             key={isStarred ? "on" : "off"}
