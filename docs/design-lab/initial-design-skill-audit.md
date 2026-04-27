@@ -93,9 +93,18 @@ Completed:
   - No changes to data fetching, persisted settings shape, server actions, dialog primitives, or pane resize.
   - Validation passed: lint, test (175 passed, 1 skipped), build, audit (0 vulnerabilities), browser verification (Playwright headless: hover/select, star toggle, reader-mode cross-fade, typography popover, mobile viewport, and reduced-motion mode).
 
+- `design/09-a11y-pass`
+  - Added a real "Skip to articles" link in `AppShell` (visible on focus, jumps focus to the `<main id="main-content" tabIndex={-1}>` wrapper) so keyboard users can bypass the chrome.
+  - Wrapped panes in landmarks: `Sidebar` is now `<nav aria-label="Feeds">`, `ArticleList` is `<section aria-label="Article list">`, `ReadingPane` is a `role="region" aria-label="Reading pane"`. The whole shell sits inside one `<main>`.
+  - Star toggle in `ArticleHeader` now exposes toggle state via `aria-pressed={isStarred}` with a verb-first `aria-label` ("Star article" / "Unstar article"). The visible "Star"/"Starred" text is preserved.
+  - Highlight pencil/trash icon-only buttons in `ReadingPane` gained `aria-label`s and matching `focus-visible` rings (they were `title`-only; now reveal on `focus-visible` with appropriate ring color).
+  - Audit verified: dialog/alert-dialog primitives already ship `<span class="sr-only">Close</span>` and trap focus; `TypographySettings` toggle already exposes `aria-expanded`; sidebar/article-list/typography icon-only buttons all have labels from `design/03-focus-and-a11y-basics`.
+  - No changes to data fetching, server actions, dialog primitives, sanitization, or selection/star/mark-read flows.
+  - Validation passed: lint, test (175 passed, 1 skipped), build, audit (0 vulnerabilities), browser verification (Playwright headless: skip link is the first focusable element on desktop and mobile, activating it moves focus to `<main>`; landmarks present; `aria-pressed` flips on Star toggle; reduced-motion mode preserves skip-link visibility).
+
 Next:
 
-- `design/09-a11y-pass`
+- `design/10-button-system-prune`
 
 # 1. High-Impact Quick Wins
 
@@ -825,7 +834,7 @@ design/05-reading-pane-typography  # Reader scale, balance/pretty           [DON
 design/06-empty-and-loading        # 1.8, empty-state polish                       [DONE]
 design/07-confirm-dialogs          # 1.7                                            [DONE]
 design/08-motion-pass              # Rows, panels, star, reader toggle             [DONE]
-design/09-a11y-pass                # Skip link, full aria audit, contrast check
+design/09-a11y-pass                # Skip link, full aria audit, contrast check    [DONE]
 design/10-button-system-prune      # Consolidate variants
 design/11-mobile-shell-polish      # Safe-area, header height, swipe affordance
 ```
