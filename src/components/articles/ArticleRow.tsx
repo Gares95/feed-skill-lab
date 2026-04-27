@@ -33,15 +33,15 @@ export function ArticleRow({
     <button
       onClick={() => onSelect(id)}
       className={cn(
-        "group/row relative isolate flex w-full flex-col gap-1 border-b px-4 py-3 text-left outline-none",
-        "transition-[background-color,color] duration-[var(--motion-fast)] ease-[var(--ease-out-quint)]",
+        "group/row relative isolate flex w-full flex-col gap-1 border-b py-3 pr-4 text-left outline-none",
+        "transition-[background-color,color,padding-left] duration-[var(--motion-fast)] ease-[var(--ease-out-quint)]",
         "before:pointer-events-none before:absolute before:inset-y-1 before:left-0 before:w-[2px] before:rounded-r before:bg-primary before:opacity-0 before:transition-opacity before:duration-[var(--motion-fast)]",
         "hover:before:opacity-40",
         "focus-visible:bg-accent/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
         "active:bg-accent",
         isSelected
-          ? "bg-accent before:opacity-100"
-          : "hover:bg-accent/50",
+          ? "bg-accent pl-[18px] before:opacity-100"
+          : "pl-4 hover:bg-accent/50",
       )}
     >
       <span
@@ -51,7 +51,7 @@ export function ArticleRow({
         )}
       >
         {isStarred ? (
-          <Star className="mr-1.5 inline-block h-3 w-3 fill-star text-star align-middle" />
+          <Star className="mr-1.5 inline-block h-3 w-3 fill-star text-star align-middle transition-[transform,color,fill] duration-[var(--motion-fast)] ease-[var(--ease-spring)]" />
         ) : !isRead ? (
           <span
             aria-hidden="true"
