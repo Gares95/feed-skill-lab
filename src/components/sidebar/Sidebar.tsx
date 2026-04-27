@@ -6,7 +6,6 @@ import { Newspaper, Star, RefreshCw, FolderPlus, ChevronDown, ChevronRight, Penc
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { AddFeedDialog } from "./AddFeedDialog";
 import { FeedItem } from "./FeedItem";
 import { OpmlActions } from "./OpmlActions";
@@ -110,9 +109,9 @@ export function Sidebar({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex min-h-12 flex-wrap items-center justify-between gap-y-1 border-b px-4 py-1.5">
+      <div className="flex h-11 items-center justify-between gap-2 border-b px-4">
         <h1 className="text-sm font-semibold tracking-tight">Feed</h1>
-        <div className="flex flex-wrap items-center gap-1">
+        <div className="flex items-center gap-0.5">
           <Button
             variant="ghost"
             size="icon"
@@ -139,39 +138,6 @@ export function Sidebar({
           </Button>
           <AddFeedDialog onFeedAdded={onFeedAdded} />
           <OpmlActions onImportComplete={onFeedAdded} />
-          <Link
-            href="/health"
-            className={cn(
-              buttonVariants({ variant: "ghost", size: "icon" }),
-              "h-7 w-7",
-            )}
-            aria-label="Feed health dashboard"
-            title="Feed health dashboard"
-          >
-            <Activity className="h-4 w-4" aria-hidden="true" />
-          </Link>
-          <Link
-            href="/stats"
-            className={cn(
-              buttonVariants({ variant: "ghost", size: "icon" }),
-              "h-7 w-7",
-            )}
-            aria-label="Reading stats"
-            title="Reading stats"
-          >
-            <BarChart3 className="h-4 w-4" aria-hidden="true" />
-          </Link>
-          <Link
-            href="/settings"
-            className={cn(
-              buttonVariants({ variant: "ghost", size: "icon" }),
-              "h-7 w-7",
-            )}
-            aria-label="Settings"
-            title="Settings"
-          >
-            <Settings className="h-4 w-4" aria-hidden="true" />
-          </Link>
         </div>
       </div>
 
@@ -215,7 +181,7 @@ export function Sidebar({
             )}
           </button>
 
-          <Separator className="my-2" />
+          <div className="h-3" aria-hidden="true" />
 
           {feeds.length === 0 && folders.length === 0 ? (
             <p className="px-2 py-4 text-center text-xs text-muted-foreground">
@@ -322,6 +288,42 @@ export function Sidebar({
           )}
         </div>
       </ScrollArea>
+
+      <div className="flex items-center gap-1 border-t px-3 py-1.5">
+        <Link
+          href="/health"
+          className={cn(
+            buttonVariants({ variant: "ghost", size: "icon" }),
+            "h-7 w-7 text-muted-foreground hover:text-foreground",
+          )}
+          aria-label="Feed health dashboard"
+          title="Feed health dashboard"
+        >
+          <Activity className="h-4 w-4" aria-hidden="true" />
+        </Link>
+        <Link
+          href="/stats"
+          className={cn(
+            buttonVariants({ variant: "ghost", size: "icon" }),
+            "h-7 w-7 text-muted-foreground hover:text-foreground",
+          )}
+          aria-label="Reading stats"
+          title="Reading stats"
+        >
+          <BarChart3 className="h-4 w-4" aria-hidden="true" />
+        </Link>
+        <Link
+          href="/settings"
+          className={cn(
+            buttonVariants({ variant: "ghost", size: "icon" }),
+            "ml-auto h-7 w-7 text-muted-foreground hover:text-foreground",
+          )}
+          aria-label="Settings"
+          title="Settings"
+        >
+          <Settings className="h-4 w-4" aria-hidden="true" />
+        </Link>
+      </div>
     </div>
   );
 }
