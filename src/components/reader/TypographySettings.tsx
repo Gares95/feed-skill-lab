@@ -77,7 +77,7 @@ export function TypographySettings({
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full z-50 mt-1 w-56 rounded-md border bg-popover p-3 shadow-md">
+          <div className="absolute right-0 top-full z-50 mt-1 w-56 origin-top-right rounded-md border bg-popover p-3 shadow-md animate-in fade-in-0 zoom-in-95 duration-[var(--motion-fast)] ease-[var(--ease-out-quint)]">
             <div className="space-y-3">
               <SettingRow
                 label="Font size"

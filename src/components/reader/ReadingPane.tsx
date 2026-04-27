@@ -226,9 +226,10 @@ export function ReadingPane({ article, isLoading = false, onToggleStar }: Readin
             </p>
           )}
           <div
+            key={`${article.id}:${readerMode ? "reader" : "feed"}`}
             ref={contentRef}
             onMouseUp={handleMouseUp}
-            className="article-content mt-6"
+            className="article-content mt-6 animate-in fade-in-0 duration-[var(--motion-base)] ease-[var(--ease-out-quint)]"
             style={{
               fontSize: `${config.fontSize}px`,
               lineHeight: config.lineHeight,
@@ -290,7 +291,7 @@ function ReadingPaneSkeleton({ maxWidth }: { maxWidth: number }) {
       <div className="flex h-8 items-center justify-end gap-1 border-b px-3" />
       <div className="flex-1 overflow-hidden">
         <div
-          className="mx-auto animate-pulse px-8 py-8"
+          className="mx-auto animate-pulse px-8 py-8 [animation-duration:1.6s]"
           style={{ maxWidth: `${maxWidth}px` }}
         >
           <div className="space-y-4 border-b pb-6">

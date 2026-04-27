@@ -88,12 +88,13 @@ export function ArticleHeader({
         <Button
           variant="ghost"
           size="sm"
-          className="h-8 gap-1.5"
+          className="h-8 gap-1.5 active:scale-95"
           onClick={onToggleStar}
         >
           <Star
+            key={isStarred ? "on" : "off"}
             className={cn(
-              "h-3.5 w-3.5",
+              "h-3.5 w-3.5 transition-[transform,color,fill] duration-[var(--motion-fast)] ease-[var(--ease-spring)] animate-in zoom-in-95",
               isStarred ? "fill-star text-star" : "text-muted-foreground",
             )}
           />

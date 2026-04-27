@@ -83,9 +83,19 @@ Completed:
   - Folder server actions (`createFolder`, `deleteFolder`) and `onFeedAdded` refresh callback unchanged.
   - Validation passed: lint, test (175 passed, 1 skipped), build, audit (0 vulnerabilities), browser verification (Playwright: dialog opens, Escape cancels with no state change, valid name creates folder, delete shows alert dialog, Cancel preserves folder, Confirm deletes folder; no native `dialog` events fired).
 
+- `design/08-motion-pass`
+  - Article row: indicator-bar opacity already faded; selection now also nudges padding-left by 2px (token-driven, no row-height shift) and inline read-status star transitions on `transform/color/fill` with the spring ease.
+  - Star toggle (reader header): `<Star>` icon keyed by `isStarred` so flipping triggers a one-shot `animate-in zoom-in-95`; `transition-[transform,color,fill]` on the icon and `active:scale-95` on the button for tactile press feedback. Server action and toggle flow untouched.
+  - Reader content: `<div class="article-content">` keyed by `${article.id}:${readerMode}` and decorated with `animate-in fade-in-0 duration-[var(--motion-base)] ease-[var(--ease-out-quint)]`, so switching articles or toggling reader mode cross-fades instead of snap-replacing. No slide/scale.
+  - Reader skeleton pulse slowed from Tailwind's default 2s to 1.6s for a calmer loading state.
+  - Typography popover: panel now opens with `animate-in fade-in-0 zoom-in-95 origin-top-right` at `--motion-fast`.
+  - Reduced motion: added a global `@media (prefers-reduced-motion: reduce)` block in `globals.css` that pins all animation/transition durations to 0.01ms and disables smooth scrolling. Verified in Playwright with `reducedMotion: "reduce"`: row transition-duration drops from 0.12s to 0.00001s.
+  - No changes to data fetching, persisted settings shape, server actions, dialog primitives, or pane resize.
+  - Validation passed: lint, test (175 passed, 1 skipped), build, audit (0 vulnerabilities), browser verification (Playwright headless: hover/select, star toggle, reader-mode cross-fade, typography popover, mobile viewport, and reduced-motion mode).
+
 Next:
 
-- `design/08-motion-pass`
+- `design/09-a11y-pass`
 
 # 1. High-Impact Quick Wins
 
@@ -814,7 +824,7 @@ design/04-app-chrome               # 1.6, sidebar header overflow, separator, h-
 design/05-reading-pane-typography  # Reader scale, balance/pretty           [DONE]
 design/06-empty-and-loading        # 1.8, empty-state polish                       [DONE]
 design/07-confirm-dialogs          # 1.7                                            [DONE]
-design/08-motion-pass              # Rows, panels, star, reader toggle
+design/08-motion-pass              # Rows, panels, star, reader toggle             [DONE]
 design/09-a11y-pass                # Skip link, full aria audit, contrast check
 design/10-button-system-prune      # Consolidate variants
 design/11-mobile-shell-polish      # Safe-area, header height, swipe affordance
