@@ -27,13 +27,54 @@ No changes proposed to:
 
 ---
 
+## Implementation Status
+
+This audit started as a read-only design audit. Implementation is being done incrementally through small reviewable branches.
+
+Completed:
+
+- `design/01-tokens-and-fonts`
+  - Fixed Geist font token mapping.
+  - Refined dark theme tokens.
+  - Added motion timing/easing variables for future branches.
+  - Validation passed: lint, test, build, audit.
+
+- `design/02-article-row-typography-typography`
+  - Polished article row hierarchy.
+  - Added selected/hover indicator.
+  - Added focus-visible state.
+  - Improved title/meta typography.
+  - Validation passed: lint, test, build, audit.
+
+- `design/03-focus-and-a11y-basics`
+  - Fixed shared Button cursor behavior.
+  - Added sidebar and feed-item focus-visible states.
+  - Improved reveal-on-focus parity.
+  - Added missing aria-labels across sidebar, app chrome, article list, and typography settings.
+  - Validation passed: lint, test, build, audit.
+
+- `design/04-app-chrome`
+  - Tightened article list toolbar rhythm.
+  - Simplified sidebar header action density.
+  - Moved Health, Stats, and Settings to a footer rail.
+  - Removed an unnecessary sidebar separator.
+  - Replaced `h-screen` with `h-dvh`.
+  - Validation passed: lint, test, build, audit, browser verification.
+
+Next:
+
+- `design/05-reading-pane-typography`
+
 # 1. High-Impact Quick Wins
+
 
 These are low-risk, high-reward, mostly surface-level improvements. Most live in `globals.css` plus a few component files.
 
 ---
 
 ## 1.1 Geist Font Is Loaded but Never Applied
+
+**Status:** Completed in `design/01-tokens-and-fonts`.
 
 **Issue**
 
@@ -64,6 +105,8 @@ Do the same for mono. This is the single biggest visible improvement.
 
 ## 1.2 Palette Feels Like Default Tailwind / shadcn
 
+**Status:** Completed in `design/01-tokens-and-fonts`.
+
 **Issue**
 
 Pure neutral grays plus saturated indigo accent:
@@ -93,6 +136,10 @@ Tint `border` and `input` slightly.
 ---
 
 ## 1.3 Background Is Too Flat
+
+**Status:** Partially completed in `design/01-tokens-and-fonts`.
+
+The surface tokens were refined and lightness deltas were widened. A noise overlay was intentionally not added.
 
 **Issue**
 
@@ -129,6 +176,8 @@ This breaks up the digital flatness.
 
 ## 1.4 Article Row Needs Better Interaction Feedback
 
+**Status:** Completed in `design/02-article-row-typography-typography`.
+
 **Issue**
 
 `ArticleRow` has no hover or active feedback beyond `bg-accent/50`.
@@ -154,6 +203,8 @@ Also add a `1px` left border on hover and selected states to telegraph the selec
 ---
 
 ## 1.5 Article Row Typography Is Flat
+
+**Status:** Completed in `design/02-article-row-typography-typography`.
 
 **Issue**
 
@@ -716,7 +767,7 @@ Order is intentional: tokens first, so later branches inherit them.
 
 ```text
 design/01-tokens-and-fonts         # 1.1, 1.2, motion vars                          [DONE]
-design/02-article-row              # 1.4, 1.5                                       [DONE]
+design/02-article-row-typography   # 1.4, 1.5                                       [DONE]
 design/03-focus-and-a11y-basics    # 1.9 + cursor + initial aria sweep              [DONE]
 design/04-app-chrome               # 1.6, sidebar header overflow, separator, h-dvh [DONE]
 design/05-reading-pane-typography  # Reader scale, balance/pretty
