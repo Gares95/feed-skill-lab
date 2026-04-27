@@ -87,8 +87,10 @@ export function ArticleList({
             size="icon"
             className="h-5 w-5 shrink-0"
             onClick={() => onSearchChange("")}
+            aria-label="Clear search"
+            title="Clear search"
           >
-            <X className="h-3 w-3" />
+            <X className="h-3 w-3" aria-hidden="true" />
           </Button>
         )}
       </div>
@@ -119,9 +121,10 @@ export function ArticleList({
             size="icon"
             className="h-6 w-6"
             onClick={onMarkAllRead}
+            aria-label="Mark all as read"
             title="Mark all as read"
           >
-            <CheckCheck className="h-3.5 w-3.5" />
+            <CheckCheck className="h-3.5 w-3.5" aria-hidden="true" />
           </Button>
         )}
       </div>

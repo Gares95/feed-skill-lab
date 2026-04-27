@@ -67,9 +67,11 @@ export function TypographySettings({
         size="icon"
         className="h-7 w-7"
         onClick={() => setOpen(!open)}
+        aria-label="Typography settings"
+        aria-expanded={open}
         title="Typography settings"
       >
-        <ALargeSmall className="h-4 w-4" />
+        <ALargeSmall className="h-4 w-4" aria-hidden="true" />
       </Button>
 
       {open && (
@@ -153,8 +155,9 @@ function SettingRow({
           size="icon"
           className="h-6 w-6"
           onClick={onDecrease}
+          aria-label={`Decrease ${label.toLowerCase()}`}
         >
-          <Minus className="h-3 w-3" />
+          <Minus className="h-3 w-3" aria-hidden="true" />
         </Button>
         <span className="w-12 text-center text-xs tabular-nums">{value}</span>
         <Button
@@ -162,8 +165,9 @@ function SettingRow({
           size="icon"
           className="h-6 w-6"
           onClick={onIncrease}
+          aria-label={`Increase ${label.toLowerCase()}`}
         >
-          <Plus className="h-3 w-3" />
+          <Plus className="h-3 w-3" aria-hidden="true" />
         </Button>
       </div>
     </div>
