@@ -362,8 +362,8 @@ export function AppShell({
       </a>
       <main id="main-content" tabIndex={-1} className="h-full outline-none">
       {/* Mobile: stacked single-pane layout */}
-      <div className="flex h-full flex-col md:hidden">
-        <div className="flex h-12 items-center gap-2 border-b px-2">
+      <div className="flex h-full flex-col md:hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+        <div className="flex h-14 shrink-0 items-center gap-2 border-b px-3">
           {mobileView === "sidebar" ? (
             <Button
               variant="ghost"
@@ -398,7 +398,7 @@ export function AppShell({
               <Menu className="h-5 w-5" aria-hidden="true" />
             </Button>
           )}
-          <h1 className="truncate text-sm font-semibold">{heading}</h1>
+          <h1 className="truncate text-base font-semibold tracking-tight">{heading}</h1>
         </div>
         <div className="min-h-0 flex-1">
           {mobileView === "sidebar" && (
