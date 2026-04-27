@@ -35,27 +35,26 @@ export function ArticleHeader({
 }: ArticleHeaderProps) {
   const readingTime = estimateReadingTime(content);
   return (
-    <header className="space-y-3 border-b pb-6">
-      <h1 className="text-2xl font-semibold leading-tight tracking-tight">
-        {title}
-      </h1>
-      <div className="flex items-center gap-3 text-sm text-muted-foreground">
-        <span>{feedTitle}</span>
-        {author && (
-          <>
-            <span>·</span>
-            <span>{author}</span>
-          </>
-        )}
-        <span>·</span>
+    <header className="space-y-4 border-b pb-6">
+      <div className="space-y-2">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          {feedTitle}
+        </p>
+        <h1 className="text-balance text-[28px] font-semibold leading-[1.2] tracking-[-0.02em] sm:text-[32px]">
+          {title}
+        </h1>
+      </div>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+        {author && <span>{author}</span>}
+        {author && <span aria-hidden="true">·</span>}
         <time dateTime={new Date(publishedAt).toISOString()}>
           {format(new Date(publishedAt), "MMM d, yyyy")}
         </time>
         {readingTime !== null && (
           <>
-            <span>·</span>
-            <span className="inline-flex items-center gap-1">
-              <Clock className="h-3 w-3" />
+            <span aria-hidden="true">·</span>
+            <span className="inline-flex items-center gap-1 tabular-nums">
+              <Clock className="h-3 w-3" aria-hidden="true" />
               {readingTime} min read
             </span>
           </>
@@ -89,13 +88,13 @@ export function ArticleHeader({
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 gap-1.5 text-xs"
+          className="h-8 gap-1.5"
           onClick={onToggleStar}
         >
           <Star
             className={cn(
               "h-3.5 w-3.5",
-              isStarred ? "fill-star text-star" : "text-muted-foreground"
+              isStarred ? "fill-star text-star" : "text-muted-foreground",
             )}
           />
           {isStarred ? "Starred" : "Star"}
@@ -104,9 +103,9 @@ export function ArticleHeader({
           href={link}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
-          <ExternalLink className="h-3.5 w-3.5" />
+          <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
           Open original
         </a>
       </div>
