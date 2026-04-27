@@ -187,7 +187,7 @@ export function ReadingPane({ article, isLoading = false, onToggleStar }: Readin
       return <ReadingPaneSkeleton maxWidth={config.maxWidth} />;
     }
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center text-muted-foreground">
+      <div role="region" aria-label="Reading pane" className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center text-muted-foreground">
         <BookOpen className="h-8 w-8" aria-hidden="true" />
         <div className="space-y-1">
           <p className="text-sm font-medium text-foreground">Nothing selected</p>
@@ -198,7 +198,7 @@ export function ReadingPane({ article, isLoading = false, onToggleStar }: Readin
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div role="region" aria-label="Reading pane" className="flex h-full flex-col">
       <div className="flex h-8 items-center justify-end gap-1 border-b px-3">
         <TypographySettings config={config} onUpdate={update} />
       </div>
@@ -360,7 +360,8 @@ function HighlightItem({ highlight, onDelete, onSaveNote }: HighlightItemProps) 
         <button
           type="button"
           onClick={startEdit}
-          className="opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
+          className="opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 rounded"
+          aria-label={highlight.note ? "Edit note" : "Add note"}
           title={highlight.note ? "Edit note" : "Add note"}
         >
           <Pencil className="h-3.5 w-3.5" />
@@ -368,7 +369,8 @@ function HighlightItem({ highlight, onDelete, onSaveNote }: HighlightItemProps) 
         <button
           type="button"
           onClick={onDelete}
-          className="opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+          className="opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40 rounded"
+          aria-label="Delete highlight"
           title="Delete highlight"
         >
           <Trash2 className="h-3.5 w-3.5" />

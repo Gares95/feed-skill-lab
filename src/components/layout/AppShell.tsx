@@ -350,6 +350,17 @@ export function AppShell({
 
   return (
     <div className="h-dvh w-screen overflow-hidden">
+      <a
+        href="#main-content"
+        onClick={(e) => {
+          e.preventDefault();
+          document.getElementById("main-content")?.focus();
+        }}
+        className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:left-3 focus-visible:top-3 focus-visible:z-[60] focus-visible:rounded-md focus-visible:border focus-visible:bg-popover focus-visible:px-3 focus-visible:py-2 focus-visible:text-sm focus-visible:font-medium focus-visible:text-popover-foreground focus-visible:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        Skip to main content
+      </a>
+      <main id="main-content" tabIndex={-1} className="h-full outline-none">
       {/* Mobile: stacked single-pane layout */}
       <div className="flex h-full flex-col md:hidden">
         <div className="flex h-12 items-center gap-2 border-b px-2">
@@ -513,6 +524,7 @@ export function AppShell({
           />
         </ResizablePanel>
       </ResizablePanelGroup>
+      </main>
       <CommandPalette
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
