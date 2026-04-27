@@ -76,9 +76,16 @@ Completed:
   - No data-fetching, sanitization, persistence, or route changes. Optimistic mark-as-read behavior unchanged.
   - Validation passed: lint, test, build, audit, browser verification.
 
+- `design/07-confirm-dialogs`
+  - Replaced `window.prompt` for new folder with an in-app `Dialog` containing an `Input` + Cancel/Create footer (autofocus, Enter submits, Escape cancels, disabled while in-flight).
+  - Replaced `window.confirm` for folder deletion with an `AlertDialog` that names the folder being deleted and warns feeds inside become uncategorized; Cancel/Delete footer with destructive-styled action button.
+  - Inline rename flow preserved (already in-app, not a native dialog).
+  - Folder server actions (`createFolder`, `deleteFolder`) and `onFeedAdded` refresh callback unchanged.
+  - Validation passed: lint, test (175 passed, 1 skipped), build, audit (0 vulnerabilities), browser verification (Playwright: dialog opens, Escape cancels with no state change, valid name creates folder, delete shows alert dialog, Cancel preserves folder, Confirm deletes folder; no native `dialog` events fired).
+
 Next:
 
-- `design/07-confirm-dialogs`
+- `design/08-motion-pass`
 
 # 1. High-Impact Quick Wins
 
@@ -274,7 +281,9 @@ Resolved on `design/04-app-chrome`:
 
 ---
 
-## 1.7 Native Dialogs Break Product Feel
+## 1.7 Native Dialogs Break Product Feel — DONE (`design/07-confirm-dialogs`)
+
+Resolved on `design/07-confirm-dialogs`: `window.prompt` for new folder swapped for a `Dialog` + `Input` form (autofocus, Enter submits, Escape cancels, in-flight disabled state). `window.confirm` for folder deletion swapped for an `AlertDialog` that names the folder and uses a destructive-styled action button. Server-action calls and refresh callbacks preserved.
 
 **Issue**
 
@@ -804,7 +813,7 @@ design/03-focus-and-a11y-basics    # 1.9 + cursor + initial aria sweep          
 design/04-app-chrome               # 1.6, sidebar header overflow, separator, h-dvh [DONE]
 design/05-reading-pane-typography  # Reader scale, balance/pretty           [DONE]
 design/06-empty-and-loading        # 1.8, empty-state polish                       [DONE]
-design/07-confirm-dialogs          # 1.7
+design/07-confirm-dialogs          # 1.7                                            [DONE]
 design/08-motion-pass              # Rows, panels, star, reader toggle
 design/09-a11y-pass                # Skip link, full aria audit, contrast check
 design/10-button-system-prune      # Consolidate variants
