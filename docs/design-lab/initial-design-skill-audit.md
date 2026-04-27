@@ -197,28 +197,14 @@ This creates cleaner column rhythm.
 
 ---
 
-## 1.6 Article List Toolbar Rhythm Is Choppy
+## 1.6 Article List Toolbar Rhythm Is Choppy — DONE (`design/04-app-chrome`)
 
-**Issue**
+Resolved on `design/04-app-chrome`:
 
-There are three competing 12px-ish toolbars stacked at the top of the article list:
-
-* Search row: `h-12`
-* Filter row: `h-8`
-
-This creates choppy visual rhythm.
-
-**File(s)**
-
-* `ArticleList.tsx:75-127`
-
-**Fix Sketch**
-
-Merge into a single `44px` header:
-
-* Search inline-leading
-* Count/range/mark-all cluster trailing
-* Drop the second border
+* Search row dropped from `h-12` to `h-11` and lost its `border-b`, so the two header rows now read as a single 80px header capped by one divider at the bottom.
+* Meta row tightened to `h-9` with the article count pushed to `ml-auto` (smaller `text-[11px]`/`muted-foreground/80`) so the date-range picker reads as the primary affordance and count/mark-all cluster trailing.
+* Search ellipsis now uses a real `…` glyph for typographic polish.
+* The two-row structure was kept rather than fully merging; the search input needs full-width breathing room and the meta row functions as section header for the list scroll area.
 
 ---
 
@@ -271,25 +257,15 @@ Match the final geometry.
 
 ---
 
-## 1.9 Sidebar Buttons Need Focus Rings
+## 1.9 Sidebar Buttons Need Focus Rings — DONE (`design/03-focus-and-a11y-basics`)
 
-**Issue**
+Resolved on `design/03-focus-and-a11y-basics`:
 
-Keyboard-accessible feed and folder buttons in the sidebar use bare `<button>` elements without focus styles.
-
-**File(s)**
-
-* `Sidebar.tsx:181-216`
-
-**Fix Sketch**
-
-Add:
-
-```tsx
-focus-visible:outline-none
-focus-visible:ring-2
-focus-visible:ring-ring/60
-```
+* **Shared Button cursor behavior** — `components/ui/button.tsx`: added `cursor-pointer` + `disabled:cursor-not-allowed` to `buttonVariants`. Removed the redundant `disabled:pointer-events-none` so the disabled cursor actually shows. Fixes the asymmetry where `<Link>`-rendered actions (Health/Stats/Settings) showed a pointer but `<Button>`-rendered ones (New Folder, Refresh, Add feed, Import/Export) did not.
+* **Sidebar focus-visible rings** — `Sidebar.tsx`: added `outline-none focus-visible:ring-2 focus-visible:ring-ring/60` to the bare buttons (All Articles, Starred, folder collapse toggle, rename, delete).
+* **Feed item focus-visible / reveal-on-focus parity** — `FeedItem.tsx`: focus-visible ring on the `role="button"` row and on inner refresh / settings / delete icon buttons. Hover-only icon actions now also reveal on `focus-visible`.
+* **`aria-label` improvements** across `AppShell.tsx` (mobile back / open-feeds), `ArticleList.tsx` (clear-search, mark-all-read), `TypographySettings.tsx` (toggle with `aria-expanded`, ± steppers labeled by row), `Sidebar.tsx` (folder rename/delete labeled with folder name, folder toggle exposes `aria-expanded`), and `FeedItem.tsx` (decorative icons set `aria-hidden`).
+* **Validation:** `npm run lint`, `npm run test` (175 passed, 1 skipped), `npm run build`, `npm audit` (0 vulnerabilities) — all clean.
 
 ---
 
@@ -384,57 +360,23 @@ Also remove the asymmetric button sizing mix:
 
 ---
 
-## Sidebar Header Is Overloaded
+## Sidebar Header Is Overloaded — DONE (`design/04-app-chrome`)
 
-**Issue**
+Resolved on `design/04-app-chrome`:
 
-Seven icon buttons plus brand are packed into a `12px`-padded row that wraps at narrow widths.
-
-**File(s)**
-
-* `Sidebar.tsx:113-176`
-
-The `flex-wrap` line break shows the row is over-budget.
-
-**Recommendation**
-
-Promote:
-
-* New folder
-* Refresh
-* Add
-
-Demote into a single overflow menu, or move to sidebar footer:
-
-* Health
-* Stats
-* Settings
+* Header now contains brand + four primary actions (New folder, Refresh, Add feed, Import/Export) on a single `h-11` row. `flex-wrap` removed since the row no longer overflows.
+* Health, Reading stats, and Settings demoted to a new `border-t` footer rail at the bottom of the sidebar (`px-3 py-1.5`, `h-7` icon buttons, muted-foreground), with Settings pushed to `ml-auto` per platform convention.
+* All actions, routes, and aria-labels preserved.
 
 ---
 
-## Separator Overuse
+## Separator Overuse — DONE (`design/04-app-chrome`)
 
-**Issue**
+Resolved on `design/04-app-chrome`:
 
-The sidebar uses:
-
-* Header `border-b`
-* `Separator` between sections
-* Folder dividers
-* Row borders
-
-Too many horizontal lines cost visual energy.
-
-**File(s)**
-
-* `Sidebar.tsx:218`
-
-**Recommendation**
-
-Remove the explicit `Separator` and lean on:
-
-* Whitespace
-* Existing uppercase folder label
+* Removed the explicit `Separator` between Starred and the feed list. Replaced with a 12px whitespace gap; the existing uppercase folder labels carry the section break.
+* `Separator` import dropped from `Sidebar.tsx`.
+* Header `border-b` and footer `border-t` retained — they bookend the scroll area and earn their visual weight.
 
 ---
 
@@ -600,35 +542,9 @@ to clear iOS notches.
 
 ---
 
-## Replace `h-screen` with `h-dvh`
+## Replace `h-screen` with `h-dvh` — DONE (`design/04-app-chrome`)
 
-**Issue**
-
-Current shell uses:
-
-```tsx
-h-screen w-screen
-```
-
-**File(s)**
-
-* `AppShell.tsx:342`
-
-This can cause iOS Safari viewport jump when the URL bar collapses.
-
-**Recommendation**
-
-Use:
-
-```tsx
-h-dvh w-screen
-```
-
-or:
-
-```tsx
-min-h-dvh w-screen
-```
+`AppShell.tsx` outer wrapper changed from `h-screen w-screen` to `h-dvh w-screen`. iOS Safari URL-bar collapse no longer jumps the layout.
 
 ---
 
@@ -727,7 +643,7 @@ Reserve animation for reinforcing causality, never decoration.
 Add:
 
 * Real “Skip to article list” link
-* Full icon-only button `aria-label` audit
+* Full icon-only button `aria-label` audit — partially done on `design/03-focus-and-a11y-basics` (sidebar, app chrome mobile bar, article list toolbar, typography settings). Still to verify: reader pane controls, dialog close buttons, any `Menu` triggers not covered.
 * Color contrast check after palette changes
 
 The recent `v1.0.0` work added many labels, but this is worth re-auditing after redesign.
@@ -799,16 +715,17 @@ Each branch is small, reviewable, and self-contained.
 Order is intentional: tokens first, so later branches inherit them.
 
 ```text
-design/01-tokens-and-fonts         # 1.1, 1.2, motion vars
-design/02-app-chrome               # 1.3, 1.6, sidebar header overflow, h-dvh fix
-design/03-article-row-typography   # 1.4, 1.5
-design/04-reading-pane-typography  # Reader scale, balance/pretty
-design/05-empty-and-loading        # 1.8, empty-state polish
-design/06-confirm-dialogs          # 1.7
-design/07-motion-pass              # Rows, panels, star, reader toggle
-design/08-a11y-pass                # Focus rings, skip link, aria audit
-design/09-button-system-prune      # Consolidate variants
-design/10-mobile-shell-polish      # Safe-area, header height, swipe affordance
+design/01-tokens-and-fonts         # 1.1, 1.2, motion vars                          [DONE]
+design/02-article-row              # 1.4, 1.5                                       [DONE]
+design/03-focus-and-a11y-basics    # 1.9 + cursor + initial aria sweep              [DONE]
+design/04-app-chrome               # 1.6, sidebar header overflow, separator, h-dvh [DONE]
+design/05-reading-pane-typography  # Reader scale, balance/pretty
+design/06-empty-and-loading        # 1.8, empty-state polish
+design/07-confirm-dialogs          # 1.7
+design/08-motion-pass              # Rows, panels, star, reader toggle
+design/09-a11y-pass                # Skip link, full aria audit, contrast check
+design/10-button-system-prune      # Consolidate variants
+design/11-mobile-shell-polish      # Safe-area, header height, swipe affordance
 ```
 
 For each branch:
