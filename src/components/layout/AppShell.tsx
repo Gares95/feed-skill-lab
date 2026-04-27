@@ -339,7 +339,7 @@ export function AppShell({
       : "All Articles";
 
   return (
-    <div className="h-screen w-screen overflow-hidden">
+    <div className="h-dvh w-screen overflow-hidden">
       {/* Mobile: stacked single-pane layout */}
       <div className="flex h-full flex-col md:hidden">
         <div className="flex h-12 items-center gap-2 border-b px-2">

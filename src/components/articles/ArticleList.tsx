@@ -14,7 +14,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ArticleRow } from "./ArticleRow";
-import { cn } from "@/lib/utils";
 import { type DateRange } from "@/lib/date-range";
 import { DateRangePicker } from "./DateRangePicker";
 import type { DateRangeSelection } from "@/components/layout/AppShell";
@@ -72,8 +71,8 @@ export function ArticleList({
   const hasUnread = articles.some((a) => !a.isRead);
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-12 items-center gap-2 border-b px-4">
-        <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+      <div className="flex h-11 items-center gap-2 px-4">
+        <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         <Input
           type="text"
           placeholder="Search articles..."
@@ -95,8 +94,8 @@ export function ArticleList({
         )}
       </div>
 
-      <div className="flex h-8 items-center gap-2 border-b px-4">
-        <h2 className="text-xs font-medium text-muted-foreground">
+      <div className="flex h-9 items-center gap-2 border-b px-4">
+        <h2 className="truncate text-xs font-medium text-muted-foreground">
           {searchQuery ? "Search Results" : heading}
         </h2>
         {!searchQuery && (
@@ -107,13 +106,8 @@ export function ArticleList({
             onChange={onDateRangeChange}
           />
         )}
-        <span
-          className={cn(
-            "text-xs text-muted-foreground tabular-nums",
-            searchQuery && "ml-auto",
-          )}
-        >
-          {isSearching ? "..." : articles.length}
+        <span className="ml-auto text-[11px] text-muted-foreground/80 tabular-nums">
+          {isSearching ? "…" : articles.length}
         </span>
         {!searchQuery && hasUnread && (
           <Button
