@@ -61,9 +61,17 @@ Completed:
   - Replaced `h-screen` with `h-dvh`.
   - Validation passed: lint, test, build, audit, browser verification.
 
+- `design/05-reading-pane-typography`
+  - Reworked article-content heading scale (h1 1.75rem, h2 1.4rem, h3 1.175rem) with tighter leading and stronger negative tracking.
+  - Added `text-wrap: balance` to article headings and `text-wrap: pretty` + `hyphens: auto` to paragraphs.
+  - First-child heading no longer inherits the top margin.
+  - Bumped reader defaults: `fontSize` 16 → 17, `maxWidth` 672 → 680. Persisted shape unchanged; existing settings still load.
+  - Refined `ArticleHeader`: feed title promoted to eyebrow, h1 enlarged with balance + tighter tracking, meta row demoted to `text-xs`, reading time uses `tabular-nums`, all action buttons normalized to `h-8`.
+  - Validation passed: lint, test, build, audit.
+
 Next:
 
-- `design/05-reading-pane-typography`
+- `design/06-empty-and-loading`
 
 # 1. High-Impact Quick Wins
 
@@ -345,7 +353,16 @@ These are bigger than a tweak but smaller than a redesign. They are multi-file b
 
 ---
 
-## Reading Pane Typographic Scale
+## Reading Pane Typographic Scale — DONE (`design/05-reading-pane-typography`)
+
+Resolved on `design/05-reading-pane-typography`:
+
+* Article-content heading scale rebuilt: `h1` 1.75rem, `h2` 1.4rem, `h3` 1.175rem, `h4` 1rem. Tighter `line-height: 1.25` on all headings; `letter-spacing: -0.02em` on `h1`, `-0.015em` elsewhere; `margin-top` widened to `1.75em` and reset to `0` on the first child.
+* `text-wrap: balance` on every article heading; `text-wrap: pretty` + `hyphens: auto` on paragraphs.
+* Reader defaults bumped: `fontSize` 16 → 17, `maxWidth` 672 → 680. Persisted-config shape unchanged (existing localStorage values still load via `{ ...DEFAULTS, ...stored }`).
+* `ArticleHeader` refined within scope: feed title promoted to eyebrow above the title, `h1` resized to 28/32px with balance and tighter tracking, meta row dropped from `text-sm` to `text-xs`, reading time gets `tabular-nums`, action buttons normalized to a single `h-8` height.
+
+Original recommendation kept below for reference.
 
 Current article content scale:
 
@@ -388,7 +405,11 @@ Also improve defaults:
 
 ---
 
-## Article Header Hierarchy
+## Article Header Hierarchy — DONE (`design/05-reading-pane-typography`)
+
+Folded into the reading-pane typography pass. Feed eyebrow + display `h1` + demoted meta row + unified `h-8` button heights.
+
+Original notes below for reference.
 
 **Issue**
 
@@ -770,7 +791,7 @@ design/01-tokens-and-fonts         # 1.1, 1.2, motion vars                      
 design/02-article-row-typography   # 1.4, 1.5                                       [DONE]
 design/03-focus-and-a11y-basics    # 1.9 + cursor + initial aria sweep              [DONE]
 design/04-app-chrome               # 1.6, sidebar header overflow, separator, h-dvh [DONE]
-design/05-reading-pane-typography  # Reader scale, balance/pretty
+design/05-reading-pane-typography  # Reader scale, balance/pretty           [DONE]
 design/06-empty-and-loading        # 1.8, empty-state polish
 design/07-confirm-dialogs          # 1.7
 design/08-motion-pass              # Rows, panels, star, reader toggle

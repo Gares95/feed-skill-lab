@@ -11,9 +11,9 @@ interface TypographyConfig {
 }
 
 const DEFAULTS: TypographyConfig = {
-  fontSize: 16,
+  fontSize: 17,
   lineHeight: 1.7,
-  maxWidth: 672,
+  maxWidth: 680,
 };
 
 const STORAGE_KEY = "feed-typography";
