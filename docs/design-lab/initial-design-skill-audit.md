@@ -102,9 +102,15 @@ Completed:
   - No changes to data fetching, server actions, dialog primitives, sanitization, or selection/star/mark-read flows.
   - Validation passed: lint, test (175 passed, 1 skipped), build, audit (0 vulnerabilities), browser verification (Playwright headless: skip link is the first focusable element on desktop and mobile, activating it moves focus to `<main>`; landmarks present; `aria-pressed` flips on Star toggle; reduced-motion mode preserves skip-link visibility).
 
+- `design/11-mobile-shell-polish`
+  - Mobile top bar bumped `h-12` → `h-14` with `text-base font-semibold tracking-tight` heading and `px-3` padding for thumb-zone presence.
+  - Outer mobile column applies `pt-[env(safe-area-inset-top)]` and `pb-[env(safe-area-inset-bottom)]`; root layout exports `viewport: { viewportFit: "cover" }` so the env-vars resolve on iOS.
+  - Desktop three-pane layout (`hidden md:flex`) untouched. `h-dvh` wrapper and `flex-1 min-h-0` ScrollArea behavior preserved.
+  - Validation: lint clean, tests 175 passed / 1 skipped, build clean, audit 0 vulnerabilities.
+
 Next:
 
-- `design/11-mobile-shell-polish`
+- All audit-listed branches complete.
 
 # 1. High-Impact Quick Wins
 
@@ -639,6 +645,15 @@ Extend `tabular-nums` to health and stats pages.
 
 ## Mobile Top Bar Needs More Presence
 
+**Status:** Completed in `design/11-mobile-shell-polish`.
+- Mobile top bar height bumped `h-12` → `h-14` (48px → 56px) with `shrink-0` to lock against `flex-1` content.
+- Title weight/size lifted from `text-sm font-semibold` to `text-base font-semibold tracking-tight`.
+- Mobile column wrapper now applies `pt-[env(safe-area-inset-top)]` and `pb-[env(safe-area-inset-bottom)]` so the bar clears iOS notches and the home-indicator strip is respected. Paired with `viewportFit: "cover"` exported from `src/app/layout.tsx` so `env(safe-area-inset-*)` actually resolves to non-zero on iOS.
+- Bar horizontal padding `px-2` → `px-3`. Back/menu buttons unchanged (`ghost icon` 32×32) — already meet thumb-target size.
+- Desktop three-pane layout untouched (only the `md:hidden` branch changed).
+- Mobile navigation model preserved: sidebar / list / reader views with the same back / open-feeds controls.
+- `h-dvh` outer wrapper preserved; `ScrollArea` panes inside `flex-1 min-h-0` continue to scroll.
+
 **Issue**
 
 The mobile top bar is `48px` high with a `14px` title.
@@ -846,7 +861,7 @@ design/07-confirm-dialogs          # 1.7                                        
 design/08-motion-pass              # Rows, panels, star, reader toggle             [DONE]
 design/09-a11y-pass                # Skip link, full aria audit, contrast check    [DONE]
 design/10-button-system-prune      # Consolidate variants                          [DONE]
-design/11-mobile-shell-polish      # Safe-area, header height, swipe affordance
+design/11-mobile-shell-polish      # Safe-area, header height, swipe affordance [DONE]
 ```
 
 For each branch:
