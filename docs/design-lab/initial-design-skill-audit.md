@@ -104,7 +104,7 @@ Completed:
 
 Next:
 
-- `design/10-button-system-prune`
+- `design/11-mobile-shell-polish`
 
 # 1. High-Impact Quick Wins
 
@@ -491,7 +491,17 @@ Resolved on `design/04-app-chrome`:
 
 ## Button System Has Too Many Sizes
 
-**Issue**
+**Status:** Completed in `design/10-button-system-prune`.
+
+- Audited every `<Button>` call site and `buttonVariants(...)` helper usage in `src/`.
+- In-use variants: `default` (implicit), `outline`, `secondary` (reader-mode toggle active state), `ghost`, `destructive`.
+- In-use sizes: `default` (implicit), `sm`, `icon`, `icon-sm`.
+- Removed (dead): variant `link`; sizes `xs`, `lg`, `icon-xs`, `icon-lg`.
+- No call sites changed — only `src/components/ui/button.tsx` was edited.
+- Visual behavior, focus rings, disabled cursor, active translate, and a11y semantics preserved.
+- Validation: lint clean, 175 tests pass / 1 skip, build clean, 0 audit vulnerabilities.
+
+**Issue (original)**
 
 The button system has five sizes:
 
@@ -835,7 +845,7 @@ design/06-empty-and-loading        # 1.8, empty-state polish                    
 design/07-confirm-dialogs          # 1.7                                            [DONE]
 design/08-motion-pass              # Rows, panels, star, reader toggle             [DONE]
 design/09-a11y-pass                # Skip link, full aria audit, contrast check    [DONE]
-design/10-button-system-prune      # Consolidate variants
+design/10-button-system-prune      # Consolidate variants                          [DONE]
 design/11-mobile-shell-polish      # Safe-area, header height, swipe affordance
 ```
 
