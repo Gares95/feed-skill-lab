@@ -1,151 +1,113 @@
-# Feed
+# Feed Skill Lab
 
-A local-first RSS/Atom reader. Runs entirely on your machine, stores everything in a single SQLite file, and requires zero accounts or API keys. Dark-mode-first, keyboard-navigable, designed for focused reading.
+Public UI/design-skills experiment for [Feed](https://github.com/Gares95/Feed). This repo is where Claude Code, Claude Design, and the Claude Skills system are tested as tools for redesigning, polishing, and re-imagining a real working app.
 
-> Closer in spirit to Reeder or Matter than to Feedly. No cloud, no algorithm, no ads.
+## Relationship to canonical Feed
 
-![Feed — three-pane reader interface](docs/screenshot.png)
+- [`Gares95/Feed`](https://github.com/Gares95/Feed) — the stable canonical local-first RSS/Atom reader.
+- [`Gares95/feed-skill-lab`](https://github.com/Gares95/feed-skill-lab) — this repo, the public design lab.
 
-## Features
+This is **not** a GitHub fork. GitHub does not allow forking a repository into the same owner account, so the lab was bootstrapped by cloning canonical Feed at the `v1.0.0` release tag, resetting history, and pointing at a new origin. Canonical Feed is tracked here as the `upstream` remote and patch-level fixes (server actions, schema, sanitization, safe-fetch, retention, parsing, search, shared dependency versions) are cherry-picked from it via release tags.
 
-**Reading**
-- Three-pane resizable layout — sidebar, article list, reading pane
-- Reader mode with Mozilla Readability content extraction
-- Article highlights — select text to save persistent annotations
-- Typography settings — adjustable font size, line height, content width
-- Code-block syntax highlighting in articles (highlight.js)
-- Image proxy for blocked or mixed-content images
+The lab preserves Feed's data model, server actions, Prisma schema, API routes, persistence model, and core RSS/Atom behavior unless explicitly noted. **UI, layout, chrome, typography, motion, navigation, and interaction design are the experimental surface.**
 
-**Organization**
-- Feed folders with rename, delete, and drag-to-move
-- Full-text search powered by SQLite FTS5
-- Command palette (`Cmd+K` / `Ctrl+K`) for quick navigation
-- Date range filters — today, past week, past month, all time
-- Mark all as read — per feed or across the current view
+## Current Status
 
-**Feed management**
-- Auto-refresh with configurable per-feed intervals
-- OPML import and export
-- Feed health dashboard — frequency, freshness, error metrics
-- Retention policy — automatic pruning of old read articles (preserves starred, highlighted, unread)
+| Track | Status |
+|---|---|
+| Incremental polish | Complete |
+| Radical concepts | Next |
+| Hosted demos | Deferred |
 
-**Export & backup**
-- Starred articles as Markdown or JSON
-- OPML for feed subscriptions
-- Full data backup & restore — JSON export/import of feeds, articles, highlights, and settings
+The current default branch is the **polished baseline** — the result of running an incremental design-skill-guided polish track over the v1.0.0 baseline. The next phase is radical UI concept exploration on dedicated `concept/*` branches.
 
-**Interface**
-- Dark-mode-first design using oklch color tokens
-- Mobile-responsive layout with swipe gestures
-- Keyboard shortcuts for everything: `j`/`k`, `s`, `m`, `r`, `o`, `Cmd+K`
+## Polished Baseline
 
-## Quick start
+![Feed Skill Lab — polished baseline (desktop, reader mode)](docs/design-lab/screenshots/polish-baseline-desktop.png)
+
+<details>
+<summary>Mobile view</summary>
+
+![Feed Skill Lab — polished baseline (mobile, reader mode)](docs/design-lab/screenshots/polish-baseline-mobile.png)
+
+</details>
+
+The polished baseline lands the following design-skill passes on top of v1.0.0:
+
+- Theme tokens and Geist font system
+- Article row hierarchy (title weight, meta line, selection indicator)
+- Focus states and accessibility basics
+- App chrome (sidebar density, header alignment, divider system)
+- Reading-pane typography (measure, leading, code-block treatment)
+- Loading and empty states
+- In-app dialogs (Add Feed, Command Palette, settings panels)
+- Subtle motion pass (reader cross-fade, popover, star toggle, `prefers-reduced-motion`)
+- A11y pass
+- Button-system pruning (variant inventory consolidated, sizes normalised)
+- Mobile shell polish (safe-area insets, top-bar presence, `viewport-fit: cover`)
+- Canonical `ScrollArea` flex-shrink fix inherited from Feed v1.0.2
+
+See [`docs/design-lab/initial-design-skill-audit.md`](docs/design-lab/initial-design-skill-audit.md) for the full audit and per-branch progress notes.
+
+## Experiment Tracks
+
+| Track | Status | Purpose |
+|---|---|---|
+| Incremental polish | Complete | Make the baseline UI more refined and usable |
+| Radical concepts | Planned / next | Explore substantially different UI directions |
+| Selected upstreaming | Later | Move proven stable improvements back to canonical Feed |
+
+## Radical Concepts Gallery
+
+| Concept | Branch | PR | Status | Screenshot | Notes |
+|---|---|---|---|---|---|
+| Editorial Reader | `concept/01-editorial-reader` | TBD | Planned | TBD | Reader-first direction |
+| Command Center | `concept/02-command-center` | TBD | Planned | TBD | Keyboard/action-first direction |
+| Compact Pro | `concept/03-compact-pro` | TBD | Planned | TBD | Dense power-user direction |
+| Magazine Dashboard | `concept/04-magazine-dashboard` | TBD | Planned | TBD | More visual discovery direction |
+
+## How to Run Locally
 
 ```bash
-git clone https://github.com/Gares95/Feed.git
-cd Feed
+git clone https://github.com/Gares95/feed-skill-lab.git
+cd feed-skill-lab
 npm run setup       # install + generate Prisma client + run migrations
 npm run dev         # http://localhost:3000
 ```
 
-Open the app, click `+`, paste a feed URL, and start reading.
-
-## Commands
+To try a concept branch (once published):
 
 ```bash
-npm run setup       # First-time setup
-npm run dev         # Dev server (Turbopack) on http://localhost:3000
-npm run build       # Production build
-npm run lint        # ESLint
-npm run test        # Vitest
-npm run test:watch  # Vitest in watch mode
-npx prisma studio   # Browse the SQLite database
+git fetch origin
+git checkout concept/01-editorial-reader
+npm run setup
+npm run dev
 ```
 
-## Tech stack
+## What Stays Stable
 
-| Layer | Choice |
-|---|---|
-| Framework | Next.js 15 (App Router), React 19, TypeScript 5 (strict) |
-| Styling | Tailwind CSS v4, @base-ui/react (base-nova via shadcn CLI), Lucide icons |
-| Database | Prisma 6 + SQLite (single file at `prisma/dev.db`) |
-| Feed parsing | rss-parser, DOMPurify + jsdom for HTML sanitization |
-| Layout | react-resizable-panels |
-| Testing | Vitest + React Testing Library |
+These surfaces are intentionally identical to canonical Feed and follow it as `upstream`:
 
-## Architecture
+- Data model
+- Server actions
+- Prisma schema
+- API routes
+- SQLite / local-first persistence model
+- RSS/Atom parsing and refresh behavior
+- OPML import/export behavior (unless explicitly documented)
+- Core reader behavior (Readability extraction, sanitization, safe-fetch)
 
-```
-Add feed URL  →  POST /api/feeds  →  fetch RSS → parse XML → sanitize → SQLite
-Read articles →  Server Components query Prisma → render three-pane layout
-Mutations     →  Server Actions → SQLite → optimistic UI update
-```
+## Deployment Status
 
-- **Server-side feed fetching only** — no client-side RSS fetches (CORS/security)
-- **SSRF-safe outbound HTTP** — every server-side request (feed fetch, article extraction, image proxy, feed discovery) runs through `lib/safe-fetch.ts`, which resolves DNS and blocks loopback/RFC1918/link-local/cloud-metadata ranges, revalidates each redirect, and caps response size
-- **Full article HTML stored in SQLite** — reading is instant, no network needed
-- **All feed HTML sanitized with DOMPurify** before rendering; anchors are forced to `rel="noopener noreferrer nofollow"` to neutralise tab-nabbing and block Referer leakage
-- **Server Actions for mutations** — API routes only for complex server-only operations
-- **No client state library** — React Context for UI state, Server Components for data
+- No hosted demos yet.
+- Feed is a local-first app backed by SQLite at `prisma/dev.db`.
+- A public deployment requires a safe demo mode with seeded data and risky actions disabled or mocked. That work is out of scope for the polish track.
+- Deployment will be reconsidered for selected finalist concepts only.
 
-## Project layout
+## Documentation
 
-```
-src/
-├── app/              # Pages and API routes (App Router)
-│   ├── api/          # feeds, articles, opml, image-proxy, export, backup
-│   ├── health/       # Feed health dashboard
-│   ├── stats/        # Reading statistics
-│   ├── settings/     # Retention policy, backup & restore
-│   └── page.tsx      # Three-pane reader
-├── actions/          # Server Actions (feeds, articles, folders, retention, highlights)
-├── components/
-│   ├── layout/       # AppShell (resizable three-pane)
-│   ├── sidebar/      # Sidebar, FeedItem, AddFeedDialog, OpmlActions
-│   ├── articles/     # ArticleList, ArticleRow
-│   ├── reader/       # ReadingPane, ArticleHeader, TypographySettings
-│   ├── settings/     # RetentionSettings, BackupSettings
-│   └── ui/           # shadcn primitives
-├── lib/              # feed-parser, sanitize, retention, settings, queries, …
-├── hooks/            # useKeyboardShortcuts, useAutoRefresh, …
-└── generated/prisma  # Prisma client (custom output path)
-prisma/
-├── schema.prisma
-└── migrations/
-```
-
-## Keyboard shortcuts
-
-| Key | Action |
-|---|---|
-| `j` / `↓` | Next article |
-| `k` / `↑` | Previous article |
-| `Enter` / `o` | Open article / original link |
-| `s` | Toggle star |
-| `m` | Toggle read/unread |
-| `r` | Refresh current feed |
-| `R` | Refresh all feeds |
-| `a` | Add new feed |
-| `Cmd+K` / `Ctrl+K` | Command palette |
-
-## Privacy
-
-Everything lives in `prisma/dev.db`. No telemetry, no third-party requests beyond fetching the feeds you subscribe to. Back up the project directory to back up all your data.
-
-The dev and production servers bind to `127.0.0.1` only, so the app is not reachable from other devices on your network. If you want LAN access (e.g. reading from your phone at home), you have two options:
-
-- **Recommended:** put `npm run dev` behind a reverse proxy (nginx basic-auth, Tailscale, Caddy with a password) and have the proxy handle auth.
-- **Quick and unauthenticated:** `npm run dev:lan` / `npm run start:lan` bind to `0.0.0.0`. No auth — anyone on the same network can read or destroy your data. Only use this on a network you trust.
-
-## Roadmap
-
-See [`PROJECT_BLUEPRINT.md`](./PROJECT_BLUEPRINT.md) for the full phased roadmap, design tokens, database schema, and architectural rationale. Phases 1–4 (core reader, organization, reading experience, and power-user features) are complete and shipped in v1.0.0. AI features are not on the roadmap — see the Anti-Goals section of the blueprint for the reasoning.
-
-## Variants
-
-This repository is the canonical v1 implementation, built on Tailwind v4 and `@base-ui/react`. Forks will explore alternative UI stacks against the same data layer and feature set, so the implementations can be compared directly.
-
-- _(forks listed here once they exist)_
+- [`docs/design-lab/initial-design-skill-audit.md`](docs/design-lab/initial-design-skill-audit.md) — the original design-skill audit and per-branch implementation notes for the polish track.
+- `docs/design-lab/concepts/` — per-concept design notes (added when each `concept/*` branch lands).
 
 ## License
 
