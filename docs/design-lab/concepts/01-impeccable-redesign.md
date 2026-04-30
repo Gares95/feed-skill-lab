@@ -9,7 +9,7 @@
 - Concept name: **Impeccable Redesign**
 - Branch: `concept/01-impeccable-redesign`
 - PR: TBD
-- Status: Planning (architecture written; implementation not started)
+- Status: Phase 1 complete (design-system foundations); Phase 2 not started
 - Created: 2026-05-01
 - Last updated from main: `b7a2f5f` — *Merge concept documentation template*
 - Baseline: `lab-polish-v1` (tag on `main`)
@@ -223,11 +223,11 @@ To be filled in at the end of implementation. Choose one:
 
 Decision notes: TBD.
 
-## Implementation Phases (deferred — gated on explicit approval)
+## Implementation Phases
 
-Each phase will require its own go-ahead before any file edits in `src/`. Suggested ordering:
+Each phase requires its own go-ahead before any file edits in `src/`. Status:
 
-1. **Phase 1 — Design-system foundations.** `src/app/globals.css` token-value rewrite (warm-hue palette, retain token names), `--motion-canvas`, no component changes. Verifiable with the existing baseline rendering against the new tokens.
+1. **Phase 1 — Design-system foundations. ✅ Complete.** See "Phase 1 Implementation Notes" below.
 2. **Phase 2 — App shell + navigation.** New `AppShell.tsx`, new `Rail` and `Canvas` components, retire `react-resizable-panels` usage, command-palette absorbs nav, `\` toggle.
 3. **Phase 3 — Article list and feed browsing.** `ArticleList.tsx` and `ArticleRow.tsx` rewrite to continuous typographic list; new `DayDivider`, `Eyebrow`. Search-into-palette wiring.
 4. **Phase 4 — Reader pane.** `ReadingPane.tsx`, `ArticleHeader.tsx`, `TypographySettings.tsx` rewire; new `EdgeRail`; reader-mode default-on for full-content articles; highlight rail.
@@ -235,6 +235,97 @@ Each phase will require its own go-ahead before any file edits in `src/`. Sugges
 6. **Phase 6 — Dialogs, empty / loading states, final polish.** Restyle `Dialog` / `AlertDialog` / `AddFeedDialog` / `FeedSettingsDialog` / `CommandPalette`. Replace skeletons with rhythm-preserving variants.
 7. **Phase 7 — Screenshots and concept-doc closure.** Capture six required screenshots into `docs/design-lab/screenshots/concepts/01-impeccable-redesign/`, fill the Screenshots and Validation tables, write the Decision and Follow-up sections.
 
+## Phase 1 Implementation Notes
+
+### What changed
+
+Token-only pass against `src/app/globals.css`. Token names preserved exactly — no component, layout, or behavior code touched. `react-resizable-panels` retained per revision to the approved architecture; the rail-and-canvas restructure stays in Phase 2 and will visually de-emphasize pane chrome rather than retire the dependency.
+
+#### Dark mode (`.dark`) — primary experience
+
+Hue rotated from cool indigo (250) to warm sepia/amber (~65 for neutrals, 75–80 for warm states, 30 for the ember accent). Lightness ladder preserved at the same ~0.025 deltas so background → sidebar → card → popover still read as four distinct planes.
+
+| Token | Before | After |
+| ----- | ------ | ----- |
+| `--background` | `oklch(0.135 0.005 250)` | `oklch(0.145 0.012 65)` |
+| `--foreground` | `oklch(0.94 0.003 250)` | `oklch(0.92 0.02 80)` |
+| `--card` | `oklch(0.175 0.006 250)` | `oklch(0.185 0.014 65)` |
+| `--popover` | `oklch(0.215 0.007 250)` | `oklch(0.225 0.016 65)` |
+| `--sidebar` | `oklch(0.16 0.006 250)` | `oklch(0.17 0.013 65)` |
+| `--muted` / `--secondary` | `oklch(0.21 0.006 250)` | `oklch(0.22 0.014 65)` |
+| `--accent` (selected-row plane) | `oklch(0.235 0.008 250)` | `oklch(0.245 0.018 65)` |
+| `--muted-foreground` | `oklch(0.58 0.008 250)` | `oklch(0.65 0.018 75)` |
+| `--primary` / `--ring` | `oklch(0.68 0.10 250)` (Quiet Indigo) | `oklch(0.62 0.13 30)` (deep ember) |
+| `--primary-foreground` | `oklch(0.985 0 0)` | `oklch(0.98 0.012 80)` |
+| `--destructive` | `oklch(0.65 0.18 25)` | `oklch(0.62 0.18 28)` |
+| `--star` | `oklch(0.78 0.13 85)` | `oklch(0.80 0.14 75)` |
+| `--border` | `oklch(1 0 0 / 7%)` | `oklch(1 0.02 80 / 8%)` |
+| `--input` | `oklch(1 0 0 / 9%)` | `oklch(1 0.02 80 / 10%)` |
+| Sidebar mirror tokens | (cool indigo set) | matched warm set |
+| Chart colors | hue spread around 250/25/85/150/300 | hue spread around 30/28/75/130/350 |
+
+#### Light mode (`:root`) — secondary experience
+
+Warmed to "warm paper": background `oklch(0.975 0.012 80)` (faint cream), foreground `oklch(0.18 0.02 50)` (warm dark ink), primary deeper-ember `oklch(0.48 0.14 30)`. Border / input neutrals tinted to hue 80 at low chroma. Token names again preserved.
+
+#### Article-content typography
+
+Single value-only change: the highlight wash shifted from `oklch(0.75 0.15 85 / 30%)` to `oklch(0.78 0.16 75 / 30%)` to keep the warm-amber glow distinguishable from the new background hue. All other `.article-content` rules (heading scale, balance/pretty wrap, hyphenation, blockquote, code, table, figure) preserved exactly.
+
+#### Motion tokens
+
+Existing tokens preserved: `--motion-fast: 120ms`, `--motion-base: 200ms`, `--motion-slow: 360ms`, `--ease-out-quint`, `--ease-in-out-quint`, `--ease-spring`. **New token added:** `--motion-canvas: 480ms` reserved for the Phase 2 rail collapse / canvas-level transition. Not yet referenced anywhere — purely a definition.
+
+#### Radius scale
+
+Unchanged. `--radius: 0.625rem` and the derived `sm/md/lg/xl/2xl/3xl/4xl` ratios in `@theme inline` are intact.
+
+#### Reduced-motion guard
+
+The `@media (prefers-reduced-motion: reduce)` block from `design/08-motion-pass` is unchanged. Floor preserved.
+
+### What was preserved exactly
+
+- Every existing CSS custom property *name* in `:root` and `.dark`.
+- Token aliases inside `@theme inline` (the Tailwind v4 mapping).
+- `react-resizable-panels` mechanics (per revision to architecture).
+- All component code under `src/components/**`.
+- All `.article-content` typography rules other than the highlight color.
+- `prefers-reduced-motion: reduce` floor.
+- Radius scale, spacing scale, font tokens (`--font-sans`, `--font-mono`, `--font-heading`).
+- Data layer, server actions, API routes, Prisma, lib/, tests.
+
+### Validation results
+
+- **`npm run lint`** — clean for the project (`npx eslint src/` returns no output). The default lint command surfaces 96 pre-existing warnings inside the untracked `.claude/skills/impeccable/scripts/*` skill tooling (third-party files, not project code, not introduced by Phase 1).
+- **`npm run test`** — 175/175 passing, 1 skipped (unchanged from baseline).
+- **`npm run build`** — 0 errors, 0 warnings.
+- **`npm audit`** — 0 vulnerabilities.
+
+### Browser observations (headless Chromium 1217 at 1440×900 and 390×844 mobile)
+
+Headed Chrome was not available in this environment; used headless. Three reference screenshots saved into the concept's screenshot directory:
+
+- `phase1-desktop.png` (1440×900) — desktop overview, warm sepia background visible, sidebar/list/canvas tonal layering preserved, "Nothing selected" empty state in the reader. The Next.js dev indicator in the bottom-right shows the new ember accent.
+- `phase1-reader.png` (1440×900) — article selected with reader mode active. Body content (cream foreground on warm dark) is highly legible; the "Exit reader mode" pill, "Starred" button, and "Open original" link all read clearly with the new ember/amber accents. The cargo-terminal hero image renders normally; the article body remains scrollable inside the Radix `ScrollArea`.
+- `phase1-mobile.png` (390×844) — single-pane mobile shell, article list visible, top-bar `viewportFit: cover` padding intact. Star icon and selected-row treatment carry the new warm-amber/ember pair.
+
+Visual notes vs. `lab-polish-v1`:
+- **Identity shift is visible at a glance.** The cool indigo "Calm Reading Room" reads now as a warm "dim reading lamp"; the difference is unmistakable and lives entirely in the palette, not the chrome.
+- **Tonal layering still holds.** Sidebar / list-pane / reader pane / popover surfaces remain four distinct planes; no surface collapsed visually because the lightness ladder was preserved.
+- **Ember accent (`--primary`) is currently used both for the focus ring and for primary-button surfaces.** This is acceptable for Phase 1 — the architecture's "ember-as-ring-only, ghost-by-default for chrome buttons" rewiring belongs to Phase 2.
+- **Star color reads well against the new background.** The slight hue shift from 85 → 75 was the right call; the older 85 would have looked olive against hue-65 surfaces.
+- **Contrast is acceptable on inspection.** Body text (`oklch(0.92 0.02 80)` on `oklch(0.145 0.012 65)`) is high-contrast (~14:1 estimated); muted-foreground on background sits comfortably above WCAG AA. The ember primary on dark background reads strongly. A formal per-surface AA audit is deferred to Phase 6 polish.
+- **App is scrollable** — confirmed by automating reader-pane scroll-to-position-0 via the existing screenshot harness.
+
+### Deviations from the approved architecture
+
+- **`react-resizable-panels` retained**, per revision to the architecture issued before Phase 1. The Phase 2 plan in this doc still describes "rail + canvas" as a *visual* pattern; the resize mechanics will stay until/unless a later phase explicitly retires them.
+- **Primary-button and accent-button surfaces still use `--primary`** (the new ember). The architecture targets ember-as-ring-only with ghost-by-default chrome buttons; that rewiring is intentionally deferred to Phase 2 component work, not Phase 1 token work.
+- **Light-mode chart 4 / 5 hues** were warmed to 130 / 350 (vs. baseline 150 / 300) for hue-coherence with the warm system. Stats / Health pages were not visited in this round; if the warmer chart spread reads as too monochromatic against the warm cream, it can be re-balanced in Phase 6.
+
 ## Follow-up Tasks
 
-- [ ] TBD (populate after each phase)
+- [ ] Phase 2 — App shell + navigation work (rail visual treatment, command-palette absorbs nav). Will revisit `--primary` usage in chrome buttons.
+- [ ] Phase 6 — Per-surface WCAG AA contrast audit with a checker tool, especially `muted-foreground`-on-`muted` (settings page secondary copy) and `chart-1..5` series in `Stats` / `Health`.
+- [ ] Visit `/stats` and `/health` once visual changes settle to confirm the warmed chart spread still reads as five distinct series.
