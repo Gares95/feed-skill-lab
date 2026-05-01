@@ -9,7 +9,7 @@
 - Concept name: **Impeccable Redesign**
 - Branch: `concept/01-impeccable-redesign`
 - PR: TBD
-- Status: Phases 1–2 complete (foundations + app shell visual rail+canvas); Phase 3 not started
+- Status: Phases 1–3 complete (foundations + app shell + article list editorial queue); Phase 4 not started
 - Created: 2026-05-01
 - Last updated from main: `b7a2f5f` — *Merge concept documentation template*
 - Baseline: `lab-polish-v1` (tag on `main`)
@@ -229,6 +229,7 @@ Each phase requires its own go-ahead before any file edits in `src/`. Status:
 
 1. **Phase 1 — Design-system foundations. ✅ Complete.** See "Phase 1 Implementation Notes" below.
 2. **Phase 2 — App shell + navigation visual redesign. ✅ Complete.** See "Phase 2 Implementation Notes" below. `react-resizable-panels` retained; visual rail+canvas treatment only.
+3. **Phase 3 — Article list redesign. ✅ Complete.** See "Phase 3 Implementation Notes" below. Continuous typographic queue with day groups; no row borders; selection by tonal warmth + weight.
 2. **Phase 2 — App shell + navigation.** New `AppShell.tsx`, new `Rail` and `Canvas` components, retire `react-resizable-panels` usage, command-palette absorbs nav, `\` toggle.
 3. **Phase 3 — Article list and feed browsing.** `ArticleList.tsx` and `ArticleRow.tsx` rewrite to continuous typographic list; new `DayDivider`, `Eyebrow`. Search-into-palette wiring.
 4. **Phase 4 — Reader pane.** `ReadingPane.tsx`, `ArticleHeader.tsx`, `TypographySettings.tsx` rewire; new `EdgeRail`; reader-mode default-on for full-content articles; highlight rail.
@@ -385,10 +386,78 @@ Behavior verifications during capture:
 - **Architecture said:** "rail's content shifts based on context: by default it shows the article list for the active feed, with feeds + folders accessible behind a small 'Feeds' affordance at the top." This is a structural rewire (the rail would absorb the article list). Phase 2 is **visual only** per scope; the rail still holds the feed/folder tree exactly as before. Structural absorption is Phase 3 work.
 - **Default panel sizes** were nudged (28/30/50 → 24/28/48). Cosmetic only — `minSize`/`maxSize` constraints and resize behavior are unchanged.
 
+## Phase 3 Implementation Notes
+
+### What changed
+
+A visual rewrite of the article-list pane. The data shape, all selection/search/date-range/mark-all/optimistic-read semantics, and every keyboard binding stay exactly as they were. The list now reads as an editorial reading queue: day-grouped sections, a continuous typographic rhythm with no row borders, a leading dot column for star/unread state, and a softer selected state that uses tonal warmth + weight rather than a filled chip.
+
+#### `src/components/articles/ArticleList.tsx`
+
+- **Toolbar quieter.** The search row drops its hard `border-b`. The metadata row (heading + date range + count + mark-all) is a 40px row with no bottom border. The heading is now uppercase tracked muted-foreground (`text-[11px] font-medium uppercase tracking-[0.16em]`) — sits as a small editorial label rather than an h2-style header. Mark-all-read button recedes at `opacity-60`, lifts to full on hover/focus.
+- **Day grouping.** A small client-only helper `groupByDay(articles)` partitions the (already date-sorted) array into `{ key, label, articles }` clusters. Labels: `Today`, `Yesterday`, `EEE, MMM d` for this year, `MMM d, yyyy` for older. Each group renders a small uppercase tracked label (`text-[10px] tracking-[0.18em]`) with a hairline rule extending right to the edge — magazine-style section break. Inter-group spacing is 20px; intra-group spacing comes from the row padding alone (no separators between articles).
+- **No grouping during search.** When `searchQuery` is non-empty, the list renders flat under the "Search Results" heading — search results have no useful date sequence to group by, and a mixed-day cluster would look noisy.
+- **`Load more` quieter.** Previous treatment was an outline button on top of a `border-t`. New treatment: ghost button, uppercase tracked label, no separator border above. Stays centered, keeps the loading spinner.
+- **List padding bumped 16px → 20px** on the toolbar and rows so the editorial register has more breathing room.
+- **Empty / no-results / search-error states unchanged** — copy and behavior preserved; they sit on the same warm canvas and still read coherently. (Visual adjustment was permitted; none was needed.)
+
+#### `src/components/articles/ArticleRow.tsx`
+
+- **No `border-b`.** Rhythm comes from row padding (14px top/bottom) and the inter-group spacing in the parent.
+- **Two-column row layout.** A 12px-wide leading column carries the state glyph (warm-amber star if starred, ember dot if unread, blank if read). The content column carries an eyebrow row + a title line.
+- **Eyebrow row.** Feed name + thin horizontal separator + relative time, all in `text-[10px] uppercase tracking-[0.12em] text-muted-foreground`. Time normal-cased and tabular-nums for stable column alignment. The hairline between feed and time is a 12px-wide 1px bar — quiet typographic punctuation.
+- **Title.** `text-[15px] leading-[1.4] text-balance`. Color and weight encode state:
+  - Unread: `text-foreground` (default weight, ~400).
+  - Read: `text-muted-foreground` (default weight). No weight change avoids reflow.
+  - Selected: `text-foreground font-medium`. Weight change is bounded (only one row at a time is selected) and the line-height is fixed, so vertical reflow is negligible.
+- **Selection state.** Replaced the filled `bg-accent` + `pl-[18px]` + 2px-bar pattern with a soft `bg-accent/40` wash + foreground + `font-medium` title. Hover state is `bg-accent/25`. The 2px ember bar is gone — selection now reads as warmth + weight, exactly as the architecture brief specified.
+- **Star icon** keeps the existing `--motion-fast` + `--ease-spring` transition for `[transform, color, fill]` so the toggle still has its tactile feel from `design/08-motion-pass`.
+- **Focus state** stays `ring-2 ring-ring ring-inset`, preserving the keyboard-navigation floor.
+
+### What stayed stable
+
+- Article data shape (`ArticleWithFeed` interface) unchanged.
+- All callbacks unchanged (`onSelectArticle`, `onSearchChange`, `onDateRangeChange`, `onMarkAllRead`, `onRefreshAll`, `onLoadMore`).
+- All semantics — read/unread, starred, mark-all-read, search, date-range filtering, optimistic updates, infinite-scroll-by-cursor — go through the same `AppShell` handlers as before.
+- Keyboard shortcuts (`useKeyboardShortcuts`: next/prev article, toggle star, toggle read, refresh, open original) all still work because they live on `AppShell` and consume `displayedArticles` independent of the list rendering.
+- Server actions, API routes, Prisma, lib, generated files, tests — untouched.
+- `DateRangePicker` component untouched.
+- Empty / search-error / no-feeds / no-results states preserved (copy + behavior).
+- Skip link, landmarks (`<section aria-label="Article list">`), focus-visible rings, `aria-label`s on interactive elements — preserved.
+- `prefers-reduced-motion: reduce` floor — preserved (every transition still goes through the existing motion tokens, which the global media query collapses to ~0ms).
+
+### Validation results
+
+- **`npm run lint`** → `ESLint: No issues found`.
+- **`npm run test`** → 175 passed, 1 skipped.
+- **`npm run build`** → 0 errors, 0 warnings.
+- **`npm audit`** → 0 vulnerabilities.
+
+### Browser observations
+
+Headed Chrome unavailable; used headless Chromium 1217 at 1440×900 desktop and 390×844 mobile.
+
+- `phase3-list.png` (1440×900) — desktop overview with day-grouped list. `TODAY` and `YESTERDAY` labels render with the hairline extending right, evenly tracked. Feed eyebrow ("BBC NEWS") + time row reads as quiet typographic punctuation. Read articles fade to muted-foreground (the third and fourth rows of TODAY). Unread articles carry an ember dot in the leading column. No row borders; rhythm is pure spacing. The list and reader still flow as one canvas (Phase 2 treatment intact).
+- `phase3-search.png` (1440×900) — search query "trump" entered. Heading flips to `SEARCH RESULTS`; date range picker hides; result count updates. List renders flat (no day groups), as designed. Selection / hover affordances unchanged from the day-grouped view.
+- `phase3-mobile-list.png` (390×844) — mobile list view. Day groups carry through with full hairlines. The eyebrow row stays single-line on a 390px viewport because the feed name + 12px separator + relative time fit comfortably under typical content. Search row and metadata row are full-width with the same uppercase tracked label.
+
+Behavioral checks during capture:
+- Article selection still drives `markRead` and `router.push` — the headless harness used the existing click path successfully when selecting an article in earlier shoots.
+- Search reactively re-renders the list and the heading, replacing day groups with a flat result set.
+- ScrollArea remains scrollable.
+
+### Deviations from the approved architecture
+
+- **Architecture said:** "Search collapses into the command palette by default (`/` opens it pre-scoped to the active list). Date range remains, but as a small 'Today / This week / All' segmented control rather than an open picker." Phase 3 keeps the existing search input + DateRangePicker components. Reason: the command-palette extension belongs to a dedicated palette/nav phase (currently bundled into the Phase 2 follow-up); replacing the date range picker with a segmented control is component-level work outside the article-list scope and would have churned `DateRangePicker.tsx`. Visual quietening was applied to the in-place toolbar instead.
+- **Architecture said:** "Selection is signaled by warming the row background by ~3% and shifting the title weight from 500 → 600. No 2px indicator bar." Phase 3 ships exactly this — selection = `bg-accent/40` wash + `font-medium` title, and the leading 2px indicator bar from the baseline is gone.
+- **Day labels** use `EEE, MMM d` (e.g. "Mon, Apr 28") rather than the architecture's "smcp small-caps eyebrow" because Geist Sans does not ship the `smcp` OpenType feature; the architecture brief already noted this fallback as the agreed plan.
+
 ## Follow-up Tasks
 
-- [ ] Phase 3 — Article list + feed browsing (continuous typographic list, day dividers, eyebrow). Will reconsider whether the rail should absorb the article list and how Feeds/Folders surfaces from a typographic toggle.
-- [ ] Decide whether `--sidebar` should be tinted *darker* than `--background` to match the "rail-in-shadow, canvas-in-lamplight" Reading Lamp metaphor. Currently `--sidebar` is one tonal step lighter (carry-over from baseline semantics). Token-level change; would land alongside Phase 3 chrome work if pursued.
-- [ ] Move Health / Stats / Settings into the command palette and retire the footer rail. Requires the palette extension — pair with Phase 3.
+- [ ] Phase 4 — Reader pane (centered narrower column, floating edge-rail for actions, reader-mode default, highlight rail).
+- [ ] Decide whether `--sidebar` should be tinted *darker* than `--background` to match the "rail-in-shadow, canvas-in-lamplight" Reading Lamp metaphor. Currently `--sidebar` is one tonal step lighter (carry-over from baseline semantics). Token-level change; would land alongside Phase 5 / 6 if pursued.
+- [ ] Move Health / Stats / Settings into the command palette and retire the footer rail. Requires the palette extension — pair with the eventual nav rework.
+- [ ] Replace `DateRangePicker` with a small `Today / This week / Month / All` segmented control per the architecture brief.
+- [ ] Consider re-pre-scoping the command palette to "search articles" when invoked with `/`.
 - [ ] Phase 6 — Per-surface WCAG AA contrast audit with a checker tool, especially `muted-foreground`-on-`muted` (settings page secondary copy) and `chart-1..5` series in `Stats` / `Health`.
 - [ ] Visit `/stats` and `/health` once visual changes settle to confirm the warmed chart spread still reads as five distinct series.
