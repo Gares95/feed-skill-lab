@@ -349,7 +349,7 @@ export function AppShell({
       : "All Articles";
 
   return (
-    <div className="h-dvh w-screen overflow-hidden">
+    <div className="h-dvh w-screen overflow-hidden bg-background">
       <a
         href="#main-content"
         onClick={(e) => {
@@ -363,7 +363,7 @@ export function AppShell({
       <main id="main-content" tabIndex={-1} className="h-full outline-none">
       {/* Mobile: stacked single-pane layout */}
       <div className="flex h-full flex-col md:hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
-        <div className="flex h-14 shrink-0 items-center gap-2 border-b px-3">
+        <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border/40 px-3">
           {mobileView === "sidebar" ? (
             <Button
               variant="ghost"
@@ -453,7 +453,10 @@ export function AppShell({
         </div>
       </div>
 
-      {/* Desktop: three-pane resizable layout */}
+      {/* Desktop: three-pane resizable layout. Phase 2 visual treatment:
+          rail + canvas — sidebar reads as a quiet rail surface, list and
+          reader share the canvas, dividers recede at rest and surface on
+          hover. Layout engine (react-resizable-panels) is unchanged. */}
       <ResizablePanelGroup
         orientation="horizontal"
         id="app-layout"
@@ -461,10 +464,10 @@ export function AppShell({
       >
         <ResizablePanel
           id="sidebar"
-          defaultSize="28%"
+          defaultSize="24%"
           minSize="200px"
-          maxSize="38%"
-          className="bg-card"
+          maxSize="36%"
+          className="bg-sidebar"
         >
           <Sidebar
             feeds={feeds}
@@ -484,11 +487,11 @@ export function AppShell({
           />
         </ResizablePanel>
 
-        <ResizableHandle />
+        <ResizableHandle className="bg-transparent hover:bg-border transition-colors duration-[var(--motion-fast)] ease-[var(--ease-out-quint)]" />
 
         <ResizablePanel
           id="article-list"
-          defaultSize="30%"
+          defaultSize="28%"
           minSize="250px"
           className="bg-background"
         >
@@ -514,9 +517,9 @@ export function AppShell({
           />
         </ResizablePanel>
 
-        <ResizableHandle />
+        <ResizableHandle className="bg-transparent hover:bg-border transition-colors duration-[var(--motion-fast)] ease-[var(--ease-out-quint)]" />
 
-        <ResizablePanel id="reading-pane" defaultSize="50%" minSize="400px" className="bg-background">
+        <ResizablePanel id="reading-pane" defaultSize="48%" minSize="400px" className="bg-background">
           <ReadingPane
             article={currentArticle}
             isLoading={isArticleLoading}
