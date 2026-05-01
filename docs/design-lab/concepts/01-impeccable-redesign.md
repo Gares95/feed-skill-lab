@@ -1,15 +1,17 @@
 # Concept 01 — Impeccable Redesign
 
-> First radical UI concept on the post-polish track. Architecture-only as of this
-> writing; implementation is gated on explicit approval and will land in seven
-> small phases on this branch.
+> First radical UI concept on the post-polish track. Implemented across seven
+> phases on this branch (`concept/01-impeccable-redesign`), each gated on
+> explicit user approval. Decision: **candidate finalist** — kept on the
+> branch for side-by-side comparison against future concepts before any
+> merge/upstream call.
 
 ## Metadata
 
 - Concept name: **Impeccable Redesign**
 - Branch: `concept/01-impeccable-redesign`
 - PR: TBD
-- Status: Phases 1–6 complete (foundations + app shell + article list + reader pane + mobile layout + final polish); Phase 7 (decision write-up) not started
+- Status: **Candidate finalist** — Phases 1–7 complete. Pending comparison against future concepts before merging or upstreaming.
 - Created: 2026-05-01
 - Last updated from main: `b7a2f5f` — *Merge concept documentation template*
 - Baseline: `lab-polish-v1` (tag on `main`)
@@ -143,26 +145,49 @@ Inherited from canonical Feed via `upstream`, locked for this concept:
 | View                     | Screenshot | Notes |
 | ------------------------ | ---------- | ----- |
 | Desktop list + reader    | `final-desktop.png` | 1440×900. Sidebar rail, editorial article queue, reader column with feed eyebrow + display title + pill actions. |
-| Reader column (desktop)  | `final-reader.png`  | Same layout, second-pass capture. |
+| Reader column (desktop)  | `final-reader.png`  | 690×900, clipped to the visible reader pane only with **Reader mode engaged** ("Exit reader mode" pill, fully extracted body, justified editorial column, anchor underlines). Distinct composition from `final-desktop.png`. |
 | Mobile list              | `final-mobile-list.png` | 390×844, single-pane state machine, quieter top bar. |
 | Mobile reader            | `final-mobile-reader.png` | Editorial reader column with feed eyebrow replacing duplicate screen heading. |
 | Add Feed dialog          | `final-dialog.png`  | Phase 6 dialog chrome — warmer scrim, softer ring/shadow, transparent footer rail, eyebrow-style "Try one of these" header. |
-| Phase 5 (mobile)         | `phase5-mobile-list.png`, `phase5-mobile-sidebar.png`, `phase5-mobile-reader.png` | Pre-polish mobile captures from Phase 5. |
+| Phase 5 (mobile)         | `phase5-mobile-list.png`, `phase5-mobile-sidebar.png` | Pre-polish mobile captures from Phase 5. The Phase 5 mobile-reader capture was byte-identical to `final-mobile-reader.png` (mobile reader didn't change in Phase 6) and was removed to avoid duplicates. |
 | Earlier phase captures   | see `phase1-*`, `phase2-*`, `phase3-*`, `phase4-*` files | Per-phase progression. |
 
 All final screenshots are stored under `docs/design-lab/screenshots/concepts/01-impeccable-redesign/`.
 
-## Local Run Instructions
+## How to review this concept locally
 
 ```bash
 git checkout concept/01-impeccable-redesign
-npm run setup
-npm run dev
+npm run setup    # install deps, generate Prisma client, run migrations
+npm run dev      # http://localhost:3000
 ```
+
+What to look at, in order:
+
+1. **Desktop list + reader** at 1440×900 (or wider). Confirm the rail / queue
+   / reader read as three calm tonal planes; reader column carries the
+   editorial header (feed eyebrow → display title → pill row) on dark.
+2. Click any article. Then click **Reader mode**. Confirm the body grows,
+   the pill flips to "Exit reader mode", and the column stays editorial
+   (justified, link underlines).
+3. **Mobile** at 390×844 (DevTools "Responsive" mode). Cycle through
+   `sidebar ⇄ list ⇄ reader` via the top-bar Menu / back chevron. Confirm
+   the reader top bar shows the feed eyebrow, not a duplicate heading.
+4. **Dialogs.** Click **+** in the sidebar (Add Feed) and the folder ⊕
+   (New folder); click ⋯ → Delete on a folder (Alert dialog). Confirm the
+   warm scrim, softer ring/shadow, and transparent footer rail.
+5. **Empty / error states.** Search for nonsense text in the article
+   queue; clear all feeds (or use Starred with no stars) to see the
+   eyebrow-led empty state. Trigger a search error if convenient.
+6. **Reduced motion.** Toggle `prefers-reduced-motion: reduce` in DevTools;
+   confirm transitions collapse but no layout breaks.
+
+Use `git diff main -- src/actions src/lib src/app/api prisma` to verify
+that no protected surface drifted on this branch.
 
 ## Validation Checklist
 
-End-of-Phase-6 status:
+End-of-Phase-7 status (re-run as part of concept closure):
 
 - [x] `npm run lint` — clean.
 - [x] `npm run test` — 175 passed, 1 skipped.
@@ -214,41 +239,60 @@ End-of-Phase-6 status:
 
 ## Decision
 
-**Provisional (end of Phase 6): _Candidate finalist._** Phases 1–6 land the brief
-end-to-end without violating any hard constraint: no `src/actions`, `src/lib`,
-`src/app/api`, or `prisma/` changes; no new dependencies; lint / test / build /
-audit all green. The reader column reads as editorial rather than SaaS, the
-list reads as a queue rather than a card grid, the sidebar collapses to a
-quiet rail, and mobile inherits the same warm/quiet language without a custom
-shell. The deviations from the architecture brief (rail-and-canvas kept on
-top of `react-resizable-panels` rather than removing it; bottom-bar reader
-actions skipped on mobile in favor of the existing pill row) are
-intentional and listed in Follow-up Tasks; neither blocks the concept.
+**Candidate finalist.** Phases 1–7 land the brief end-to-end without
+violating any hard constraint: no `src/actions`, `src/lib`, `src/app/api`,
+or `prisma/` changes; no new dependencies; lint / test / build / audit
+all green at every phase boundary. The reader column reads as editorial
+rather than SaaS, the list reads as a queue rather than a card grid, the
+sidebar collapses to a quiet rail, and mobile inherits the same
+warm/quiet language without a custom shell. The deviations from the
+original architecture brief (rail-and-canvas kept on top of
+`react-resizable-panels` rather than removing it; bottom-bar reader
+actions skipped on mobile in favor of the existing pill row;
+`CommandPalette` surface chrome polish deferred until the structural
+"absorb Health/Stats/Settings" rework lands) are intentional and listed
+in Follow-up Tasks; none blocks the concept.
 
-The final-status checkbox below stays blank until the user confirms after
-their own browser pass.
+This concept stays on its branch as a finalist for side-by-side
+comparison against future concepts (concept/02, concept/03, …) before
+any merge to `main` or upstream call. It is **not** discarded, **not**
+merged, and **not** intended to be the only concept this lab produces.
 
 - [ ] Keep exploring
 - [ ] Mine for parts
-- [ ] Candidate finalist
+- [x] Candidate finalist
 - [ ] Discard
 - [ ] Upstream selected pieces to canonical Feed
 
-Decision notes: pending user confirmation in browser.
+Decision notes:
+
+- The single hardest call across the whole concept was retaining
+  `react-resizable-panels` (Phase 2) instead of replacing the shell
+  outright. The rail-and-canvas read is delivered visually; the
+  resize-handle affordance remains, but it is the only meaningful
+  carry-over from the old chrome. If a future concept removes the
+  package, mining this branch's tokens, queue, reader, and dialog
+  treatments wholesale is the recommended path.
+- The reader treatment (eyebrow + display title + pill row, edge-aware
+  Aa popover, soft warm selection toolbar, left-rule highlights) is
+  the highest-confidence surface and is the most upstream-able to
+  canonical Feed independently.
+- The dialog chrome (Phase 6) is one tonal step warmer than the rest of
+  shadcn's defaults; if upstreamed, it should travel together with the
+  Phase 1 token diff or it will read as misregistered against a cool
+  surface.
 
 ## Implementation Phases
 
 Each phase requires its own go-ahead before any file edits in `src/`. Status:
 
-1. **Phase 1 — Design-system foundations. ✅ Complete.** See "Phase 1 Implementation Notes" below.
+1. **Phase 1 — Design-system foundations. ✅ Complete.** See "Phase 1 Implementation Notes" below. Token-only pass against `src/app/globals.css`; warm sepia/amber neutrals + ember accent; token names preserved.
 2. **Phase 2 — App shell + navigation visual redesign. ✅ Complete.** See "Phase 2 Implementation Notes" below. `react-resizable-panels` retained; visual rail+canvas treatment only.
 3. **Phase 3 — Article list redesign. ✅ Complete.** See "Phase 3 Implementation Notes" below. Continuous typographic queue with day groups; no row borders; selection by tonal warmth + weight.
-2. **Phase 2 — App shell + navigation.** New `AppShell.tsx`, new `Rail` and `Canvas` components, retire `react-resizable-panels` usage, command-palette absorbs nav, `\` toggle.
-3. **Phase 3 — Article list and feed browsing.** `ArticleList.tsx` and `ArticleRow.tsx` rewrite to continuous typographic list; new `DayDivider`, `Eyebrow`. Search-into-palette wiring.
 4. **Phase 4 — Reader pane redesign. ✅ Complete.** See "Phase 4 Implementation Notes" below. Editorial header (eyebrow row + display title + pill action row), floating top-right Typography settings, no top toolbar border, warmer article-content typography (links + blockquotes), highlights as a left-rule list.
 5. **Phase 5 — Mobile layout. ✅ Complete.** See "Phase 5 Implementation Notes" below. Quieter mobile top bar, editorial reader header (feed eyebrow replaces duplicate screen heading in reader view), tighter mobile reader top padding. Layout state machine (sidebar ⇄ list ⇄ reader) and swipe behavior unchanged.
 6. **Phase 6 — Dialogs, empty / loading states, final polish. ✅ Complete.** See "Phase 6 Implementation Notes" below. Warmer dialog scrim and chrome (`Dialog` / `AlertDialog`), eyebrow-styled empty / no-results / error states in `ArticleList`, softer reader skeleton blocks and selection toolbar, editorial reader empty state.
-7. **Phase 7 — Screenshots and concept-doc closure.** Capture six required screenshots into `docs/design-lab/screenshots/concepts/01-impeccable-redesign/`, fill the Screenshots and Validation tables, write the Decision and Follow-up sections.
+7. **Phase 7 — Screenshots and concept-doc closure. ✅ Complete.** See "Phase 7 Closure Notes" below. Final curated screenshot set, screenshots table updated, validation re-run, decision committed (Candidate finalist), duplicate Phase 2 / Phase 3 entries cleaned up, "How to review this concept locally" section expanded.
 
 ## Phase 1 Implementation Notes
 
@@ -725,6 +769,62 @@ visual-surface; no `actions/`, `lib/`, `app/api/`, or `prisma/` changes.
   formally with a checker tool — the eye-level pass against `globals.css`
   tokens (no text colors changed; only chrome layers swapped) suggests no
   regression, but a real audit remains a follow-up.
+
+## Phase 7 Closure Notes
+
+Documentation, screenshot curation, and final-validation pass. No app
+code changes (`git diff main -- src/` shows only the Phase-1–6 surface
+edits already on this branch).
+
+### What changed
+
+- **Concept doc.** Status metadata flipped from "Phase 7 not started" to
+  **Candidate finalist**. Header summary blockquote rewritten from the
+  pre-implementation "Architecture-only" wording to a closure summary.
+  Implementation Phases list cleaned up: the duplicate Phase 2 / Phase 3
+  entries (one line summarizing the completed work, one line carrying
+  the original architecture-brief sentence) were collapsed to a single
+  ✅ entry per phase. Phase 7 entry marked complete and pointing at this
+  section. Decision section converted from provisional to final, with
+  the `Candidate finalist` checkbox checked and three short upstreaming
+  notes added (the resizable-panels carry-over, the reader-treatment
+  upstream-readiness, and the dialog-with-tokens caveat).
+- **Local-run section.** Renamed "Local Run Instructions" → "How to
+  review this concept locally" and expanded with a six-step review
+  checklist (desktop list+reader, reader-mode toggle, mobile cycle,
+  dialogs, empty/error states, reduced motion) plus the
+  `git diff main` command for verifying the locked-surfaces guarantee.
+- **Screenshots table.** `final-reader.png` description corrected from
+  "Same layout, second-pass capture" to its actual content (690×900
+  clipped to the visible reader pane with **Reader mode engaged**,
+  showing fully extracted body, justified column, anchor underlines).
+  Phase 5 mobile-reader entry trimmed because the file was byte-identical
+  to `final-mobile-reader.png`.
+- **Curation.** Removed `phase5-mobile-reader.png` (byte-identical to
+  `final-mobile-reader.png` — `cmp` confirmed).
+
+### Final-validation results
+
+| Check | Result |
+| ----- | ------ |
+| `npm run lint` | clean. |
+| `npm run test` | 21 passed / 1 skipped suites; 175 / 1 skipped tests. |
+| `npm run build` | succeeded; 10/10 static pages; route sizes unchanged. |
+| `npm audit` | 0 vulnerabilities. |
+| `git diff main -- src/actions src/lib src/app/api prisma package.json package-lock.json` | empty. |
+
+### What stayed stable
+
+- Every line of `src/actions/`, `src/lib/`, `src/app/api/`, `prisma/`,
+  `package.json`, `package-lock.json`. Verified via `git diff` above.
+- Phases 1–6 implementation surfaces. No re-edits were made in this
+  pass.
+- Screenshot files for Phases 1–6 (with the one byte-identical
+  exception removed for clarity).
+- `PRODUCT.md` and `DESIGN.md` at the repo root, unchanged from when
+  Impeccable / `teach` and `document` produced them.
+
+## Follow-up Tasks
 
 - [ ] Floating right-edge action rail experiment (vertical column with all four reader actions, sticky, reduced-motion-aware) — Phase 6 polish work.
 - [ ] Reader-mode-default-on for articles whose feed content is heuristically truncated — needs a separate decision on the heuristic before shipping.
