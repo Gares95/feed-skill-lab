@@ -61,10 +61,22 @@ See [`docs/design-lab/initial-design-skill-audit.md`](docs/design-lab/initial-de
 
 | Concept | Branch | PR | Status | Screenshot | Notes |
 |---|---|---|---|---|---|
-| Editorial Reader | `concept/01-editorial-reader` | TBD | Planned | TBD | Reader-first direction |
+| Impeccable Redesign / Reading Lamp | `concept/01-impeccable-redesign` | [#1](https://github.com/Gares95/feed-skill-lab/pull/1) | Candidate finalist | [`docs/design-lab/gallery/01-impeccable-redesign.png`](docs/design-lab/gallery/01-impeccable-redesign.png) | Warm, editorial, reader-first redesign generated through Impeccable. |
 | Command Center | `concept/02-command-center` | TBD | Planned | TBD | Keyboard/action-first direction |
 | Compact Pro | `concept/03-compact-pro` | TBD | Planned | TBD | Dense power-user direction |
 | Magazine Dashboard | `concept/04-magazine-dashboard` | TBD | Planned | TBD | More visual discovery direction |
+
+## Concept 01 — Impeccable Redesign / Reading Lamp
+
+![Impeccable Redesign / Reading Lamp](docs/design-lab/gallery/01-impeccable-redesign.png)
+
+The first **radical** concept on the post-polish track, branched from the polished baseline (`lab-polish-v1`) and built end-to-end through the [Impeccable](.claude/skills/impeccable/) design workflow (`teach` → `document` → `shape` → seven implementation phases).
+
+- **Direction.** Warm, editorial, reader-first — a "reading lamp" pooled around the article body, with sidebar and list recessed at the edge of the light.
+- **What's preserved.** Feed's data model, server actions, Prisma schema, API routes, SQLite-backed persistence, and core RSS/Atom behavior are unchanged. The concept lives entirely in the design surface: tokens, shell chrome, list, reader, dialogs, and mobile layout.
+- **What's not preserved.** The cool indigo dark theme, the always-three-pane shell as the entire identity, and the SaaS-card register on lists, dialogs, and empty states.
+- **Status.** **Candidate finalist** — kept on its branch for side-by-side comparison against future concepts (`concept/02-…`, `concept/03-…`) before any merge to `main` or upstream call. **Not** automatically intended to merge.
+- **Read more.** The full concept doc lives on the concept branch at [`docs/design-lab/concepts/01-impeccable-redesign.md`](https://github.com/Gares95/feed-skill-lab/blob/concept/01-impeccable-redesign/docs/design-lab/concepts/01-impeccable-redesign.md), with per-phase implementation notes, screenshots, validation results, and follow-ups.
 
 ## How to Run Locally
 
@@ -79,7 +91,7 @@ To try a concept branch (once published):
 
 ```bash
 git fetch origin
-git checkout concept/01-editorial-reader
+git checkout concept/01-impeccable-redesign
 npm run setup
 npm run dev
 ```
