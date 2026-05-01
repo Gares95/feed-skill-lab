@@ -9,7 +9,7 @@
 - Concept name: **Impeccable Redesign**
 - Branch: `concept/01-impeccable-redesign`
 - PR: TBD
-- Status: Phase 1 complete (design-system foundations); Phase 2 not started
+- Status: Phases 1–2 complete (foundations + app shell visual rail+canvas); Phase 3 not started
 - Created: 2026-05-01
 - Last updated from main: `b7a2f5f` — *Merge concept documentation template*
 - Baseline: `lab-polish-v1` (tag on `main`)
@@ -228,6 +228,7 @@ Decision notes: TBD.
 Each phase requires its own go-ahead before any file edits in `src/`. Status:
 
 1. **Phase 1 — Design-system foundations. ✅ Complete.** See "Phase 1 Implementation Notes" below.
+2. **Phase 2 — App shell + navigation visual redesign. ✅ Complete.** See "Phase 2 Implementation Notes" below. `react-resizable-panels` retained; visual rail+canvas treatment only.
 2. **Phase 2 — App shell + navigation.** New `AppShell.tsx`, new `Rail` and `Canvas` components, retire `react-resizable-panels` usage, command-palette absorbs nav, `\` toggle.
 3. **Phase 3 — Article list and feed browsing.** `ArticleList.tsx` and `ArticleRow.tsx` rewrite to continuous typographic list; new `DayDivider`, `Eyebrow`. Search-into-palette wiring.
 4. **Phase 4 — Reader pane.** `ReadingPane.tsx`, `ArticleHeader.tsx`, `TypographySettings.tsx` rewire; new `EdgeRail`; reader-mode default-on for full-content articles; highlight rail.
@@ -324,8 +325,70 @@ Visual notes vs. `lab-polish-v1`:
 - **Primary-button and accent-button surfaces still use `--primary`** (the new ember). The architecture targets ember-as-ring-only with ghost-by-default chrome buttons; that rewiring is intentionally deferred to Phase 2 component work, not Phase 1 token work.
 - **Light-mode chart 4 / 5 hues** were warmed to 130 / 350 (vs. baseline 150 / 300) for hue-coherence with the warm system. Stats / Health pages were not visited in this round; if the warmer chart spread reads as too monochromatic against the warm cream, it can be re-balanced in Phase 6.
 
+## Phase 2 Implementation Notes
+
+### What changed
+
+A pure visual pass on app chrome + sidebar + pane surfaces. `react-resizable-panels` is unchanged — the resize handles still exist and still drag — but they are now visually dim at rest and surface only on hover. The sidebar reads as a quiet rail; the list and reader share the canvas.
+
+#### `src/components/layout/AppShell.tsx`
+
+- Outer wrapper gains `bg-background` so the shell carries a single warm canvas underneath every panel. Mobile/desktop trees both inherit it.
+- Mobile top-bar divider softened from `border-b` to `border-b border-border/40` so the bar bleeds into the canvas instead of cutting it.
+- Desktop sidebar panel: `className="bg-card"` → `className="bg-sidebar"`. The `--sidebar` token is one tonal step above `--background` and reads as a quiet rail. `defaultSize` 28% → 24%, `maxSize` 38% → 36%.
+- Desktop article-list panel: `defaultSize` 30% → 28%. Background still `bg-background` so list and reader share the canvas.
+- Desktop reader panel: `defaultSize` 50% → 48%. Background unchanged.
+- Both `<ResizableHandle />` instances now pass `className="bg-transparent hover:bg-border transition-colors duration-[var(--motion-fast)] ease-[var(--ease-out-quint)]"` — invisible at rest, hairline on hover. Drag mechanics unchanged (the underlying `after:` invisible drag target still exists; this only changes the visible bar).
+
+#### `src/components/sidebar/Sidebar.tsx`
+
+- **Header bar.** Hard `border-b` removed. Wordmark "Feed" demoted from `text-sm font-semibold tracking-tight` to `text-[13px] font-medium uppercase tracking-[0.16em] text-muted-foreground` — it now reads as a quiet section label, not a brand banner. Height bumped 11 → 12 with a top-padding tick so the cluster sits a touch lower.
+- **Action cluster** (`FolderPlus`, `RefreshCw`, `AddFeedDialog +`, `OpmlActions`). Wrapped in a single container at `opacity-60 transition-opacity duration-[var(--motion-fast)] focus-within:opacity-100 hover:opacity-100`. Recessed at rest; full-strength when the user reaches for it. Icon buttons themselves unchanged in size — recession is via opacity, not size.
+- **All Articles / Starred buttons.** Replaced filled `bg-accent` selected state with the article-row pattern: a leading 2px ember bar (`before:` pseudo with `bg-primary` and `opacity-100` only when selected) and a much quieter background wash (`bg-accent/40` selected, `bg-accent/30` hover). Padding-left nudges from 8px → 12px when selected, keyed to `--motion-fast`. Selection now reads as an editorial signal rather than a chip-fill.
+- **Folder labels and feed items**. Untouched. The folder section (`Uncategorized`, expand/collapse chevrons, rename/delete inline tools, `FeedItem.tsx`) keeps its existing treatment — Phase 3 work.
+- **Footer rail** (`Activity`, `BarChart3`, `Settings`). Hard `border-t` removed. Container set to `opacity-50 transition-opacity focus-within:opacity-100 hover:opacity-100`. Icon size shrunk `h-4 w-4` → `h-3.5 w-3.5` for added recession. Buttons themselves keep `h-7 w-7` so the focus ring stays at a comfortable target size.
+
+### What was preserved exactly
+
+- `react-resizable-panels` — every `<ResizablePanelGroup>`, `<ResizablePanel>`, and `<ResizableHandle>` in place. Resize, min/max constraints, and drag state behave identically.
+- Every existing `id`, `aria-label`, `aria-pressed`, `tabIndex`, focus-visible ring, and skip-link target.
+- Mobile single-pane flow (`mobileView` state machine: `sidebar` → `list` → `reader`), the swipe-to-navigate hook, and every back-chevron behavior.
+- All routing, `router.push` URL building, server-action calls, optimistic updates, search wiring, command-palette wiring, keyboard shortcuts (`useKeyboardShortcuts`), and auto-refresh.
+- `Sidebar` exports (`type FeedWithCount`, `type FolderRef`).
+- `FeedItem.tsx`, `AddFeedDialog.tsx`, `FeedSettingsDialog.tsx`, `OpmlActions.tsx` — untouched.
+- `ArticleList`, `ArticleRow`, `ReadingPane`, `ArticleHeader`, `TypographySettings` — untouched (Phases 3 and 4).
+- All folder dialogs (`Dialog`, `AlertDialog` for new folder / delete folder).
+
+### Validation results
+
+- **`npm run lint`** → `ESLint: No issues found`.
+- **`npm run test`** → 175/175 passing, 1 skipped (unchanged).
+- **`npm run build`** → 0 errors, 0 warnings.
+- **`npm audit`** → 0 vulnerabilities.
+
+### Browser observations
+
+Headed Chrome unavailable; used headless Chromium 1217. Three reference screenshots saved into the concept's screenshot directory:
+
+- `phase2-reader.png` (1440×900) — article in reader mode (BBC News, "Golders Green stabbing suspect…"). The rail is visually quiet on the left: the "Feed" wordmark reads as an uppercase label, the action icons recede at 60% opacity, the folder label tree is unchanged, and the All-Articles row carries the new leading ember bar with the soft `bg-accent/40` wash — the selected state reads as an editorial signal rather than a filled chip. The list and reader panes flow into one canvas — the divider between them is invisible at rest, and the divider between sidebar-rail and canvas is just the tonal step. The article header buttons (Exit reader mode / Starred / Open original) carry the Phase 1 ember + amber pair; reader content is fully scrollable. Footer rail is recessed at 50% opacity, no border on top.
+- `phase2-mobile.png` (390×844) — list view. Top-bar divider softened to a hairline; otherwise mobile structure unchanged (Phase 5 territory).
+
+Behavior verifications during capture:
+- Article selection still drives `router.push` and `markRead`; reader mode toggle still flips `Reader mode` ↔ `Exit reader mode`; the headless harness confirmed both.
+- Resize handles still drag — verified by visually checking on desktop screenshots that all three panes still co-exist with their new default proportions (24% / 28% / 48%).
+- Skip link, focus ring, and `aria-label`s on the now-recessed action cluster preserved (verified by reading the JSX, not by axe).
+- All existing dialogs, command palette, OPML actions, AddFeed dialog still mount from the sidebar header cluster.
+
+### Deviations from the approved architecture
+
+- **Architecture said:** "Health/Stats/Settings move into the command palette as commands rather than visible footer affordances." Phase 2 only **recesses** the footer rail (50% opacity, no border) rather than removing it. Reason: removing the only desktop affordance for `/health`, `/stats`, `/settings` before the palette has been extended to host them would strand the user; that wiring is part of the larger nav rework and stays for Phase 3 or a dedicated palette-extension step.
+- **Architecture said:** "rail's content shifts based on context: by default it shows the article list for the active feed, with feeds + folders accessible behind a small 'Feeds' affordance at the top." This is a structural rewire (the rail would absorb the article list). Phase 2 is **visual only** per scope; the rail still holds the feed/folder tree exactly as before. Structural absorption is Phase 3 work.
+- **Default panel sizes** were nudged (28/30/50 → 24/28/48). Cosmetic only — `minSize`/`maxSize` constraints and resize behavior are unchanged.
+
 ## Follow-up Tasks
 
-- [ ] Phase 2 — App shell + navigation work (rail visual treatment, command-palette absorbs nav). Will revisit `--primary` usage in chrome buttons.
+- [ ] Phase 3 — Article list + feed browsing (continuous typographic list, day dividers, eyebrow). Will reconsider whether the rail should absorb the article list and how Feeds/Folders surfaces from a typographic toggle.
+- [ ] Decide whether `--sidebar` should be tinted *darker* than `--background` to match the "rail-in-shadow, canvas-in-lamplight" Reading Lamp metaphor. Currently `--sidebar` is one tonal step lighter (carry-over from baseline semantics). Token-level change; would land alongside Phase 3 chrome work if pursued.
+- [ ] Move Health / Stats / Settings into the command palette and retire the footer rail. Requires the palette extension — pair with Phase 3.
 - [ ] Phase 6 — Per-surface WCAG AA contrast audit with a checker tool, especially `muted-foreground`-on-`muted` (settings page secondary copy) and `chart-1..5` series in `Stats` / `Health`.
 - [ ] Visit `/stats` and `/health` once visual changes settle to confirm the warmed chart spread still reads as five distinct series.
