@@ -288,13 +288,11 @@ All existing keyboard shortcuts (`j`/`k`, `s`, `m`, `r`, `Shift+R`, `o`,
 
 ## Implementation Phases
 
-Each phase requires its own go-ahead. This concept doc is the only
-deliverable of Phase 1.
+Each phase requires its own go-ahead.
 
-1. **Concept architecture and docs** — *this phase.* Doc + scaffolding.
-2. **Design-system / visual foundation** — extend `globals.css` with the
-   cockpit accent, kbd-chip vars, density tokens, status-bar tokens. Add
-   a `Kbd` UI primitive. No layout changes yet.
+1. **Concept architecture and docs** — ✅ Complete. Doc + scaffolding.
+2. **Design-system / visual foundation** — ✅ Complete. See Phase 2
+   Implementation Notes below.
 3. **App shell + command surface** — new `AppShell` grid skeleton with
    ContextBar + NavRail + Inspector + StatusBar shells (queue still
    mounts the existing `ArticleList`). Mode state machine introduced.
@@ -310,6 +308,70 @@ deliverable of Phase 1.
    import/export, Health, Stats, Settings; all empty / loading flavors.
 9. **Screenshots, validation, concept-doc closure** — capture the
    screenshot table, fill the validation checklist, write the Decision.
+
+## Phase 2 Implementation Notes
+
+Done on child branch `concept/02-command-center-02-tokens`. Scope: visual
+foundation only — tokens + a `Kbd` primitive. No layout, no AppShell, no
+CommandPalette behavior changes. Tokens are added additively so the rest
+of the polished baseline keeps rendering until a later phase consumes
+the new chrome.
+
+**Palette commitments**
+
+- Surface hue cooled from `250` (cool indigo) → `230` (cool slate)
+  across both light and dark modes. Lightness deltas preserved so the
+  background → card → popover plane separation remains.
+- Single accent shifted from cool indigo `oklch(0.68 0.10 250)` → cool
+  cyan `oklch(0.72 0.13 220)` (dark mode) and `oklch(0.55 0.13 220)`
+  (light mode). `--ring` is a slightly brighter cyan
+  `oklch(0.78 0.13 220)` for clear focus visibility.
+- `--primary-foreground` in dark mode flipped from near-white
+  `oklch(0.985 0 0)` → deep slate `oklch(0.18 0.005 230)` so primary
+  buttons clear WCAG AA against the new lighter cyan background.
+
+**New cockpit token blocks** (in `src/app/globals.css`)
+
+- *Geometry:* `--cockpit-context-bar-h` (40px),
+  `--cockpit-status-bar-h` (28px), `--cockpit-rail-w` (52px),
+  `--cockpit-rail-w-pinned` (220px), `--cockpit-row-h-dense` (32px),
+  `--cockpit-row-h-comfortable` (40px),
+  `--cockpit-focus-ring-w` (1.5px), `--cockpit-hairline` (1px).
+- *Surface aliases:* `--cockpit-bg`, `--cockpit-rail-bg`,
+  `--cockpit-queue-bg`, `--cockpit-inspector-bg`,
+  `--cockpit-status-bg`, `--cockpit-status-fg`,
+  `--cockpit-buffer-fg`, `--cockpit-accent`,
+  `--cockpit-accent-foreground`, `--cockpit-rail-active-edge`. Dark
+  mode overrides at the end of the `.dark` block.
+- *Keyboard chip:* `--kbd-bg`, `--kbd-fg`, `--kbd-border`,
+  `--kbd-radius` (4px), `--kbd-font-size` (11px),
+  `--kbd-min-w` (18px), `--kbd-h` (18px). Dark-mode overrides for
+  bg/fg/border so chips read inset on rows but pop on the queue.
+
+**New utilities**
+
+- `.kbd` — the canonical keyboard-chip class. Inline-flex, monospaced,
+  tabular-nums, 18px square minimum, hairline border.
+  `data-pressed="true"` / `data-flash="true"` apply a transient
+  accent-mix tint for visual feedback when the bound shortcut fires.
+- `.cockpit-mono` — monospace + tabular-nums + neutral letter-spacing
+  for counters, time-ago, IDs, and the keystroke buffer indicator.
+
+**New UI primitive**
+
+- `src/components/ui/kbd.tsx` — exports `Kbd` and `KbdGroup`.
+  `Kbd` is a thin `<kbd>` wrapper around `.kbd` with optional
+  `pressed` / `flash` props. `KbdGroup` is an inline-flex span for
+  multi-cap clusters (e.g. `Shift J` rendered as two adjacent caps).
+  Functional component pattern (no `forwardRef`) matching the existing
+  shadcn primitives in this repo.
+
+**Decisions deferred to later phases**
+
+- Whether `react-resizable-panels` survives in the new shell — Phase 3.
+- Whether the status bar is on by default on desktop — Phase 3.
+- Whether to introduce a *light cockpit* mode at all (current Phase 2
+  light-mode tokens are parity-only; the concept is dark-first).
 
 ## Screenshots
 
