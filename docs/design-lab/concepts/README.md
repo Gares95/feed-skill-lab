@@ -12,6 +12,28 @@ Skill Lab — the second experiment track after the polished-baseline pass.
 - Screenshots for each concept go under
   `docs/design-lab/screenshots/<concept-slug>/`.
 
+## Radical concepts
+
+Concept branches are the **radical** track for the lab — they are explicitly
+allowed to substantially change UI layout, visual structure, navigation model,
+component composition, and interaction model.
+
+- The original three-pane shell is **not sacred**. Concepts may collapse,
+  replace, invert, or reinterpret it.
+- Concepts do not have to share a creative method. Concept 01
+  (Impeccable Redesign / Reading Lamp) was driven by the project-local
+  Impeccable skill; Concept 02 (Command Center) is driven by the
+  `redesign-existing-projects` skill. Future concepts may use other skills,
+  audits, or manual direction.
+- The backend / data contract (data model, server actions, Prisma schema,
+  API routes, persistence model, RSS/Atom behavior, OPML semantics,
+  sanitization pipeline, safe-fetch, reader/highlights/star/mark-read
+  semantics) must be preserved unless a change is explicitly justified
+  in the concept doc. UI is the experimental surface.
+- Concepts are not expected to merge into `main`. They may be **mined for
+  parts**, **discarded**, or **promoted to finalist** for side-by-side
+  comparison.
+
 ## Expectations
 
 - Concepts are **not expected to merge into `main`**. `main` continues to track

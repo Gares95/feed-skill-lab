@@ -43,9 +43,16 @@ Explain:
 
 ## What Changes
 
-Describe expected changes to:
+For radical concepts, describe the new architecture explicitly. For polish
+concepts, the existing surfaces below may be enough.
 
-- Layout
+- **Interaction metaphor** — what the interface should *feel like* (e.g.
+  reading room, command center, magazine, dashboard).
+- **Primary user feeling** — what the user should feel at first use.
+- **Layout architecture** — the shell. Three-pane / two-pane / single-pane /
+  mode-aware grid / something else.
+- **Navigation model** — how the user moves between feeds, search,
+  commands, modes, and secondary surfaces (Health/Stats/Settings).
 - Sidebar/navigation
 - Article list
 - Reader pane
