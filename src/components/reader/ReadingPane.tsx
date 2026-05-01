@@ -187,11 +187,18 @@ export function ReadingPane({ article, isLoading = false, onToggleStar }: Readin
       return <ReadingPaneSkeleton maxWidth={config.maxWidth} />;
     }
     return (
-      <div role="region" aria-label="Reading pane" className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center text-muted-foreground">
-        <BookOpen className="h-8 w-8" aria-hidden="true" />
-        <div className="space-y-1">
-          <p className="text-sm font-medium text-foreground">Nothing selected</p>
-          <p className="text-xs">Pick an article from the list to start reading.</p>
+      <div role="region" aria-label="Reading pane" className="flex h-full flex-col items-center justify-center gap-4 px-8 text-center">
+        <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground/80">
+          Reading lamp
+        </span>
+        <BookOpen className="h-6 w-6 text-muted-foreground/70" aria-hidden="true" />
+        <div className="space-y-1.5 max-w-[32ch]">
+          <p className="text-[15px] font-semibold tracking-tight text-foreground">
+            Nothing selected
+          </p>
+          <p className="text-[13px] leading-relaxed text-muted-foreground">
+            Pick an article from the list to start reading.
+          </p>
         </div>
       </div>
     );
@@ -267,7 +274,7 @@ export function ReadingPane({ article, isLoading = false, onToggleStar }: Readin
         <button
           type="button"
           onClick={saveHighlight}
-          className="fixed z-50 flex items-center gap-1.5 rounded-full border border-border/60 bg-popover px-3 py-1.5 text-[12px] font-medium text-popover-foreground shadow-md transition-colors duration-[var(--motion-fast)] ease-[var(--ease-out-quint)] hover:bg-accent"
+          className="fixed z-50 flex items-center gap-1.5 rounded-full border border-border/60 bg-popover px-3 py-1.5 text-[12px] font-medium text-popover-foreground shadow-[0_8px_24px_-12px_rgba(0,0,0,0.55)] ring-1 ring-foreground/5 transition-colors duration-[var(--motion-fast)] ease-[var(--ease-out-quint)] hover:bg-accent hover:text-foreground"
           style={{
             top: selection.rect.top - 36,
             left: selection.rect.left + selection.rect.width / 2 - 50,
@@ -296,35 +303,35 @@ function ReadingPaneSkeleton({ maxWidth }: { maxWidth: number }) {
           style={{ maxWidth: `${maxWidth}px` }}
         >
           <div className="space-y-5 pb-6">
-            <div className="space-y-2">
-              <div className="h-3 w-24 rounded bg-muted" />
+            <div className="space-y-3">
+              <div className="h-2.5 w-20 rounded-full bg-foreground/10" />
               <div className="space-y-2">
-                <div className="h-7 w-11/12 rounded bg-muted" />
-                <div className="h-7 w-3/5 rounded bg-muted" />
+                <div className="h-7 w-11/12 rounded-md bg-foreground/12" />
+                <div className="h-7 w-3/5 rounded-md bg-foreground/12" />
               </div>
             </div>
             <div className="flex gap-2">
-              <div className="h-3 w-20 rounded bg-muted/70" />
-              <div className="h-3 w-24 rounded bg-muted/70" />
-              <div className="h-3 w-16 rounded bg-muted/70" />
+              <div className="h-3 w-20 rounded-full bg-foreground/8" />
+              <div className="h-3 w-24 rounded-full bg-foreground/8" />
+              <div className="h-3 w-16 rounded-full bg-foreground/8" />
             </div>
             <div className="flex gap-2">
-              <div className="h-8 w-28 rounded-md bg-muted/80" />
-              <div className="h-8 w-16 rounded-md bg-muted/60" />
-              <div className="h-8 w-28 rounded-md bg-muted/40" />
+              <div className="h-8 w-28 rounded-full bg-foreground/10" />
+              <div className="h-8 w-16 rounded-full bg-foreground/8" />
+              <div className="h-8 w-28 rounded-full bg-foreground/6" />
             </div>
           </div>
           <div className="mt-6 space-y-3">
-            <div className="h-4 w-full rounded bg-muted/70" />
-            <div className="h-4 w-11/12 rounded bg-muted/70" />
-            <div className="h-4 w-10/12 rounded bg-muted/70" />
-            <div className="h-4 w-full rounded bg-muted/70" />
-            <div className="h-4 w-9/12 rounded bg-muted/70" />
+            <div className="h-3.5 w-full rounded bg-foreground/8" />
+            <div className="h-3.5 w-11/12 rounded bg-foreground/8" />
+            <div className="h-3.5 w-10/12 rounded bg-foreground/8" />
+            <div className="h-3.5 w-full rounded bg-foreground/8" />
+            <div className="h-3.5 w-9/12 rounded bg-foreground/8" />
           </div>
           <div className="mt-6 space-y-3">
-            <div className="h-4 w-full rounded bg-muted/70" />
-            <div className="h-4 w-11/12 rounded bg-muted/70" />
-            <div className="h-4 w-7/12 rounded bg-muted/70" />
+            <div className="h-3.5 w-full rounded bg-foreground/8" />
+            <div className="h-3.5 w-11/12 rounded bg-foreground/8" />
+            <div className="h-3.5 w-7/12 rounded bg-foreground/8" />
           </div>
         </div>
       </div>

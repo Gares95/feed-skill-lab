@@ -166,72 +166,45 @@ export function ArticleList({
       </div>
 
       {searchError ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center text-muted-foreground">
-          <AlertCircle className="h-8 w-8 text-destructive" aria-hidden="true" />
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-destructive">{searchError}</p>
-            <p className="text-xs">Try a different query or clear the search.</p>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onSearchChange("")}
-            className="h-7"
-          >
-            Clear search
-          </Button>
-        </div>
+        <EmptyState
+          icon={<AlertCircle className="h-6 w-6 text-destructive/80" aria-hidden="true" />}
+          eyebrow="Search error"
+          title={searchError}
+          body="Try a different query or clear the search."
+          action={{ label: "Clear search", onClick: () => onSearchChange("") }}
+          tone="destructive"
+        />
       ) : articles.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center text-muted-foreground">
+        <>
           {searchQuery ? (
-            <>
-              <Search className="h-8 w-8" aria-hidden="true" />
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-foreground">
-                  No results for &ldquo;{searchQuery}&rdquo;
-                </p>
-                <p className="text-xs">Try different keywords, or clear the search.</p>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onSearchChange("")}
-                className="h-7"
-              >
-                Clear search
-              </Button>
-            </>
+            <EmptyState
+              icon={<Search className="h-6 w-6 text-muted-foreground/70" aria-hidden="true" />}
+              eyebrow="No results"
+              title={`Nothing for “${searchQuery}”`}
+              body="Try different keywords, or clear the search."
+              action={{ label: "Clear search", onClick: () => onSearchChange("") }}
+            />
           ) : !hasFeeds ? (
-            <>
-              <Inbox className="h-8 w-8" aria-hidden="true" />
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-foreground">No feeds yet</p>
-                <p className="text-xs">
-                  Add your first feed from the sidebar to start reading.
-                </p>
-              </div>
-            </>
+            <EmptyState
+              icon={<Inbox className="h-6 w-6 text-muted-foreground/70" aria-hidden="true" />}
+              eyebrow="Empty queue"
+              title="No feeds yet"
+              body="Add your first feed from the sidebar to start reading."
+            />
           ) : (
-            <>
-              <FileText className="h-8 w-8" aria-hidden="true" />
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-foreground">All caught up</p>
-                <p className="text-xs">
-                  No articles in this view. Refresh to check for new items.
-                </p>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onRefreshAll}
-                className="h-7"
-              >
-                <RefreshCw className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-                Refresh feeds
-              </Button>
-            </>
+            <EmptyState
+              icon={<FileText className="h-6 w-6 text-muted-foreground/70" aria-hidden="true" />}
+              eyebrow="All caught up"
+              title="Nothing left to read"
+              body="No articles in this view. Refresh to check for new items."
+              action={{
+                label: "Refresh feeds",
+                onClick: onRefreshAll,
+                icon: <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />,
+              }}
+            />
           )}
-        </div>
+        </>
       ) : (
         <ScrollArea className="flex-1">
           {groups
@@ -297,5 +270,48 @@ export function ArticleList({
         </ScrollArea>
       )}
     </section>
+  );
+}
+
+interface EmptyStateProps {
+  icon: React.ReactNode;
+  eyebrow: string;
+  title: string;
+  body: string;
+  action?: { label: string; onClick: () => void; icon?: React.ReactNode };
+  tone?: "default" | "destructive";
+}
+
+function EmptyState({ icon, eyebrow, title, body, action, tone = "default" }: EmptyStateProps) {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-4 px-8 text-center">
+      <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground/80">
+        {eyebrow}
+      </span>
+      {icon}
+      <div className="space-y-1.5 max-w-[28ch]">
+        <p
+          className={
+            tone === "destructive"
+              ? "text-[15px] font-semibold tracking-tight text-destructive"
+              : "text-[15px] font-semibold tracking-tight text-foreground"
+          }
+        >
+          {title}
+        </p>
+        <p className="text-[13px] leading-relaxed text-muted-foreground">{body}</p>
+      </div>
+      {action && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={action.onClick}
+          className="h-8 gap-1.5 rounded-full border border-border/60 bg-transparent px-3 text-[12px] font-medium text-muted-foreground hover:border-border hover:text-foreground"
+        >
+          {action.icon}
+          {action.label}
+        </Button>
+      )}
+    </div>
   );
 }

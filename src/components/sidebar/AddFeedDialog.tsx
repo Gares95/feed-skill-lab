@@ -114,12 +114,12 @@ export function AddFeedDialog({ onFeedAdded }: AddFeedDialogProps) {
           <DialogTitle>Add Feed</DialogTitle>
         </DialogHeader>
 
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm leading-relaxed text-muted-foreground">
           Paste an RSS/Atom URL, or a site&apos;s homepage URL — Feed will try
           to auto-discover the feed link.
         </p>
 
-        <form onSubmit={handleSubmit} className="mt-3 flex flex-col gap-3">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <Input
             placeholder="https://site.url/feed.xml"
             value={url}
@@ -133,11 +133,11 @@ export function AddFeedDialog({ onFeedAdded }: AddFeedDialogProps) {
           </Button>
         </form>
 
-        <div className="mt-5 border-t pt-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <div className="mt-2 border-t border-border/40 pt-4">
+          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
             Try one of these
           </p>
-          <ul className="mt-2 space-y-1">
+          <ul className="mt-3 space-y-1">
             {SUGGESTED_FEEDS.map((suggestion) => (
               <li key={suggestion.url}>
                 <button
