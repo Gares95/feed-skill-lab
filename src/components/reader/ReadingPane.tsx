@@ -204,7 +204,7 @@ export function ReadingPane({ article, isLoading = false, onToggleStar }: Readin
       </div>
       <ScrollArea className="flex-1">
         <article
-          className="mx-auto px-6 pb-16 pt-14 sm:px-8"
+          className="mx-auto px-5 pb-16 pt-8 sm:px-8 sm:pt-14"
           style={{ maxWidth: `${config.maxWidth}px` }}
         >
           <ArticleHeader
@@ -292,7 +292,7 @@ function ReadingPaneSkeleton({ maxWidth }: { maxWidth: number }) {
       <span className="sr-only">Loading article…</span>
       <div className="flex-1 overflow-hidden">
         <div
-          className="mx-auto animate-pulse px-6 pb-16 pt-14 [animation-duration:1.6s] sm:px-8"
+          className="mx-auto animate-pulse px-5 pb-16 pt-8 [animation-duration:1.6s] sm:px-8 sm:pt-14"
           style={{ maxWidth: `${maxWidth}px` }}
         >
           <div className="space-y-5 pb-6">

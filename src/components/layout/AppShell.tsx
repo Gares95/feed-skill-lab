@@ -361,14 +361,17 @@ export function AppShell({
         Skip to main content
       </a>
       <main id="main-content" tabIndex={-1} className="h-full outline-none">
-      {/* Mobile: stacked single-pane layout */}
+      {/* Mobile: stacked single-pane layout. Phase 5 treatment — quieter top
+          bar, editorial reader header (feed eyebrow instead of a duplicate
+          screen heading), softer divider. Layout state machine
+          (sidebar ⇄ list ⇄ reader) is unchanged. */}
       <div className="flex h-full flex-col md:hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
-        <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border/40 px-3">
+        <div className="flex h-12 shrink-0 items-center gap-2 border-b border-border/30 px-2">
           {mobileView === "sidebar" ? (
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-9 w-9 text-muted-foreground hover:text-foreground"
               onClick={() => setMobileView("list")}
               aria-label="Back to article list"
               title="Back"
@@ -379,7 +382,7 @@ export function AppShell({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-9 w-9 text-muted-foreground hover:text-foreground"
               onClick={() => setMobileView("list")}
               aria-label="Back to article list"
               title="Back to list"
@@ -390,7 +393,7 @@ export function AppShell({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-9 w-9 text-muted-foreground hover:text-foreground"
               onClick={() => setMobileView("sidebar")}
               aria-label="Open feeds sidebar"
               title="Open feeds"
@@ -398,7 +401,15 @@ export function AppShell({
               <Menu className="h-5 w-5" aria-hidden="true" />
             </Button>
           )}
-          <h1 className="truncate text-base font-semibold tracking-tight">{heading}</h1>
+          {mobileView === "reader" ? (
+            <span className="truncate text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              {currentArticle?.feedTitle ?? heading}
+            </span>
+          ) : (
+            <h1 className="truncate text-[15px] font-semibold tracking-tight text-foreground">
+              {heading}
+            </h1>
+          )}
         </div>
         <div className="min-h-0 flex-1">
           {mobileView === "sidebar" && (
