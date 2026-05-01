@@ -9,7 +9,7 @@
 - Concept name: **Impeccable Redesign**
 - Branch: `concept/01-impeccable-redesign`
 - PR: TBD
-- Status: Phases 1–3 complete (foundations + app shell + article list editorial queue); Phase 4 not started
+- Status: Phases 1–4 complete (foundations + app shell + article list + reader pane); Phase 5 not started
 - Created: 2026-05-01
 - Last updated from main: `b7a2f5f` — *Merge concept documentation template*
 - Baseline: `lab-polish-v1` (tag on `main`)
@@ -232,7 +232,7 @@ Each phase requires its own go-ahead before any file edits in `src/`. Status:
 3. **Phase 3 — Article list redesign. ✅ Complete.** See "Phase 3 Implementation Notes" below. Continuous typographic queue with day groups; no row borders; selection by tonal warmth + weight.
 2. **Phase 2 — App shell + navigation.** New `AppShell.tsx`, new `Rail` and `Canvas` components, retire `react-resizable-panels` usage, command-palette absorbs nav, `\` toggle.
 3. **Phase 3 — Article list and feed browsing.** `ArticleList.tsx` and `ArticleRow.tsx` rewrite to continuous typographic list; new `DayDivider`, `Eyebrow`. Search-into-palette wiring.
-4. **Phase 4 — Reader pane.** `ReadingPane.tsx`, `ArticleHeader.tsx`, `TypographySettings.tsx` rewire; new `EdgeRail`; reader-mode default-on for full-content articles; highlight rail.
+4. **Phase 4 — Reader pane redesign. ✅ Complete.** See "Phase 4 Implementation Notes" below. Editorial header (eyebrow row + display title + pill action row), floating top-right Typography settings, no top toolbar border, warmer article-content typography (links + blockquotes), highlights as a left-rule list.
 5. **Phase 5 — Mobile layout.** Re-derive from the new chrome rather than patching `design/11`. Bottom-bar actions, scroll-progress dot, safe-area insets.
 6. **Phase 6 — Dialogs, empty / loading states, final polish.** Restyle `Dialog` / `AlertDialog` / `AddFeedDialog` / `FeedSettingsDialog` / `CommandPalette`. Replace skeletons with rhythm-preserving variants.
 7. **Phase 7 — Screenshots and concept-doc closure.** Capture six required screenshots into `docs/design-lab/screenshots/concepts/01-impeccable-redesign/`, fill the Screenshots and Validation tables, write the Decision and Follow-up sections.
@@ -452,9 +452,81 @@ Behavioral checks during capture:
 - **Architecture said:** "Selection is signaled by warming the row background by ~3% and shifting the title weight from 500 → 600. No 2px indicator bar." Phase 3 ships exactly this — selection = `bg-accent/40` wash + `font-medium` title, and the leading 2px indicator bar from the baseline is gone.
 - **Day labels** use `EEE, MMM d` (e.g. "Mon, Apr 28") rather than the architecture's "smcp small-caps eyebrow" because Geist Sans does not ship the `smcp` OpenType feature; the architecture brief already noted this fallback as the agreed plan.
 
+## Phase 4 Implementation Notes
+
+### What changed
+
+A visual rewrite of the reader pane to make it the emotional center of the Reading Lamp concept. All article fetching, reader-mode extraction, sanitization, highlight semantics, star/open-original/typography-settings persistence, and the `dangerouslySetInnerHTML` injection of pre-sanitized article HTML stay exactly as before. The reader now reads as a quiet editorial column on the warm canvas: no top toolbar chrome, an eyebrow + display-title header, soft pill actions, and a calmer highlights list.
+
+#### `src/components/reader/ArticleHeader.tsx`
+
+- **Eyebrow row** at the top: feed name + thin 1px hairline + date + dot separator + reading time, all in `text-[10px] uppercase tracking-[0.18em] text-muted-foreground`. Same typographic register as the article-list eyebrow — the surfaces feel continuous when the eye crosses from list to reader.
+- **Display title** scaled up: `text-[30px] sm:text-[36px] font-semibold leading-[1.15] tracking-[-0.022em] text-foreground`. Heavier presence than the polished baseline's 28/32 — the title is now the visual anchor of the surface.
+- **Author** broken out as a separate quiet line ("By <author>") rather than crammed into the metadata strip. Reads more like a byline.
+- **Action row** as soft pills (rounded-full, h-8, 12px label, ember-pressed variant for reader-mode-on): Reader mode → Star → Open original. Reader-mode pill uses `bg-primary/15` when active so it reads as warm-pressed rather than as a heavy filled button. `aria-pressed` on Star and Reader-mode is preserved. Star icon keeps the existing `--ease-spring` animation from `design/08`.
+- **No `border-b`** under the header — the section break is purely typographic spacing.
+
+#### `src/components/reader/ReadingPane.tsx`
+
+- **Top toolbar removed.** The previous `h-8 border-b` strip is gone. Typography settings is now an absolutely-positioned button at `top-3 right-3` of the reader region, faded to `opacity-60` and lifting on hover/focus-within. Pointer events scoped so the popover and its trigger remain interactive while the surrounding area stays inert.
+- **Article column** padding is `pt-14 pb-16 px-6 sm:px-8` — generous vertical breathing, slightly tighter horizontal on mobile.
+- **Skeleton** updated to match (no top toolbar bar, same padding rhythm).
+- **Selection toolbar** for highlight creation: rounded-full pill, `bg-popover` with `border-border/60`, same warm ember hover. Same z-index, same coordinates.
+- **Highlights section** rebuilt from "card grid" to "rule list":
+  - Header: uppercase tracked label + hairline + count, identical typographic register to the article-list day-group divider.
+  - Each highlight: `border-l-2 border-star/60 pl-4`, italic quote, no card chrome. Edit/delete icon buttons keep the same hover-reveal behavior. The warm-amber star color reuses `var(--star)` from Phase 1.
+  - Spacing between highlights bumped to `gap-5` so the rule strip reads as a sequence of marginalia rather than stacked cards.
+
+#### `src/app/globals.css`
+
+- **`.article-content a`** — links keep `var(--primary)` color but now carry a permanent underline at 40% alpha with 0.18em offset and 1px thickness. On hover the underline goes opaque. Reads as proper editorial body text rather than the previous "underline-on-hover" SaaS treatment.
+- **`.article-content blockquote`** — left rule changed from `3px solid var(--border)` (cool gray) to `2px solid color-mix(in oklch, var(--primary) 55%, transparent)` (ember). Padding-left and vertical margin nudged for breathing room. Quotes now read as warm marginalia consistent with the Reading Lamp metaphor.
+- No other `.article-content` rules changed.
+
+### What stayed stable
+
+- `extractArticle`, `addHighlight`, `deleteHighlight`, `updateHighlightNote`, `getHighlights` actions — all called identically.
+- `applyHighlights`, `rangeTextOffset` from `lib/highlights.ts` — untouched.
+- `dangerouslySetInnerHTML` injection of pre-sanitized HTML — unchanged.
+- `useTypography` hook + `feed-typography` localStorage shape — unchanged.
+- Star toggle, open-original anchor, `aria-pressed` on Star/Reader-mode, `target="_blank" rel="noopener noreferrer"` on the original link — preserved.
+- Reader-mode reset on article switch, image-error hide, highlight-apply effect dependencies — unchanged.
+- Selection toolbar geometry (`fixed`, `top - 36`, `left + width/2 - 50`) — unchanged.
+- Article max-width and font-size/line-height driven by `useTypography` config — unchanged.
+- Empty / loading / reader-error states — copy preserved; loading skeleton restructured to match new chrome but identical role/aria-busy/sr-only behavior.
+
+### Validation results
+
+- **`npm run lint`** → `ESLint: No issues found`.
+- **`npm run test`** → 175 passed, 1 skipped (matches Phases 1–3 baseline).
+- **`npm run build`** → 0 errors, 0 warnings.
+- **`npm audit`** → 0 vulnerabilities.
+
+### Browser observations
+
+Headed Chrome unavailable; used headless Chromium 1217 at 1440×900 desktop and 390×844 mobile.
+
+- `phase4-reader.png` (1440×900) — reader with a BBC News article in **reader mode**. Eyebrow row reads "BBC NEWS · MAY 1, 2026 · 4 MIN READ" in tracked muted-foreground type. Display title "Golders Green stabbing suspect was previously referred to Prevent" sits balanced and confident. Pill action row underneath: "Exit reader mode" carries the warm `bg-primary/15` pressed state, Star and Open original recede as ghost pills. Typography-settings (`Aa`) glyph faded into the top-right corner, unobtrusive but reachable. Article body inherits the warm canvas; first paragraph reads as continuous body text with the new underline treatment ready when links appear. Image renders cleanly with the rounded-corner treatment from baseline.
+- `phase4-mobile-reader.png` (390×844) — mobile reader column. The eyebrow row and pill action row stack identically to desktop, just at narrower width; pills wrap if needed. Title sets at 30px on mobile (per the responsive scale) and remains readable with text-balance. Top-right `Aa` glyph stays in the corner above the title. Mobile top-bar (Phase 2) is intact above.
+
+Behavioral checks during capture:
+- Article selection from the list still triggers `markRead` and routes to `/?article=<id>` (the headless harness used the same click path as Phase 3).
+- Reader-mode toggle clicked, `extractArticle` resolved, content re-rendered with the fade-in transition.
+- The Typography-settings popover opened/closed via the floating `Aa` button (verified during script iteration).
+- Star toggle round-trip and open-original anchor unchanged from Phase 3.
+- Long-article scrolling within the ScrollArea continues to work; the floating `Aa` remains anchored to the reader region (not the scrolling content).
+
+### Deviations from the approved architecture
+
+- **Architecture said:** "Floating right-edge action rail (vertical column outside the article max-width with star, reader-mode, open-original, typography settings)." Phase 4 ships **only** the typography-settings as a floating affordance (top-right). Reader-mode, Star, and Open-original remain in-flow as pill actions inside `ArticleHeader`. Reason: a vertical rail floating outside the article column is fragile under variable max-widths and panel-resize, and would have required scroll-tracking + reduced-motion-aware sticky behavior to feel calm. The pill-action row already reads as quiet editorial chrome and keeps every action a single tab-stop from the title. The vertical-rail experiment is recorded as a Phase 6 follow-up.
+- **Architecture said:** "Reader mode default-on for full-content articles." Not done in Phase 4. Reason: changing the default state changes a persisted UX expectation (the user's prior session state may have implied "off"); a default-on heuristic also requires an inference step ("does this article look truncated?") that has policy implications outside the visual rewrite scope. Logged as a follow-up.
+- **Architecture said:** "Highlight rail in the right margin." Phase 4 keeps highlights as an inline section after the article body, restyled as a quiet rule list rather than as a margin rail. Reason: a true margin rail requires either a wider reader column or a structural split of the article + rail layout, both outside the no-rewrite-of-AppShell scope. The inline rule list reads as marginalia thematically and stays accessible on mobile (where a margin rail collapses anyway).
+
 ## Follow-up Tasks
 
-- [ ] Phase 4 — Reader pane (centered narrower column, floating edge-rail for actions, reader-mode default, highlight rail).
+- [ ] Floating right-edge action rail experiment (vertical column with all four reader actions, sticky, reduced-motion-aware) — Phase 6 polish work.
+- [ ] Reader-mode-default-on for articles whose feed content is heuristically truncated — needs a separate decision on the heuristic before shipping.
+- [ ] Margin highlight rail (true right-margin column) — pair with any future reader-column-vs-rail structural change.
 - [ ] Decide whether `--sidebar` should be tinted *darker* than `--background` to match the "rail-in-shadow, canvas-in-lamplight" Reading Lamp metaphor. Currently `--sidebar` is one tonal step lighter (carry-over from baseline semantics). Token-level change; would land alongside Phase 5 / 6 if pursued.
 - [ ] Move Health / Stats / Settings into the command palette and retire the footer rail. Requires the palette extension — pair with the eventual nav rework.
 - [ ] Replace `DateRangePicker` with a small `Today / This week / Month / All` segmented control per the architecture brief.
