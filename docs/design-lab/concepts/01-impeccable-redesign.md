@@ -9,7 +9,7 @@
 - Concept name: **Impeccable Redesign**
 - Branch: `concept/01-impeccable-redesign`
 - PR: TBD
-- Status: Phases 1–4 complete (foundations + app shell + article list + reader pane); Phase 5 not started
+- Status: Phases 1–5 complete (foundations + app shell + article list + reader pane + mobile layout); Phases 6–7 not started
 - Created: 2026-05-01
 - Last updated from main: `b7a2f5f` — *Merge concept documentation template*
 - Baseline: `lab-polish-v1` (tag on `main`)
@@ -233,7 +233,7 @@ Each phase requires its own go-ahead before any file edits in `src/`. Status:
 2. **Phase 2 — App shell + navigation.** New `AppShell.tsx`, new `Rail` and `Canvas` components, retire `react-resizable-panels` usage, command-palette absorbs nav, `\` toggle.
 3. **Phase 3 — Article list and feed browsing.** `ArticleList.tsx` and `ArticleRow.tsx` rewrite to continuous typographic list; new `DayDivider`, `Eyebrow`. Search-into-palette wiring.
 4. **Phase 4 — Reader pane redesign. ✅ Complete.** See "Phase 4 Implementation Notes" below. Editorial header (eyebrow row + display title + pill action row), floating top-right Typography settings, no top toolbar border, warmer article-content typography (links + blockquotes), highlights as a left-rule list.
-5. **Phase 5 — Mobile layout.** Re-derive from the new chrome rather than patching `design/11`. Bottom-bar actions, scroll-progress dot, safe-area insets.
+5. **Phase 5 — Mobile layout. ✅ Complete.** See "Phase 5 Implementation Notes" below. Quieter mobile top bar, editorial reader header (feed eyebrow replaces duplicate screen heading in reader view), tighter mobile reader top padding. Layout state machine (sidebar ⇄ list ⇄ reader) and swipe behavior unchanged.
 6. **Phase 6 — Dialogs, empty / loading states, final polish.** Restyle `Dialog` / `AlertDialog` / `AddFeedDialog` / `FeedSettingsDialog` / `CommandPalette`. Replace skeletons with rhythm-preserving variants.
 7. **Phase 7 — Screenshots and concept-doc closure.** Capture six required screenshots into `docs/design-lab/screenshots/concepts/01-impeccable-redesign/`, fill the Screenshots and Validation tables, write the Decision and Follow-up sections.
 
@@ -522,11 +522,67 @@ Behavioral checks during capture:
 - **Architecture said:** "Reader mode default-on for full-content articles." Not done in Phase 4. Reason: changing the default state changes a persisted UX expectation (the user's prior session state may have implied "off"); a default-on heuristic also requires an inference step ("does this article look truncated?") that has policy implications outside the visual rewrite scope. Logged as a follow-up.
 - **Architecture said:** "Highlight rail in the right margin." Phase 4 keeps highlights as an inline section after the article body, restyled as a quiet rule list rather than as a margin rail. Reason: a true margin rail requires either a wider reader column or a structural split of the article + rail layout, both outside the no-rewrite-of-AppShell scope. The inline rule list reads as marginalia thematically and stays accessible on mobile (where a margin rail collapses anyway).
 
+## Phase 5 Implementation Notes
+
+### What changed
+
+A small but deliberate mobile pass that re-derives the mobile shell from the Reading Lamp concept rather than carrying the polished baseline mobile chrome forward. The single-pane state machine (`mobileView: "sidebar" | "list" | "reader"`), swipe back-to-list, swipe-to-next-article, and safe-area insets are all unchanged. The desktop three-pane shell was not touched.
+
+#### `src/components/layout/AppShell.tsx`
+
+- **Quieter mobile top bar.** Height `h-14` → `h-12` (back to a tighter editorial chrome — matching the desktop rail's quiet register), left padding `px-3` → `px-2`, divider `border-border/40` → `border-border/30`. The bar reads as a hairline rather than a SaaS app-bar.
+- **Larger touch targets for icon buttons.** `h-8 w-8` → `h-9 w-9` (36px) so the back chevron and feeds menu icon meet the WCAG 2.5.5 / iOS HIG comfort range, with `text-muted-foreground hover:text-foreground` so they recede unless reached for.
+- **Editorial reader-view header.** In `mobileView === "reader"`, the top bar no longer prints a redundant screen heading ("All Articles" / feed name) — the article header below already carries the feed name as an eyebrow and the article title as a display heading. The mobile bar instead shows the **feed name as a tracked uppercase eyebrow** (`text-[10px] uppercase tracking-[0.18em] text-muted-foreground`) using `currentArticle?.feedTitle`. When sidebar/list is active, the same slot renders the screen heading at `text-[15px] font-semibold tracking-tight`.
+- **No bottom-anchored navigation bar.** Considered and skipped — the existing top-bar back/menu pattern + swipe-right-back is already thumb-reachable for the most-used moves, and a persistent bottom dock would have either duplicated `ArticleHeader`'s pill row or required hiding it (a Phase-4 surface). Logged as a follow-up.
+
+#### `src/components/reader/ReadingPane.tsx`
+
+- **Tighter mobile top padding.** Article column `pt-14` → `pt-8 sm:pt-14`. Reason: on mobile the top bar is already a 48px hairline and there's no need for desktop-scale 56px breathing room above the eyebrow row. The desktop `pt-14` is preserved on `sm:` and up.
+- **Slightly tighter horizontal gutter on mobile.** `px-6 sm:px-8` → `px-5 sm:px-8`. The 1-step shrink on mobile gives the display title room to breathe without forcing wraps on tablet-class viewports. Skeleton padding mirrors this.
+
+### What stayed stable
+
+- `mobileView` state machine and the three views (sidebar, list, reader) — unchanged.
+- `useSwipe` integration on the reader view (swipe-right back, swipe-left next article) — unchanged.
+- Article selection, mark-read on open, star toggle, mark-all-read, refresh-all, date-range, search, command palette, dialogs — all paths untouched.
+- `safe-area-inset-top` / `safe-area-inset-bottom` padding on the mobile shell — preserved.
+- `Sidebar`, `ArticleList`, `ReadingPane`, `ArticleHeader`, `TypographySettings` internal behavior, props shape, and Phase 4 visual treatment — preserved.
+- Skip-link, `<main>` landmark, focus-visible ring, `aria-pressed` on Star and Reader-mode — preserved.
+- Desktop three-pane `ResizablePanelGroup` with min/max sizes (sidebar 200–36%, list 250-min, reader 400-min) — untouched.
+
+### Validation results
+
+- **`npm run lint`** → `ESLint: No issues found`.
+- **`npm run test`** → 175 passed, 1 skipped (matches Phase 4 baseline).
+- **`npm run build`** → 0 errors, 0 warnings.
+- **`npm audit`** → 0 vulnerabilities.
+
+### Browser observations
+
+Headed Chrome unavailable; used headless Chromium 1217 at 390×844 (iPhone 14 class) with `mobile: true` device-metrics override.
+
+- `phase5-mobile-list.png` (390×844) — list view. The new 48px top bar carries the menu icon (warmed muted-foreground) + "All Articles" title in 15px tracking-tight; the divider is now a hairline rather than the previous /40 line. Search field and date/mark-all-read row sit beneath. Article rows render with the Phase 3 editorial queue treatment unchanged.
+- `phase5-mobile-sidebar.png` (390×844) — sidebar drawer. Back chevron + heading row identical typographic register; warm rail surface, FEED eyebrow, All Articles + Starred + Uncategorized list, BBC News feed row. Bottom utility icons (Health / Stats / Settings) at the safe-area edge unchanged.
+- `phase5-mobile-reader.png` (390×844) — mobile reader. Top bar reads "BBC NEWS" as a tracked uppercase eyebrow next to the back chevron; the article header below opens with another eyebrow + date + title — but because the screen-heading is gone, the two no longer feel duplicated. Display title sets at 30px (responsive scale), pill actions wrap to a single row, the floating `Aa` typography control stays anchored top-right. Below: the calmer pt-8 top spacing and px-5 mobile gutter give the title roughly the same proportional breathing room desktop has at pt-14/px-8.
+
+Behavioral checks during capture:
+- Tapping the menu icon transitions list → sidebar; tapping back returns to list; tapping an article transitions list → reader, fetches `/api/articles/<id>`, applies `markRead`. All routes preserved.
+- Reader-mode pill, Star pill, Open original anchor visible in mobile reader header (Phase 4 treatment intact at narrow widths).
+- Floating `Aa` reachable on mobile (top-right of reader region).
+- Desktop `md:` breakpoint check via inspector: `ResizablePanelGroup` renders unchanged with the Phase 2 rail/canvas treatment; mobile-only changes are guarded under `md:hidden`.
+- Safe-area insets still applied (`pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]` on the mobile shell).
+
+### Deviations from the approved architecture
+
+- **Architecture said:** "Bottom-bar actions, scroll-progress dot." Phase 5 ships neither. Reason: a bottom action bar in the reader view would either duplicate the `ArticleHeader` pill row that Phase 4 just established (Reader mode / Star / Open original) or require hiding it on mobile only — both create surface drift between mobile and desktop. The existing top-bar back chevron and the swipe-right back gesture cover the primary "leave reader" need; the rest of the actions remain a single tap-target away inside the article header. The scroll-progress dot is a polish affordance more naturally bundled with Phase 6 final-polish work, where an empty-state and loading-state pass would also live. Logged as a follow-up.
+
 ## Follow-up Tasks
 
 - [ ] Floating right-edge action rail experiment (vertical column with all four reader actions, sticky, reduced-motion-aware) — Phase 6 polish work.
 - [ ] Reader-mode-default-on for articles whose feed content is heuristically truncated — needs a separate decision on the heuristic before shipping.
 - [ ] Margin highlight rail (true right-margin column) — pair with any future reader-column-vs-rail structural change.
+- [ ] Mobile bottom-anchored navigation/action bar — re-evaluate during Phase 6 when empty/loading states and dialog polish are in scope; would only land if it can avoid duplicating the Phase 4 ArticleHeader pill row.
+- [ ] Mobile reader scroll-progress dot — small affordance to land with the Phase 6 polish pass.
 - [ ] Decide whether `--sidebar` should be tinted *darker* than `--background` to match the "rail-in-shadow, canvas-in-lamplight" Reading Lamp metaphor. Currently `--sidebar` is one tonal step lighter (carry-over from baseline semantics). Token-level change; would land alongside Phase 5 / 6 if pursued.
 - [ ] Move Health / Stats / Settings into the command palette and retire the footer rail. Requires the palette extension — pair with the eventual nav rework.
 - [ ] Replace `DateRangePicker` with a small `Today / This week / Month / All` segmented control per the architecture brief.
