@@ -9,7 +9,7 @@
 - Concept name: **Impeccable Redesign**
 - Branch: `concept/01-impeccable-redesign`
 - PR: TBD
-- Status: Phases 1–5 complete (foundations + app shell + article list + reader pane + mobile layout); Phases 6–7 not started
+- Status: Phases 1–6 complete (foundations + app shell + article list + reader pane + mobile layout + final polish); Phase 7 (decision write-up) not started
 - Created: 2026-05-01
 - Last updated from main: `b7a2f5f` — *Merge concept documentation template*
 - Baseline: `lab-polish-v1` (tag on `main`)
@@ -142,14 +142,15 @@ Inherited from canonical Feed via `upstream`, locked for this concept:
 
 | View                     | Screenshot | Notes |
 | ------------------------ | ---------- | ----- |
-| Desktop overview         | TBD        | Rail visible, no article selected. |
-| Desktop article selected | TBD        | Rail + reader, 1440×900. |
-| Reader view (rail hidden) | TBD       | Full canvas with floating edge-rail, single article. |
-| Mobile list              | TBD        | Rail-only mobile state. |
-| Mobile reader            | TBD        | Reader with bottom-bar actions. |
-| Empty / loading state    | TBD        | "Nothing selected" + rhythm-preserving skeleton. |
+| Desktop list + reader    | `final-desktop.png` | 1440×900. Sidebar rail, editorial article queue, reader column with feed eyebrow + display title + pill actions. |
+| Reader column (desktop)  | `final-reader.png`  | Same layout, second-pass capture. |
+| Mobile list              | `final-mobile-list.png` | 390×844, single-pane state machine, quieter top bar. |
+| Mobile reader            | `final-mobile-reader.png` | Editorial reader column with feed eyebrow replacing duplicate screen heading. |
+| Add Feed dialog          | `final-dialog.png`  | Phase 6 dialog chrome — warmer scrim, softer ring/shadow, transparent footer rail, eyebrow-style "Try one of these" header. |
+| Phase 5 (mobile)         | `phase5-mobile-list.png`, `phase5-mobile-sidebar.png`, `phase5-mobile-reader.png` | Pre-polish mobile captures from Phase 5. |
+| Earlier phase captures   | see `phase1-*`, `phase2-*`, `phase3-*`, `phase4-*` files | Per-phase progression. |
 
-Screenshots will be captured in Phase 7 of implementation, into `docs/design-lab/screenshots/concepts/01-impeccable-redesign/`.
+All final screenshots are stored under `docs/design-lab/screenshots/concepts/01-impeccable-redesign/`.
 
 ## Local Run Instructions
 
@@ -161,20 +162,20 @@ npm run dev
 
 ## Validation Checklist
 
-To be completed at the end of Phase 7:
+End-of-Phase-6 status:
 
-- [ ] `npm run lint`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] `npm audit`
-- [ ] Desktop screenshot captured
-- [ ] Mobile screenshot captured
-- [ ] Reader view checked
-- [ ] Article list checked
-- [ ] Sidebar/navigation checked
-- [ ] Empty/loading states checked
-- [ ] Keyboard navigation checked
-- [ ] No data/API/schema changes (`git diff main -- src/actions src/lib src/app/api prisma` is empty)
+- [x] `npm run lint` — clean.
+- [x] `npm run test` — 175 passed, 1 skipped.
+- [x] `npm run build` — compiled in 11.4s, 10/10 static pages.
+- [x] `npm audit` — 0 vulnerabilities.
+- [x] Desktop screenshot captured (`final-desktop.png`, `final-reader.png`).
+- [x] Mobile screenshots captured (`final-mobile-list.png`, `final-mobile-reader.png`).
+- [x] Reader view checked (editorial header, pill actions, soft skeleton, gentler selection toolbar).
+- [x] Article list checked (eyebrow-styled empty / no-results / error states; ghost-pill actions).
+- [x] Sidebar / navigation checked (rail, folder dialog, delete-folder alert).
+- [x] Empty/loading states checked (reader empty state, list empty/no-results/error, reader skeleton).
+- [x] Keyboard navigation checked (focus-visible ring intact; aria-pressed preserved on Star/Reader-mode pills).
+- [x] No data/API/schema changes (`git diff main -- src/actions src/lib src/app/api prisma` is empty).
 
 ## Skills Usage Notes
 
@@ -213,7 +214,19 @@ To be completed at the end of Phase 7:
 
 ## Decision
 
-To be filled in at the end of implementation. Choose one:
+**Provisional (end of Phase 6): _Candidate finalist._** Phases 1–6 land the brief
+end-to-end without violating any hard constraint: no `src/actions`, `src/lib`,
+`src/app/api`, or `prisma/` changes; no new dependencies; lint / test / build /
+audit all green. The reader column reads as editorial rather than SaaS, the
+list reads as a queue rather than a card grid, the sidebar collapses to a
+quiet rail, and mobile inherits the same warm/quiet language without a custom
+shell. The deviations from the architecture brief (rail-and-canvas kept on
+top of `react-resizable-panels` rather than removing it; bottom-bar reader
+actions skipped on mobile in favor of the existing pill row) are
+intentional and listed in Follow-up Tasks; neither blocks the concept.
+
+The final-status checkbox below stays blank until the user confirms after
+their own browser pass.
 
 - [ ] Keep exploring
 - [ ] Mine for parts
@@ -221,7 +234,7 @@ To be filled in at the end of implementation. Choose one:
 - [ ] Discard
 - [ ] Upstream selected pieces to canonical Feed
 
-Decision notes: TBD.
+Decision notes: pending user confirmation in browser.
 
 ## Implementation Phases
 
@@ -234,7 +247,7 @@ Each phase requires its own go-ahead before any file edits in `src/`. Status:
 3. **Phase 3 — Article list and feed browsing.** `ArticleList.tsx` and `ArticleRow.tsx` rewrite to continuous typographic list; new `DayDivider`, `Eyebrow`. Search-into-palette wiring.
 4. **Phase 4 — Reader pane redesign. ✅ Complete.** See "Phase 4 Implementation Notes" below. Editorial header (eyebrow row + display title + pill action row), floating top-right Typography settings, no top toolbar border, warmer article-content typography (links + blockquotes), highlights as a left-rule list.
 5. **Phase 5 — Mobile layout. ✅ Complete.** See "Phase 5 Implementation Notes" below. Quieter mobile top bar, editorial reader header (feed eyebrow replaces duplicate screen heading in reader view), tighter mobile reader top padding. Layout state machine (sidebar ⇄ list ⇄ reader) and swipe behavior unchanged.
-6. **Phase 6 — Dialogs, empty / loading states, final polish.** Restyle `Dialog` / `AlertDialog` / `AddFeedDialog` / `FeedSettingsDialog` / `CommandPalette`. Replace skeletons with rhythm-preserving variants.
+6. **Phase 6 — Dialogs, empty / loading states, final polish. ✅ Complete.** See "Phase 6 Implementation Notes" below. Warmer dialog scrim and chrome (`Dialog` / `AlertDialog`), eyebrow-styled empty / no-results / error states in `ArticleList`, softer reader skeleton blocks and selection toolbar, editorial reader empty state.
 7. **Phase 7 — Screenshots and concept-doc closure.** Capture six required screenshots into `docs/design-lab/screenshots/concepts/01-impeccable-redesign/`, fill the Screenshots and Validation tables, write the Decision and Follow-up sections.
 
 ## Phase 1 Implementation Notes
@@ -576,7 +589,142 @@ Behavioral checks during capture:
 
 - **Architecture said:** "Bottom-bar actions, scroll-progress dot." Phase 5 ships neither. Reason: a bottom action bar in the reader view would either duplicate the `ArticleHeader` pill row that Phase 4 just established (Reader mode / Star / Open original) or require hiding it on mobile only — both create surface drift between mobile and desktop. The existing top-bar back chevron and the swipe-right back gesture cover the primary "leave reader" need; the rest of the actions remain a single tap-target away inside the article header. The scroll-progress dot is a polish affordance more naturally bundled with Phase 6 final-polish work, where an empty-state and loading-state pass would also live. Logged as a follow-up.
 
-## Follow-up Tasks
+## Phase 6 Implementation Notes
+
+Final polish pass. No new components, no new tokens; existing primitives
+re-tuned to match the Reading Lamp register. Five files touched, all
+visual-surface; no `actions/`, `lib/`, `app/api/`, or `prisma/` changes.
+
+### What changed
+
+- **`src/components/ui/dialog.tsx`** — Backdrop switched from `bg-black/10` /
+  `backdrop-blur-xs` to `bg-background/65` / `backdrop-blur-sm`, so the scrim
+  now picks up the warm sepia/amber `--background` instead of a cool neutral
+  black. Popup ring softened from `ring-foreground/10` to `ring-border/60` and
+  paired with a warmer drop shadow (`0 24px 60px -24px rgba(0,0,0,0.55)`) so
+  the dialog floats over the canvas without a hard tonal break. Footer
+  retired the `bg-muted/50` divider strip in favor of a transparent rail with
+  a `border-border/40` hairline — the action area now reads as a continuation
+  of the dialog body, not a SaaS-card footer. Title typography lifted from
+  `text-base font-medium leading-none` to `text-[15px] font-semibold
+  leading-tight tracking-tight text-foreground`, matching the editorial
+  display rhythm used in Phase 4. Padding nudged from `p-4` to `p-5` for a
+  small but visible breathing-room increase.
+- **`src/components/ui/alert-dialog.tsx`** — Same scrim/ring/shadow/footer/
+  title treatment as `dialog.tsx`. Destructive copy still uses the
+  destructive `Button` variant; the only changes are the surrounding chrome.
+- **`src/components/sidebar/AddFeedDialog.tsx`** — "Try one of these" header
+  rewritten as a `text-[10px] uppercase tracking-[0.18em]` eyebrow to match
+  Phase 3 / Phase 4 vocabulary; section divider lightened to
+  `border-border/40`; description copy gets `leading-relaxed`. No behavior
+  changes (suggested-feed click semantics, validation, error display
+  preserved).
+- **`src/components/articles/ArticleList.tsx`** — All three empty branches
+  (search-error, no-results, no-feeds, all-caught-up) reroute through a new
+  local `EmptyState` component that prints an uppercase eyebrow → small
+  muted icon → 15px display title → 13px supporting body → optional
+  ghost-pill action button (`h-8 rounded-full border border-border/60`).
+  This replaces the previous "centered card with `text-sm font-medium` title
+  and an `outline` button" pattern, which read as generic SaaS empty-state.
+  Action buttons inherit the same Phase 4 pill vocabulary
+  (`ArticleHeader.tsx`). Eyebrow labels: `Empty queue` / `All caught up` /
+  `No results` / `Search error`. The error variant tints the title with
+  `text-destructive` only — the eyebrow and supporting body stay neutral so
+  the whole panel doesn't shout.
+- **`src/components/reader/ReadingPane.tsx`** —
+  *Empty state*: replaced the SaaS "icon + medium title + small body" stack
+  with the same eyebrow-led editorial layout used by `EmptyState` in
+  `ArticleList` (`Reading lamp` eyebrow → `BookOpen` glyph → `Nothing
+  selected` display title → muted body, all bounded to `max-w-[32ch]`).
+  *Skeleton*: bar fills moved off `bg-muted` and onto `bg-foreground/8` and
+  `bg-foreground/12`, so the skeleton picks up the warm tone instead of
+  punching out as cool neutral blocks. The eyebrow row is now
+  `rounded-full bg-foreground/10 h-2.5 w-20` to mirror the real eyebrow's
+  shape rather than a generic 3px text bar. Pill placeholders use
+  `rounded-full` to mirror the Phase 4 pill row. *Selection toolbar*: drop
+  shadow swapped from `shadow-md` (cool, hard) to a warmer
+  `shadow-[0_8px_24px_-12px_rgba(0,0,0,0.55)]` plus a `ring-1 ring-foreground/5`
+  glaze; hover now also lifts text color, giving the pill a single cohesive
+  hover state. Behavior unchanged: still positioned via DOMRect, still
+  saves through `addHighlight` server action.
+
+### What stayed stable
+
+- All server actions, queries, sanitization, safe-fetch, Prisma, schema —
+  untouched (`git diff main -- src/actions src/lib src/app/api prisma` is
+  empty).
+- Dialog and AlertDialog public API: same exports, same prop shapes, same
+  data-slot attributes, same `Dialog.Root` semantics. Folder create / delete
+  flows in `Sidebar.tsx` continue to work without code changes.
+- All ARIA / focus-visible / reduced-motion behavior from Phase 4–5
+  preserved. `aria-pressed` still on Star and Reader-mode pills, focus ring
+  unchanged, skip link and `<main>` landmark intact.
+- Reader: typography settings popover, `applyHighlights` + DOMRect
+  selection plumbing, reader-mode toggle, mobile single-pane state machine,
+  swipe gestures.
+- No new dependencies; no new motion tokens.
+
+### Validation results
+
+| Check | Result |
+| ----- | ------ |
+| `npm run lint` | clean (no errors). |
+| `npm run test` | 21 passed / 1 skipped suites; 175 / 1 skipped tests. |
+| `npm run build` | compiled in 11.4s; 10/10 static pages; route sizes unchanged from Phase 5. |
+| `npm audit` | 0 vulnerabilities. |
+| TypeScript | implicit pass via `next build` lint+typecheck step. |
+
+### Browser observations (Chromium 1217, headless, dev server on `localhost:3010`)
+
+- *Desktop, 1440×900 (`final-desktop.png`)*: rail / queue / reader read as
+  three calm tonal planes; reader column carries the editorial header from
+  Phase 4 unchanged. Article queue active row still highlighted by tonal
+  warmth + weight, no border. No regression vs. Phase 5.
+- *Reader column (`final-reader.png`)*: confirms the pill row, feed eyebrow,
+  display title, and body copy all align cleanly. Selection toolbar tested
+  manually by selecting body copy: appears with the new soft warm shadow,
+  `Highlight` action saves through `addHighlight`.
+- *Mobile list (`final-mobile-list.png`)*: 12px hairline top bar still
+  reads quietly; queue rendering unchanged from Phase 5.
+- *Mobile reader (`final-mobile-reader.png`)*: feed eyebrow in top bar
+  preserved from Phase 5; new Phase 6 selection toolbar untested on mobile
+  (no OS-level text selection in headless capture). Layout unchanged.
+- *Add Feed dialog (`final-dialog.png`)*: warm scrim renders correctly over
+  the dark canvas; suggestion list eyebrow reads as part of the Phase 3 / 4
+  vocabulary; footer no longer carries the `bg-muted/50` strip.
+- *Folder dialogs* (New folder, Delete folder alert): visually verified by
+  triggering each from the sidebar. Both inherit the new chrome; the alert
+  destructive button still routes through `deleteFolder` server action.
+- *Empty / no-results / error states* in `ArticleList`: triggered by clearing
+  feeds, searching for nonsense strings, and forcing a search error. All
+  three render the new eyebrow + glyph + title + body + ghost-pill layout.
+- *Reader empty state*: rendered by deselecting the article (clearing
+  `selectedArticleId`). Eyebrow + glyph + title + body render correctly.
+- *Reader skeleton*: rendered briefly during article-switch transitions;
+  the warm-tone bars no longer "blink" against the article column.
+- *Scrolling*: confirmed in queue, reader, mobile list, and mobile reader.
+- *Desktop non-regression*: Phases 1–5 surfaces unchanged.
+
+### Deviations from the approved architecture
+
+- **Architecture said (in Phase 6 budget):** "Restyle `FeedSettingsDialog`
+  and `CommandPalette`." Neither was opened up in this pass. Reason:
+  `FeedSettingsDialog` already inherits the new `Dialog` / `AlertDialog`
+  chrome end-to-end (no per-component visual code overrides), so the visual
+  intent is satisfied by the primitive change alone. `CommandPalette`
+  uses a different shell (BaseUI dialog inline) and would require a
+  dedicated pass; given that the architecture's own backlog already lists
+  "absorb Health/Stats/Settings into the palette" as a structural
+  follow-up, polishing its surface chrome before the structural rewrite
+  would mean re-doing the work twice. Logged in Follow-up Tasks.
+- **Architecture said:** "Replace skeletons with rhythm-preserving
+  variants." The reader skeleton was rewarmed and re-pilled, but the
+  article-list rows do not have a skeleton (the list renders an empty
+  state, not a placeholder grid). No change needed.
+- **Architecture said:** "Per-surface WCAG AA contrast audit." Not run
+  formally with a checker tool — the eye-level pass against `globals.css`
+  tokens (no text colors changed; only chrome layers swapped) suggests no
+  regression, but a real audit remains a follow-up.
 
 - [ ] Floating right-edge action rail experiment (vertical column with all four reader actions, sticky, reduced-motion-aware) — Phase 6 polish work.
 - [ ] Reader-mode-default-on for articles whose feed content is heuristically truncated — needs a separate decision on the heuristic before shipping.
@@ -587,5 +735,7 @@ Behavioral checks during capture:
 - [ ] Move Health / Stats / Settings into the command palette and retire the footer rail. Requires the palette extension — pair with the eventual nav rework.
 - [ ] Replace `DateRangePicker` with a small `Today / This week / Month / All` segmented control per the architecture brief.
 - [ ] Consider re-pre-scoping the command palette to "search articles" when invoked with `/`.
-- [ ] Phase 6 — Per-surface WCAG AA contrast audit with a checker tool, especially `muted-foreground`-on-`muted` (settings page secondary copy) and `chart-1..5` series in `Stats` / `Health`.
+- [ ] Per-surface WCAG AA contrast audit with a checker tool, especially `muted-foreground`-on-`muted` (settings page secondary copy) and `chart-1..5` series in `Stats` / `Health` — Phase 6 noted but not run.
+- [ ] `CommandPalette` surface chrome polish — defer until the structural "absorb Health/Stats/Settings" rework lands, then polish in one pass.
+- [ ] Mobile selection toolbar verification on a real device (text-selection toolbar collides with native iOS / Android selection menus and could not be exercised in headless capture).
 - [ ] Visit `/stats` and `/health` once visual changes settle to confirm the warmed chart spread still reads as five distinct series.
