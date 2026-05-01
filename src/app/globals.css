@@ -207,10 +207,14 @@
 
 .article-content a {
   color: var(--primary);
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklch, var(--primary) 40%, transparent);
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+  transition: text-decoration-color var(--motion-fast) var(--ease-out-quint);
 }
 .article-content a:hover {
-  text-decoration: underline;
+  text-decoration-color: var(--primary);
 }
 
 .article-content img {
@@ -229,9 +233,9 @@
 }
 
 .article-content blockquote {
-  border-left: 3px solid var(--border);
-  padding-left: 1em;
-  margin: 1em 0;
+  border-left: 2px solid color-mix(in oklch, var(--primary) 55%, transparent);
+  padding-left: 1.1em;
+  margin: 1.4em 0;
   color: var(--muted-foreground);
   font-style: italic;
 }

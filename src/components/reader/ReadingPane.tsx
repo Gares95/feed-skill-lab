@@ -198,13 +198,13 @@ export function ReadingPane({ article, isLoading = false, onToggleStar }: Readin
   }
 
   return (
-    <div role="region" aria-label="Reading pane" className="flex h-full flex-col">
-      <div className="flex h-8 items-center justify-end gap-1 border-b px-3">
+    <div role="region" aria-label="Reading pane" className="relative flex h-full flex-col">
+      <div className="pointer-events-none absolute right-3 top-3 z-30 opacity-60 transition-opacity duration-[var(--motion-fast)] ease-[var(--ease-out-quint)] hover:opacity-100 focus-within:opacity-100 [&>*]:pointer-events-auto">
         <TypographySettings config={config} onUpdate={update} />
       </div>
       <ScrollArea className="flex-1">
         <article
-          className="mx-auto px-8 py-8"
+          className="mx-auto px-6 pb-16 pt-14 sm:px-8"
           style={{ maxWidth: `${config.maxWidth}px` }}
         >
           <ArticleHeader
@@ -229,7 +229,7 @@ export function ReadingPane({ article, isLoading = false, onToggleStar }: Readin
             key={`${article.id}:${readerMode ? "reader" : "feed"}`}
             ref={contentRef}
             onMouseUp={handleMouseUp}
-            className="article-content mt-6 animate-in fade-in-0 duration-[var(--motion-base)] ease-[var(--ease-out-quint)]"
+            className="article-content mt-2 animate-in fade-in-0 duration-[var(--motion-base)] ease-[var(--ease-out-quint)]"
             style={{
               fontSize: `${config.fontSize}px`,
               lineHeight: config.lineHeight,
@@ -240,11 +240,13 @@ export function ReadingPane({ article, isLoading = false, onToggleStar }: Readin
             }}
           />
           {highlights.length > 0 && !readerMode && (
-            <div className="mt-10 border-t border-border pt-6">
-              <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Highlights ({highlights.length})
+            <div className="mt-14 border-t border-border/50 pt-8">
+              <h3 className="mb-5 flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                <span>Highlights</span>
+                <span aria-hidden="true" className="h-px flex-1 bg-border/50" />
+                <span className="tabular-nums text-muted-foreground/70">{highlights.length}</span>
               </h3>
-              <ul className="flex flex-col gap-2">
+              <ul className="flex flex-col gap-5">
                 {highlights
                   .slice()
                   .sort((a, b) => a.textOffset - b.textOffset)
@@ -265,7 +267,7 @@ export function ReadingPane({ article, isLoading = false, onToggleStar }: Readin
         <button
           type="button"
           onClick={saveHighlight}
-          className="fixed z-50 flex items-center gap-1 rounded-md border border-border bg-popover px-2 py-1 text-xs font-medium text-popover-foreground shadow-md hover:bg-accent"
+          className="fixed z-50 flex items-center gap-1.5 rounded-full border border-border/60 bg-popover px-3 py-1.5 text-[12px] font-medium text-popover-foreground shadow-md transition-colors duration-[var(--motion-fast)] ease-[var(--ease-out-quint)] hover:bg-accent"
           style={{
             top: selection.rect.top - 36,
             left: selection.rect.left + selection.rect.width / 2 - 50,
@@ -288,13 +290,12 @@ function ReadingPaneSkeleton({ maxWidth }: { maxWidth: number }) {
       aria-live="polite"
     >
       <span className="sr-only">Loading article…</span>
-      <div className="flex h-8 items-center justify-end gap-1 border-b px-3" />
       <div className="flex-1 overflow-hidden">
         <div
-          className="mx-auto animate-pulse px-8 py-8 [animation-duration:1.6s]"
+          className="mx-auto animate-pulse px-6 pb-16 pt-14 [animation-duration:1.6s] sm:px-8"
           style={{ maxWidth: `${maxWidth}px` }}
         >
-          <div className="space-y-4 border-b pb-6">
+          <div className="space-y-5 pb-6">
             <div className="space-y-2">
               <div className="h-3 w-24 rounded bg-muted" />
               <div className="space-y-2">
@@ -354,9 +355,9 @@ function HighlightItem({ highlight, onDelete, onSaveNote }: HighlightItemProps) 
   }
 
   return (
-    <li className="group flex flex-col gap-2 rounded-md border border-border bg-card p-3 text-sm">
+    <li className="group flex flex-col gap-2 border-l-2 border-star/60 pl-4 text-sm">
       <div className="flex items-start gap-2">
-        <span className="flex-1 italic text-foreground">“{highlight.text}”</span>
+        <span className="flex-1 italic leading-[1.55] text-foreground/90">“{highlight.text}”</span>
         <button
           type="button"
           onClick={startEdit}
