@@ -10,6 +10,7 @@ import {
   Search,
   X,
 } from "lucide-react";
+import { format, isThisYear, isToday, isYesterday } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,37 @@ interface ArticleListProps {
   onLoadMore: () => void;
 }
 
+interface DayGroup {
+  key: string;
+  label: string;
+  articles: ArticleWithFeed[];
+}
+
+function dayLabel(d: Date): string {
+  if (isToday(d)) return "Today";
+  if (isYesterday(d)) return "Yesterday";
+  if (isThisYear(d)) return format(d, "EEE, MMM d");
+  return format(d, "MMM d, yyyy");
+}
+
+// Sequential grouping. The article list arrives sorted by publishedAt
+// desc; same-day articles cluster naturally. If the list ever ships out
+// of order we just produce extra adjacent groups, which is harmless.
+function groupByDay(articles: ArticleWithFeed[]): DayGroup[] {
+  const groups: DayGroup[] = [];
+  let current: DayGroup | null = null;
+  for (const a of articles) {
+    const d = new Date(a.publishedAt);
+    const key = format(d, "yyyy-MM-dd");
+    if (!current || current.key !== key) {
+      current = { key, label: dayLabel(d), articles: [] };
+      groups.push(current);
+    }
+    current.articles.push(a);
+  }
+  return groups;
+}
+
 export function ArticleList({
   articles,
   selectedArticleId,
@@ -69,13 +101,21 @@ export function ArticleList({
   onLoadMore,
 }: ArticleListProps) {
   const hasUnread = articles.some((a) => !a.isRead);
+  // Search results are not date-sorted in a useful way for day groups;
+  // render flat under a single "Search results" heading.
+  const useDayGroups = !searchQuery;
+  const groups = useDayGroups ? groupByDay(articles) : null;
+
   return (
     <section aria-label="Article list" className="flex h-full flex-col">
-      <div className="flex h-11 items-center gap-2 px-4">
-        <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+      <div className="flex h-11 items-center gap-2 px-5">
+        <Search
+          className="h-4 w-4 shrink-0 text-muted-foreground"
+          aria-hidden="true"
+        />
         <Input
           type="text"
-          placeholder="Search articles..."
+          placeholder="Search articles…"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           className="h-7 border-none bg-transparent px-0 text-sm shadow-none focus-visible:ring-0"
@@ -94,8 +134,8 @@ export function ArticleList({
         )}
       </div>
 
-      <div className="flex h-9 items-center gap-2 border-b px-4">
-        <h2 className="truncate text-xs font-medium text-muted-foreground">
+      <div className="flex h-10 items-center gap-3 px-5 pb-1">
+        <h2 className="truncate text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
           {searchQuery ? "Search Results" : heading}
         </h2>
         {!searchQuery && (
@@ -106,21 +146,23 @@ export function ArticleList({
             onChange={onDateRangeChange}
           />
         )}
-        <span className="ml-auto text-[11px] text-muted-foreground/80 tabular-nums">
-          {isSearching ? "…" : articles.length}
+        <span className="ml-auto flex items-center gap-2">
+          <span className="text-[11px] tabular-nums text-muted-foreground/70">
+            {isSearching ? "…" : articles.length}
+          </span>
+          {!searchQuery && hasUnread && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 opacity-60 transition-opacity duration-[var(--motion-fast)] ease-[var(--ease-out-quint)] hover:opacity-100 focus-visible:opacity-100"
+              onClick={onMarkAllRead}
+              aria-label="Mark all as read"
+              title="Mark all as read"
+            >
+              <CheckCheck className="h-3.5 w-3.5" aria-hidden="true" />
+            </Button>
+          )}
         </span>
-        {!searchQuery && hasUnread && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            onClick={onMarkAllRead}
-            aria-label="Mark all as read"
-            title="Mark all as read"
-          >
-            <CheckCheck className="h-3.5 w-3.5" aria-hidden="true" />
-          </Button>
-        )}
       </div>
 
       {searchError ? (
@@ -192,25 +234,52 @@ export function ArticleList({
         </div>
       ) : (
         <ScrollArea className="flex-1">
-          {articles.map((article) => (
-            <ArticleRow
-              key={article.id}
-              id={article.id}
-              title={article.title}
-              feedTitle={article.feedTitle}
-              publishedAt={article.publishedAt}
-              isRead={article.isRead}
-              isStarred={article.isStarred}
-              isSelected={selectedArticleId === article.id}
-              onSelect={onSelectArticle}
-            />
-          ))}
+          {groups
+            ? groups.map((group, idx) => (
+                <div key={group.key} className={idx > 0 ? "mt-5" : ""}>
+                  <div className="flex items-center gap-3 px-5 pb-1.5 pt-2">
+                    <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground/80">
+                      {group.label}
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className="h-px flex-1 bg-border/60"
+                    />
+                  </div>
+                  {group.articles.map((article) => (
+                    <ArticleRow
+                      key={article.id}
+                      id={article.id}
+                      title={article.title}
+                      feedTitle={article.feedTitle}
+                      publishedAt={article.publishedAt}
+                      isRead={article.isRead}
+                      isStarred={article.isStarred}
+                      isSelected={selectedArticleId === article.id}
+                      onSelect={onSelectArticle}
+                    />
+                  ))}
+                </div>
+              ))
+            : articles.map((article) => (
+                <ArticleRow
+                  key={article.id}
+                  id={article.id}
+                  title={article.title}
+                  feedTitle={article.feedTitle}
+                  publishedAt={article.publishedAt}
+                  isRead={article.isRead}
+                  isStarred={article.isStarred}
+                  isSelected={selectedArticleId === article.id}
+                  onSelect={onSelectArticle}
+                />
+              ))}
           {hasMore && (
-            <div className="flex justify-center border-t p-3">
+            <div className="flex justify-center px-5 py-6">
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                className="h-8 gap-1.5"
+                className="h-8 gap-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground"
                 onClick={onLoadMore}
                 disabled={isLoadingMore}
               >
@@ -220,7 +289,7 @@ export function ArticleList({
                     Loading…
                   </>
                 ) : (
-                  "Load more articles"
+                  "Load more"
                 )}
               </Button>
             </div>

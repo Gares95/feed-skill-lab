@@ -33,48 +33,55 @@ export function ArticleRow({
     <button
       onClick={() => onSelect(id)}
       className={cn(
-        "group/row relative isolate flex w-full flex-col gap-1 border-b py-3 pr-4 text-left outline-none",
-        "transition-[background-color,color,padding-left] duration-[var(--motion-fast)] ease-[var(--ease-out-quint)]",
-        "before:pointer-events-none before:absolute before:inset-y-1 before:left-0 before:w-[2px] before:rounded-r before:bg-primary before:opacity-0 before:transition-opacity before:duration-[var(--motion-fast)]",
-        "hover:before:opacity-40",
-        "focus-visible:bg-accent/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
-        "active:bg-accent",
+        "group/row relative flex w-full gap-3 px-5 py-3.5 text-left outline-none",
+        "transition-colors duration-[var(--motion-fast)] ease-[var(--ease-out-quint)]",
+        "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
         isSelected
-          ? "bg-accent pl-[18px] before:opacity-100"
-          : "pl-4 hover:bg-accent/50",
+          ? "bg-accent/40"
+          : "hover:bg-accent/25",
       )}
     >
       <span
-        className={cn(
-          "line-clamp-2 text-[15px] leading-[1.35] tracking-[-0.005em]",
-          isRead ? "font-normal text-muted-foreground" : "font-medium text-foreground",
-        )}
+        aria-hidden="true"
+        className="mt-[7px] flex h-3 w-3 shrink-0 items-center justify-center"
       >
         {isStarred ? (
-          <Star className="mr-1.5 inline-block h-3 w-3 fill-star text-star align-middle transition-[transform,color,fill] duration-[var(--motion-fast)] ease-[var(--ease-spring)]" />
+          <Star
+            className="h-3 w-3 fill-star text-star transition-[transform,color,fill] duration-[var(--motion-fast)] ease-[var(--ease-spring)]"
+          />
         ) : !isRead ? (
+          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+        ) : null}
+      </span>
+      <div className="min-w-0 flex-1 space-y-1.5">
+        <span className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+          <span className="truncate">{feedTitle}</span>
           <span
             aria-hidden="true"
-            className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-primary align-middle"
+            className="h-px w-3 shrink-0 bg-muted-foreground/30"
           />
-        ) : null}
-        {title}
-      </span>
-      <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-        <span className="max-w-[60%] truncate font-medium uppercase tracking-[0.04em]">
-          {feedTitle}
+          <time
+            dateTime={new Date(publishedAt).toISOString()}
+            suppressHydrationWarning
+            className="shrink-0 normal-case tracking-normal tabular-nums text-muted-foreground/80"
+          >
+            {timeAgo}
+          </time>
         </span>
-        <span aria-hidden="true" className="text-muted-foreground/60">
-          ·
-        </span>
-        <time
-          dateTime={new Date(publishedAt).toISOString()}
-          suppressHydrationWarning
-          className="font-mono tabular-nums"
+        <span
+          className={cn(
+            "block text-[15px] leading-[1.4] text-balance",
+            "transition-[color,font-weight] duration-[var(--motion-fast)] ease-[var(--ease-out-quint)]",
+            isSelected
+              ? "font-medium text-foreground"
+              : isRead
+                ? "text-muted-foreground"
+                : "text-foreground",
+          )}
         >
-          {timeAgo}
-        </time>
-      </span>
+          {title}
+        </span>
+      </div>
     </button>
   );
 }
