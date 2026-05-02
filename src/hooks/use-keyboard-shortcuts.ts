@@ -8,6 +8,7 @@ interface KeyboardShortcutsOptions {
   onRefresh: () => void;
   onRefreshAll: () => void;
   onOpenOriginal: () => void;
+  onToggleSelectCurrent?: () => void;
 }
 
 export function useKeyboardShortcuts(options: KeyboardShortcutsOptions) {
@@ -55,6 +56,12 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions) {
         case "Enter":
           e.preventDefault();
           options.onOpenOriginal();
+          break;
+        case "x":
+          if (options.onToggleSelectCurrent) {
+            e.preventDefault();
+            options.onToggleSelectCurrent();
+          }
           break;
       }
     }

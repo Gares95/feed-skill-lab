@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo, useTransition } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -105,6 +105,22 @@ export function AppShell({
     setNextCursor(initialNextCursor);
     setIsLoadingMore(false);
   }, [initialArticles, initialNextCursor]);
+
+  // Drop selections that no longer exist in the visible queue (e.g. after a
+  // feed/starred/date change re-renders a different article set).
+  useEffect(() => {
+    setCheckedIds((prev) => {
+      if (prev.size === 0) return prev;
+      const visible = new Set(initialArticles.map((a) => a.id));
+      const next = new Set<string>();
+      let changed = false;
+      for (const id of prev) {
+        if (visible.has(id)) next.add(id);
+        else changed = true;
+      }
+      return changed ? next : prev;
+    });
+  }, [initialArticles]);
   const [currentArticle, setCurrentArticle] = useState<ArticleFull | null>(
     initialArticle
   );
@@ -113,6 +129,13 @@ export function AppShell({
   const [mobileView, setMobileView] = useState<"sidebar" | "list" | "reader">(
     "list",
   );
+
+  // Phase 5: UI-only multi-select state. Bulk actions loop existing
+  // single-id server actions client-side — no new endpoints, no schema
+  // changes. The set is reset whenever the visible filter view changes.
+  const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
+  const [isBulkPending, setIsBulkPending] = useState(false);
+  const lastCheckedIdRef = useRef<string | null>(null);
 
   const search = useArticleSearch();
   const { open: paletteOpen, setOpen: setPaletteOpen } = useCommandPalette();
@@ -291,6 +314,107 @@ export function AppShell({
 
   const displayedArticles = search.results ?? articles;
 
+  // ---- Phase 5: bulk selection model (UI-only) -----------------------------
+
+  const handleToggleCheck = useCallback(
+    (id: string, event: React.MouseEvent) => {
+      setCheckedIds((prev) => {
+        const next = new Set(prev);
+        // Shift-click: range-select between last toggled and this one.
+        if (event.shiftKey && lastCheckedIdRef.current) {
+          const ids = displayedArticles.map((a) => a.id);
+          const a = ids.indexOf(lastCheckedIdRef.current);
+          const b = ids.indexOf(id);
+          if (a !== -1 && b !== -1) {
+            const [lo, hi] = a < b ? [a, b] : [b, a];
+            for (let i = lo; i <= hi; i++) next.add(ids[i]);
+            lastCheckedIdRef.current = id;
+            return next;
+          }
+        }
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        lastCheckedIdRef.current = id;
+        return next;
+      });
+    },
+    [displayedArticles],
+  );
+
+  const handleClearSelection = useCallback(() => {
+    setCheckedIds(new Set());
+    lastCheckedIdRef.current = null;
+  }, []);
+
+  const handleSelectAllVisible = useCallback(() => {
+    setCheckedIds(new Set(displayedArticles.map((a) => a.id)));
+  }, [displayedArticles]);
+
+  // Bulk actions loop existing single-id server actions. Optimistic UI
+  // first, then the actual mutations in parallel, then refresh().
+  const handleBulkMarkRead = useCallback(async () => {
+    if (checkedIds.size === 0) return;
+    setIsBulkPending(true);
+    const ids = Array.from(checkedIds);
+    setArticles((prev) =>
+      prev.map((a) => (checkedIds.has(a.id) && !a.isRead ? { ...a, isRead: true } : a)),
+    );
+    try {
+      await Promise.all(
+        ids
+          .filter((id) => !displayedArticles.find((a) => a.id === id)?.isRead)
+          .map((id) => markRead(id)),
+      );
+    } finally {
+      setIsBulkPending(false);
+      handleClearSelection();
+      refresh();
+    }
+  }, [checkedIds, displayedArticles, handleClearSelection, refresh]);
+
+  const handleBulkMarkUnread = useCallback(async () => {
+    if (checkedIds.size === 0) return;
+    setIsBulkPending(true);
+    const ids = Array.from(checkedIds);
+    setArticles((prev) =>
+      prev.map((a) => (checkedIds.has(a.id) && a.isRead ? { ...a, isRead: false } : a)),
+    );
+    try {
+      await Promise.all(
+        ids
+          .filter((id) => displayedArticles.find((a) => a.id === id)?.isRead)
+          .map((id) => markUnread(id)),
+      );
+    } finally {
+      setIsBulkPending(false);
+      handleClearSelection();
+      refresh();
+    }
+  }, [checkedIds, displayedArticles, handleClearSelection, refresh]);
+
+  const handleBulkToggleStar = useCallback(async () => {
+    if (checkedIds.size === 0) return;
+    const items = displayedArticles.filter((a) => checkedIds.has(a.id));
+    if (items.length === 0) return;
+    // Coherent target state: if every checked is already starred, unstar
+    // them; otherwise star the unstarred ones. Uses `toggleStar(id)` which
+    // flips state — we only call it for items whose state needs to change.
+    const target = items.every((a) => a.isStarred) ? false : true;
+    const ids = items.filter((a) => a.isStarred !== target).map((a) => a.id);
+    if (ids.length === 0) return;
+    setIsBulkPending(true);
+    setArticles((prev) =>
+      prev.map((a) => (ids.includes(a.id) ? { ...a, isStarred: target } : a)),
+    );
+    try {
+      await Promise.all(ids.map((id) => toggleStar(id)));
+    } finally {
+      setIsBulkPending(false);
+      handleClearSelection();
+      refresh();
+    }
+  }, [checkedIds, displayedArticles, handleClearSelection, refresh]);
+
   const readerSwipe = useSwipe({
     onSwipeLeft: () => {
       const i = displayedArticles.findIndex((a) => a.id === selectedArticleId);
@@ -343,6 +467,16 @@ export function AppShell({
       if (currentArticle?.link) {
         window.open(currentArticle.link, "_blank", "noopener,noreferrer");
       }
+    },
+    onToggleSelectCurrent: () => {
+      if (!selectedArticleId) return;
+      setCheckedIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(selectedArticleId)) next.delete(selectedArticleId);
+        else next.add(selectedArticleId);
+        lastCheckedIdRef.current = selectedArticleId;
+        return next;
+      });
     },
   });
 
@@ -481,6 +615,14 @@ export function AppShell({
               hasMore={!search.results && nextCursor !== null}
               isLoadingMore={isLoadingMore}
               onLoadMore={handleLoadMore}
+              checkedIds={checkedIds}
+              onToggleCheck={handleToggleCheck}
+              onClearSelection={handleClearSelection}
+              onSelectAllVisible={handleSelectAllVisible}
+              onBulkMarkRead={handleBulkMarkRead}
+              onBulkMarkUnread={handleBulkMarkUnread}
+              onBulkToggleStar={handleBulkToggleStar}
+              isBulkPending={isBulkPending}
             />
           )}
           {mobileView === "reader" && (
@@ -568,6 +710,14 @@ export function AppShell({
                 hasMore={!search.results && nextCursor !== null}
                 isLoadingMore={isLoadingMore}
                 onLoadMore={handleLoadMore}
+                checkedIds={checkedIds}
+                onToggleCheck={handleToggleCheck}
+                onClearSelection={handleClearSelection}
+                onSelectAllVisible={handleSelectAllVisible}
+                onBulkMarkRead={handleBulkMarkRead}
+                onBulkMarkUnread={handleBulkMarkUnread}
+                onBulkToggleStar={handleBulkToggleStar}
+                isBulkPending={isBulkPending}
               />
             </ResizablePanel>
 
@@ -592,6 +742,7 @@ export function AppShell({
           modeLabel={modeLabel}
           itemCount={visibleArticleCount}
           unreadCount={visibleUnreadCount}
+          selectedCount={checkedIds.size}
           isRefreshing={isRefreshing || isPending}
         />
       </div>
