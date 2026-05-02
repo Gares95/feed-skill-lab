@@ -7,6 +7,7 @@ interface StatusBarProps {
   modeLabel: string;
   itemCount: number;
   unreadCount: number;
+  selectedCount?: number;
   isRefreshing?: boolean;
   className?: string;
 }
@@ -15,6 +16,7 @@ export function StatusBar({
   modeLabel,
   itemCount,
   unreadCount,
+  selectedCount = 0,
   isRefreshing,
   className,
 }: StatusBarProps) {
@@ -38,6 +40,18 @@ export function StatusBar({
         />
         <span className="text-foreground/85">{modeLabel}</span>
       </span>
+
+      {selectedCount > 0 && (
+        <span
+          className={cn(
+            "cockpit-mono inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.16em]",
+            "bg-[color-mix(in_oklch,var(--cockpit-accent)_18%,transparent)] text-[var(--cockpit-accent)]",
+          )}
+          aria-label={`${selectedCount} selected`}
+        >
+          {selectedCount} selected
+        </span>
+      )}
 
       <span className="cockpit-mono flex-1 truncate text-muted-foreground">
         <span>{itemCount.toLocaleString()} articles</span>

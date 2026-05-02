@@ -1,22 +1,30 @@
 "use client";
 
+import { useEffect, useMemo, useRef } from "react";
 import {
   AlertCircle,
   CheckCheck,
+  CircleDot,
   FileText,
   Inbox,
   Loader2,
   RefreshCw,
   Search,
+  Square,
+  SquareCheck,
+  Star,
+  StarOff,
   X,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { ArticleRow } from "./ArticleRow";
 import { type DateRange } from "@/lib/date-range";
 import { DateRangePicker } from "./DateRangePicker";
 import type { DateRangeSelection } from "@/components/layout/AppShell";
+import { cn } from "@/lib/utils";
 
 export interface ArticleWithFeed {
   id: string;
@@ -46,6 +54,15 @@ interface ArticleListProps {
   hasMore: boolean;
   isLoadingMore: boolean;
   onLoadMore: () => void;
+  // Phase 5: selection model (UI-only multi-select)
+  checkedIds: Set<string>;
+  onToggleCheck: (id: string, event: React.MouseEvent) => void;
+  onClearSelection: () => void;
+  onSelectAllVisible: () => void;
+  onBulkMarkRead: () => void;
+  onBulkMarkUnread: () => void;
+  onBulkToggleStar: () => void;
+  isBulkPending: boolean;
 }
 
 export function ArticleList({
@@ -67,15 +84,71 @@ export function ArticleList({
   hasMore,
   isLoadingMore,
   onLoadMore,
+  checkedIds,
+  onToggleCheck,
+  onClearSelection,
+  onSelectAllVisible,
+  onBulkMarkRead,
+  onBulkMarkUnread,
+  onBulkToggleStar,
+  isBulkPending,
 }: ArticleListProps) {
   const hasUnread = articles.some((a) => !a.isRead);
+  const sectionRef = useRef<HTMLElement>(null);
+  const checkedCount = checkedIds.size;
+  const selectionActive = checkedCount > 0;
+
+  // Derived flags for the bulk toolbar
+  const checkedSummary = useMemo(() => {
+    let allRead = true;
+    let allStarred = true;
+    let allUnread = true;
+    let allUnstarred = true;
+    for (const a of articles) {
+      if (!checkedIds.has(a.id)) continue;
+      if (a.isRead) allUnread = false;
+      else allRead = false;
+      if (a.isStarred) allUnstarred = false;
+      else allStarred = false;
+    }
+    return { allRead, allStarred, allUnread, allUnstarred };
+  }, [articles, checkedIds]);
+
+  const allVisibleChecked =
+    articles.length > 0 && articles.every((a) => checkedIds.has(a.id));
+
+  // Local Escape handler — clears selection when active. Scoped to this
+  // section so we don't fight dialog/menu Escape handling elsewhere.
+  useEffect(() => {
+    if (!selectionActive) return;
+    function onKey(e: KeyboardEvent) {
+      const t = e.target as HTMLElement | null;
+      if (
+        t &&
+        (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)
+      ) {
+        return;
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClearSelection();
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [selectionActive, onClearSelection]);
+
   return (
-    <section aria-label="Article list" className="flex h-full flex-col">
+    <section
+      ref={sectionRef}
+      aria-label="Article queue"
+      className="flex h-full flex-col"
+    >
       <div className="flex h-11 items-center gap-2 px-4">
         <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         <Input
           type="text"
-          placeholder="Search articles..."
+          placeholder="Search articles…"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           className="h-7 border-none bg-transparent px-0 text-sm shadow-none focus-visible:ring-0"
@@ -94,34 +167,137 @@ export function ArticleList({
         )}
       </div>
 
-      <div className="flex h-9 items-center gap-2 border-b px-4">
-        <h2 className="truncate text-xs font-medium text-muted-foreground">
-          {searchQuery ? "Search Results" : heading}
-        </h2>
-        {!searchQuery && (
-          <DateRangePicker
-            range={dateRange}
-            from={customFrom}
-            to={customTo}
-            onChange={onDateRangeChange}
-          />
-        )}
-        <span className="ml-auto text-[11px] text-muted-foreground/80 tabular-nums">
-          {isSearching ? "…" : articles.length}
-        </span>
-        {!searchQuery && hasUnread && (
+      {/* Header / queue toolbar — flips into bulk mode when items are checked */}
+      {selectionActive ? (
+        <div
+          role="toolbar"
+          aria-label="Bulk actions"
+          className={cn(
+            "flex h-9 items-center gap-1 border-b border-[color-mix(in_oklch,var(--cockpit-accent)_30%,var(--border))] px-2",
+            "bg-[color-mix(in_oklch,var(--cockpit-accent)_10%,transparent)]",
+          )}
+        >
+          <button
+            type="button"
+            onClick={() =>
+              allVisibleChecked ? onClearSelection() : onSelectAllVisible()
+            }
+            className="inline-flex h-6 items-center gap-1.5 rounded-sm px-1.5 text-[11px] text-foreground hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+            aria-label={
+              allVisibleChecked ? "Deselect all visible" : "Select all visible"
+            }
+            title={allVisibleChecked ? "Deselect all visible" : "Select all visible"}
+          >
+            {allVisibleChecked ? (
+              <SquareCheck
+                className="h-3.5 w-3.5 text-[var(--cockpit-accent)]"
+                aria-hidden="true"
+              />
+            ) : (
+              <Square
+                className="h-3.5 w-3.5 text-muted-foreground"
+                aria-hidden="true"
+              />
+            )}
+          </button>
+          <span className="cockpit-mono text-[11px] text-foreground/90">
+            {checkedCount}{" "}
+            <span className="text-muted-foreground">selected</span>
+          </span>
+
+          <span aria-hidden="true" className="mx-1 h-4 w-px bg-border/60" />
+
           <Button
             variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            onClick={onMarkAllRead}
-            aria-label="Mark all as read"
-            title="Mark all as read"
+            size="sm"
+            className="h-6 gap-1 px-1.5 text-[11px]"
+            onClick={onBulkMarkRead}
+            disabled={isBulkPending || checkedSummary.allRead}
+            title="Mark selected as read"
           >
-            <CheckCheck className="h-3.5 w-3.5" aria-hidden="true" />
+            <CheckCheck className="h-3 w-3" aria-hidden="true" />
+            Read
           </Button>
-        )}
-      </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 gap-1 px-1.5 text-[11px]"
+            onClick={onBulkMarkUnread}
+            disabled={isBulkPending || checkedSummary.allUnread}
+            title="Mark selected as unread"
+          >
+            <CircleDot className="h-3 w-3" aria-hidden="true" />
+            Unread
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 gap-1 px-1.5 text-[11px]"
+            onClick={onBulkToggleStar}
+            disabled={isBulkPending}
+            title={
+              checkedSummary.allStarred
+                ? "Unstar selected"
+                : "Star selected"
+            }
+          >
+            {checkedSummary.allStarred ? (
+              <StarOff className="h-3 w-3" aria-hidden="true" />
+            ) : (
+              <Star className="h-3 w-3" aria-hidden="true" />
+            )}
+            {checkedSummary.allStarred ? "Unstar" : "Star"}
+          </Button>
+
+          <span className="ml-auto inline-flex items-center gap-2">
+            {isBulkPending && (
+              <Loader2
+                className="h-3 w-3 animate-spin text-muted-foreground"
+                aria-label="Working"
+              />
+            )}
+            <button
+              type="button"
+              onClick={onClearSelection}
+              className="inline-flex items-center gap-1.5 rounded-sm px-1.5 py-0.5 text-[11px] text-muted-foreground hover:bg-accent/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+              aria-label="Clear selection"
+              title="Clear selection"
+            >
+              <Kbd>esc</Kbd>
+              clear
+            </button>
+          </span>
+        </div>
+      ) : (
+        <div className="flex h-9 items-center gap-2 border-b border-border/60 px-4">
+          <h2 className="truncate text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            {searchQuery ? "Search Results" : heading}
+          </h2>
+          {!searchQuery && (
+            <DateRangePicker
+              range={dateRange}
+              from={customFrom}
+              to={customTo}
+              onChange={onDateRangeChange}
+            />
+          )}
+          <span className="cockpit-mono ml-auto text-[11px] text-muted-foreground/80">
+            {isSearching ? "…" : articles.length}
+          </span>
+          {!searchQuery && hasUnread && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={onMarkAllRead}
+              aria-label="Mark all as read"
+              title="Mark all as read"
+            >
+              <CheckCheck className="h-3.5 w-3.5" aria-hidden="true" />
+            </Button>
+          )}
+        </div>
+      )}
 
       {searchError ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center text-muted-foreground">
@@ -201,12 +377,15 @@ export function ArticleList({
               publishedAt={article.publishedAt}
               isRead={article.isRead}
               isStarred={article.isStarred}
-              isSelected={selectedArticleId === article.id}
+              isCurrent={selectedArticleId === article.id}
+              isChecked={checkedIds.has(article.id)}
+              selectionActive={selectionActive}
               onSelect={onSelectArticle}
+              onToggleCheck={onToggleCheck}
             />
           ))}
           {hasMore && (
-            <div className="flex justify-center border-t p-3">
+            <div className="flex justify-center border-t border-border/40 p-3">
               <Button
                 variant="outline"
                 size="sm"
@@ -225,6 +404,28 @@ export function ArticleList({
               </Button>
             </div>
           )}
+          {/* Footer hint — surface the keyboard model */}
+          <div className="flex items-center justify-end gap-3 border-t border-border/40 px-4 py-2 text-[10.5px] text-muted-foreground/80">
+            <span className="inline-flex items-center gap-1">
+              <KbdGroup>
+                <Kbd>J</Kbd>
+                <Kbd>K</Kbd>
+              </KbdGroup>
+              navigate
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Kbd>X</Kbd>
+              select
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Kbd>S</Kbd>
+              star
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Kbd>M</Kbd>
+              mark
+            </span>
+          </div>
         </ScrollArea>
       )}
     </section>

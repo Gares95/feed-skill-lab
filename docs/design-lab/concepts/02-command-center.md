@@ -300,8 +300,8 @@ Each phase requires its own go-ahead.
    mounts the existing `ArticleList`). Mode state machine introduced.
 4. **Command palette overhaul** — ✅ Complete. See Phase 4 Implementation
    Notes below.
-5. **Article queue / list redesign** — `ArticleList` + `ArticleRow` to
-   dense queue with selection model, bulk-action toolbar, kbd-hint chips.
+5. **Article queue / list redesign** — ✅ Complete. See Phase 5
+   Implementation Notes below.
 6. **Reader / inspector** — `ReadingPane` adapted to inspect-vs-focus
    densities, inspector slide animation.
 7. **Mobile command-center layout** — bottom command bar, palette
@@ -623,6 +623,182 @@ the architecture brief described.
   Phase 8/9 enhancement, gated on whether the queue redesign in
   Phase 5 changes how articles are paged.
 
+## Phase 5 Implementation Notes
+
+**Status**: ✅ Complete on `concept/02-command-center-05-article-queue`.
+The article surface now reads as a queue/inbox: dense rows, hover-revealed
+checkboxes, multi-select with cyan tint, and a bulk-action toolbar that
+replaces the heading row when any item is checked. Bulk actions reuse
+the existing single-id server actions (`markRead`, `markUnread`,
+`toggleStar`) by looping client-side — no backend changes.
+
+### What changed
+
+- **`src/components/articles/ArticleRow.tsx`** rewritten:
+  - Split prior `isSelected` into **`isCurrent`** (the article being
+    read in the inspector) and **`isChecked`** (multi-select state).
+    `selectionActive` (any checked) shifts the leading gutter into
+    "always-show checkbox" mode so users don't have to hover-and-aim
+    once they've started selecting.
+  - Leading gutter is now a 28px column that holds either the cyan
+    **read-state dot** (default) or a **3.5px square checkbox**. Hovering
+    a row swaps the dot for the checkbox; checking persists it.
+  - Body is a separate inner `<button>` that handles the open-article
+    click — clicking the checkbox stops propagation so it never opens
+    the article. `aria-checked` and `role="checkbox"` are on the
+    checkbox; the body remains a regular button for keyboard `Enter`.
+  - Density tightened: 14px title (was 15px), 10.5px mono meta line,
+    `py-2` instead of `py-3`, divider opacity dropped to `border/40`.
+    Time-ago renders without "ago" suffix and uses `cockpit-mono`.
+  - Star moved out of the inline-title position into the trailing meta
+    line (cleaner left margin, no jitter when toggled). Active-edge bar
+    now uses `var(--cockpit-accent)` so it matches the rail and palette.
+  - Checked-row tint is `color-mix(in oklch, var(--cockpit-accent) 10%,
+    transparent)` — visible without being a saturated highlight.
+
+- **`src/components/articles/ArticleList.tsx`** rewritten:
+  - New props: `checkedIds: Set<string>`, `onToggleCheck`,
+    `onClearSelection`, `onSelectAllVisible`, `onBulkMarkRead`,
+    `onBulkMarkUnread`, `onBulkToggleStar`, `isBulkPending`.
+  - When any item is checked, the heading row swaps for a **bulk
+    toolbar** (`role="toolbar"`, cyan-tinted background, top border
+    in cyan-mixed border color). Toolbar surfaces:
+    - Select-all-visible checkbox (toggles between `Square` and
+      `SquareCheck`).
+    - Live `N selected` counter in `cockpit-mono`.
+    - Mark Read / Mark Unread / Star (Star ↔ Unstar based on whether
+      every checked row is starred). Each action disables itself when
+      the operation would be a no-op (e.g., "Read" disabled when all
+      checked are already read).
+    - `esc clear` button with a Kbd chip — clicking it or pressing
+      Escape clears the selection.
+    - Spinner appears next to the clear button while `isBulkPending`.
+  - When no items are checked, the prior heading row is preserved
+    (date-range picker, "mark all read" icon, count) but the heading
+    text is now a small-caps eyebrow (`uppercase tracking-[0.18em]`).
+  - **Footer hint strip** below the queue surfaces the keyboard model:
+    `J/K` navigate, `X` select, `S` star, `M` mark.
+  - Local Escape handler scoped to this section: when selection is
+    active, Escape clears it (and ignores Escape originating from
+    inputs/textareas so it doesn't fight search clearing).
+
+- **`src/components/layout/AppShell.tsx`**:
+  - New state: `checkedIds: Set<string>`, `isBulkPending`,
+    `lastCheckedIdRef` (for shift-click range select).
+  - Effect that drops checked ids no longer present in the visible
+    queue (e.g. after switching feeds, toggling starred view, changing
+    date range, or after a refresh). Prevents stale selections.
+  - `handleToggleCheck(id, event)` — toggle on plain click,
+    **shift-click** range-selects between the last toggled row and the
+    new one (using the displayed-articles index).
+  - `handleClearSelection`, `handleSelectAllVisible`.
+  - `handleBulkMarkRead` / `handleBulkMarkUnread` — optimistic update
+    of local `articles` state, then `Promise.all` over the relevant ids
+    using `markRead` / `markUnread`, then `clear` + `refresh`. Ids that
+    are already in the target state are filtered out before the loop —
+    we don't issue no-op writes.
+  - `handleBulkToggleStar` — computes a coherent target state
+    (`every(isStarred) ? false : true`) and only calls `toggleStar(id)`
+    on the items whose state needs to flip. Uses the *existing*
+    flip-state endpoint, no new "set-starred" action.
+  - Wired to both the desktop and mobile `<ArticleList>` instances so
+    the bulk model works in both layouts.
+  - `selectedCount` plumbed into the StatusBar.
+
+- **`src/components/command/StatusBar.tsx`**: added optional
+  `selectedCount` prop. When > 0, renders a cyan-tinted
+  `N SELECTED` chip between the mode label and the article counter,
+  using the same `color-mix` accent treatment as the palette scope
+  badge.
+
+- **`src/hooks/use-keyboard-shortcuts.ts`**: added optional
+  `onToggleSelectCurrent`. When set, pressing `x` toggles the checkbox
+  on the currently-open article. Existing shortcuts (`j k s m r ⇧R o
+  Enter`) untouched. Hook still skips events originating in inputs.
+
+### What stayed stable
+
+- All single-article behavior unchanged: clicking a row still opens
+  it, optimistic mark-as-read in the reader path still fires, star
+  toggle from the reader still works.
+- Search, date range, load-more, empty/no-results states unchanged
+  visually except for the eyebrow heading style.
+- Mobile state machine (`mobileView: "sidebar" | "list" | "reader"`)
+  preserved verbatim. Mobile queue gets the same selection model
+  (long-press alternative isn't wired here — Phase 7 handles
+  mobile-specific selection gestures).
+- Backend untouched: zero diff under `src/actions/`, `src/app/api/`,
+  `src/lib/`, `prisma/`, `package.json`, `package-lock.json`. No new
+  dependencies, no new server actions, no new routes.
+- All command-palette behavior unchanged.
+
+### Validation
+
+- `npm run lint` — clean.
+- `npm run test` — 175 passed, 1 skipped.
+- `npm run build` — production build succeeds; route `/` first-load
+  unchanged at 253 kB. CSS bundle moves slightly (`16.2 kB`) due to
+  new utility usages.
+- `npm audit` — 0 vulnerabilities.
+- Scope verification: `git diff --stat main..HEAD -- src/actions/
+  src/app/api/ src/lib/ prisma/ package.json package-lock.json` is
+  empty.
+
+### Browser observations (1440×900 desktop, 414×896 mobile)
+
+- Hovering a row reveals the checkbox in the leading gutter; the
+  cyan unread dot fades out so the gutter stays a single 28px
+  column. No layout shift.
+- Clicking the checkbox toggles selection without opening the
+  article. Clicking anywhere else on the row opens it as before.
+- After 3 rows are checked, the heading swaps to the cyan bulk
+  toolbar showing `3 selected · Read · Unread · Star · esc clear`.
+  All three rows render with the cyan tint + accent left edge.
+- StatusBar shows the cyan `3 SELECTED` chip between `INBOX` and
+  the article counter; the chip disappears the moment selection
+  clears.
+- Pressing `Esc` clears selection and the heading row returns to
+  the date-range picker. Pressing `X` while an article is open
+  toggles its checkbox without affecting the open state.
+- Bulk Read disables itself once every checked row is already read
+  (and Unread / Star toggle their labels symmetrically).
+- Shift-clicking a checkbox extends the selection range from the
+  last toggled row to the new one. Confirmed against load-more —
+  range select walks the full appended list, not just the initial
+  page.
+- Switching to the Starred mode clears any stale selections from
+  the Inbox view (effect-driven cleanup, no flicker).
+- Search mode + date range still operate normally; checking a row
+  in search results works the same way.
+- Mobile (414×896): queue renders dense, the leading gutter still
+  reserves space for the checkbox so spacing is consistent. Bulk
+  toolbar fits within the narrow header without truncation.
+- No console errors during any flow.
+
+### Known follow-ups
+
+- **No keyboard for bulk select-all-visible**. The toolbar button
+  works, but a `Cmd/Ctrl+A` shortcut scoped to the queue would round
+  out the keyboard model. Deferred — adding a global `Cmd+A` handler
+  needs care so it doesn't break native input behavior.
+- **Long-press multi-select on mobile** is not wired. Mobile users
+  can still tap each checkbox, but a long-press-to-enter-selection
+  gesture is the natural mobile equivalent of `x`. Belongs in
+  Phase 7's mobile redesign.
+- **No bulk-delete or bulk-folder-move** exposed. Deliberately
+  excluded — those would need either new server actions (forbidden
+  this phase) or feel slow as a per-id loop on large selections. If
+  the canonical Feed adds a real batch endpoint we can light them up
+  here without further UI work.
+- **StatusBar buffer indicator** is still a static dot. Wiring the
+  Helix-style multi-key buffer remains a Phase 7/8 follow-up.
+- **Row a11y nesting**: the row is now `<div>` containing a
+  `<button role="checkbox">` and a `<button>` body. Both are keyboard
+  reachable; the previous "single big button" model gave a slightly
+  cleaner tab ring but couldn't host a second control. Verified
+  with screen reader narration in the Chromium DevTools a11y panel —
+  both controls announce correctly.
+
 ## Screenshots
 
 | View                     | Screenshot | Notes |
@@ -633,6 +809,9 @@ the architecture brief described.
 | Phase 4 command palette  | [`phase4-command-palette.png`](../screenshots/concepts/02-command-center/phase4-command-palette.png) | 1440×900. ⌘K open with sectioned results (Navigate, Actions, Feeds, Help, Articles), scope chip row, kbd hints, footer status. |
 | Phase 4 command search   | [`phase4-command-search.png`](../screenshots/concepts/02-command-center/phase4-command-search.png) | 1440×900. Typed scope `> ref` activated — cyan **COMMAND** badge in input, filtered to matching commands only, result count in footer. |
 | Phase 4 mobile palette   | [`phase4-mobile-command.png`](../screenshots/concepts/02-command-center/phase4-mobile-command.png) | 414×896. Same palette on mobile width — scope chips, sections, kbd hints all stack cleanly. |
+| Phase 5 article queue    | [`phase5-article-queue.png`](../screenshots/concepts/02-command-center/phase5-article-queue.png) | 1440×900. Dense queue, cyan unread dots in the leading gutter, mono time-ago, eyebrow heading row, footer kbd-hint strip (`J/K`, `X`, `S`, `M`). |
+| Phase 5 bulk selection   | [`phase5-bulk-selection.png`](../screenshots/concepts/02-command-center/phase5-bulk-selection.png) | 1440×900. Three rows checked — heading row replaced by cyan bulk toolbar (`3 selected · Read · Unread · Star · esc clear`). StatusBar shows cyan `3 SELECTED` chip. |
+| Phase 5 mobile queue     | [`phase5-mobile-queue.png`](../screenshots/concepts/02-command-center/phase5-mobile-queue.png) | 414×896. Mobile queue with the same density and gutter; selection model carries over but is hidden until rows are tapped. |
 | Desktop overview         | TBD (Phase 9) | Inbox mode, queue centered, inspector open. |
 | Desktop article selected | TBD (Phase 9) | Inbox + inspector populated; bulk-action toolbar visible after multi-select. |
 | Reader view              | TBD (Phase 9) | Focus mode (`f`), inspector full-width. |
