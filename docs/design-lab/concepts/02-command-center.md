@@ -298,8 +298,8 @@ Each phase requires its own go-ahead.
 3. **App shell + command surface** — new `AppShell` grid skeleton with
    ContextBar + NavRail + Inspector + StatusBar shells (queue still
    mounts the existing `ArticleList`). Mode state machine introduced.
-4. **Command palette overhaul** — typed scopes, command registry,
-   contextual subcommands, recent-actions row.
+4. **Command palette overhaul** — ✅ Complete. See Phase 4 Implementation
+   Notes below.
 5. **Article queue / list redesign** — `ArticleList` + `ArticleRow` to
    dense queue with selection model, bulk-action toolbar, kbd-hint chips.
 6. **Reader / inspector** — `ReadingPane` adapted to inspect-vs-focus
@@ -487,6 +487,142 @@ single `BBC News` feed seeded.
   refuses to create a branch ref nested under an existing ref of the
   same prefix.
 
+## Phase 4 Implementation Notes
+
+**Status**: ✅ Complete on `concept/02-command-center-04-command-palette`.
+The command palette is now the central, structured navigation surface
+the architecture brief described.
+
+### What changed
+
+- **`src/components/CommandPalette.tsx`** rewritten end-to-end. Same file
+  path, same hook entry-point (`useCommandPalette` / `⌘K`), but a much
+  larger surface:
+  - **Typed scopes** in the input: `>` commands, `#` folders, `@` feeds,
+    `/` articles. The active scope shows as a cyan **uppercase badge**
+    inside the input row, the icon at the left of the input switches to
+    the scope's icon, and the placeholder text updates to match.
+  - **Scope chip row** appears below the input when no query is typed —
+    four pill buttons (`>` Command, `#` Folder, `@` Feed, `/` Article)
+    that prefill the corresponding prefix. Discoverability without docs.
+  - **Sectioned results** (`role="listbox"`) with sticky uppercase
+    section headers: *Recent*, *Current article* (contextual, only when
+    an article is selected), *Navigate*, *Actions*, *Folders*, *Feeds*,
+    *Help*, *Articles*. Section order is stable; recent appears only on
+    bare-empty queries.
+  - **Contextual subcommands** when an article is selected:
+    Star/Unstar, Mark read/unread, Open original. Wired to the same
+    handlers used by `j/k/s/m/o` shortcuts. Hint chips show the
+    matching keystroke.
+  - **Recent commands** persisted in `localStorage` under
+    `cmd-palette:recent-v1` (max 5 entries; UI-only, no backend).
+  - **Kbd chips** for every shortcut hint, using the `Phase 2` `Kbd`
+    primitive. `G I`, `G S`, `G H`, `G T`, `S`, `M`, `O`, `?`,
+    `⇧ R`. Footer hints (`↑↓` navigate, `↵` select, `tab` cycle scope)
+    use the same primitive.
+  - **Result rows** redesigned: leading icon, title, breadcrumb-style
+    sublabel after a chevron (folder for feeds, feed title for
+    articles, "All articles" for Inbox, etc.), trailing hint, and an
+    accent left-edge bar + cyan `»` glyph on the active row — matches
+    the rail and queue active-row language from Phase 3.
+  - **Empty state** is a centered icon + headline + subtext (instead of
+    a bare "No results" line).
+  - **Footer status bar** inside the dialog: nav hints on the left,
+    live result count on the right (`cockpit-mono` tabular).
+  - **Tab cycles scopes** (`all → command → folder → feed → article →
+    all`), giving keyboard-only users a way to discover scopes without
+    typing the prefix character.
+  - **Combobox a11y**: `role="combobox"` on the input, `role="listbox"`
+    on the result container, `role="option"` on each row,
+    `aria-selected` on the active row, `aria-activedescendant` wired to
+    the active row's id, `aria-autocomplete="list"`, `aria-expanded` set
+    to true while open, `aria-controls` linking input → list. The
+    invisible close button is suppressed with `showCloseButton={false}`
+    because the dialog now has its own footer hints and `Esc` chip.
+  - **Article scope**: capped at 60 entries to keep filtering snappy on
+    large queues — this is a UI-only cap; `j/k` traversal still walks
+    the full queue.
+
+- **`src/components/layout/AppShell.tsx`** updated to pass the new
+  props: `folders`, `articles` (the current `displayedArticles` cache),
+  `selectedArticleId`, `currentArticleLink`, `currentArticleStarred`,
+  `currentArticleRead`, plus `onSelectArticle`, `onToggleStar`,
+  `onToggleRead`, and `onOpenOriginal`. All are derived from existing
+  state — no new fetches, no new server actions, no new data flow.
+
+- **`src/components/CommandPalette.tsx`'s old prop surface** is fully
+  replaced; the only call-site is `AppShell.tsx`, so no consumer was
+  broken.
+
+### What stayed stable
+
+- Trigger surface: still `⌘K` / `Ctrl+K`, still `useCommandPalette`,
+  still the `CommandLauncher` pill in the ContextBar and the compact
+  variant on mobile. No changes to `CommandLauncher`, `ContextBar`,
+  `NavRail`, `StatusBar`, or `Kbd`.
+- All existing keyboard shortcuts (`j k s m r ⇧R o`) continue to work
+  outside the palette and are *also* exposed inside the palette as
+  contextual commands when applicable.
+- Backend untouched — zero diff under `src/actions/`, `src/app/api/`,
+  `src/lib/`, `prisma/`, generated client, `package.json`,
+  `package-lock.json`. No new dependencies.
+- Mobile state machine (`mobileView`) preserved verbatim.
+
+### Validation
+
+- `npm run lint` — clean (0 problems).
+- `npm run test` — 175 passed, 1 skipped.
+- `npm run build` — production build succeeds; route `/` first-load
+  size moves from 251 kB to 253 kB (≈ +2 kB for the expanded palette,
+  no new bundles).
+- `npm audit` — 0 vulnerabilities.
+- Scope verification: `git diff --stat main..HEAD -- src/actions/
+  src/app/api/ src/lib/ prisma/ package.json package-lock.json` is
+  empty.
+
+### Browser observations (1440×900 desktop, 414×896 mobile)
+
+- ⌘K from anywhere opens the palette over the cockpit; clicking the
+  ContextBar pill opens the same dialog. No visible flash, no console
+  errors.
+- Typing `>` → input badge flips to **COMMAND** with cyan tint, results
+  filter to commands only, scope chip row hides.
+- Typing `> ref` → narrows to "Refresh all feeds" + "Go to Settings"
+  ("preferences" keyword match). Footer count updates live.
+- Typing `@hac` filters feeds to "Hacker News".
+- Typing `#` shows folder section only; selecting a folder navigates
+  to its first feed.
+- Typing `/` shows the article section; selecting an article calls
+  `handleSelectArticle` and switches mobile to reader as expected.
+- Selecting an article in the queue then opening ⌘K shows
+  *Current article* section at the top with Star / Mark / Open
+  original. Pressing `Enter` on Star fires `toggleStar` and the
+  palette closes.
+- `Tab` cycles through scopes and updates the input + badge.
+- `Esc` closes the palette and returns focus to the previously
+  focused element.
+- Mobile width (414): palette renders full-width with the same scope
+  chip row, sections, and kbd hints. Result rows truncate cleanly with
+  the breadcrumb chevron.
+- No console errors or warnings during any of the flows above.
+
+### Known follow-ups (not in scope here)
+
+- A dedicated `?` cheat-sheet popover is still pending; for now the
+  palette's "Keyboard shortcuts" entry deeplinks to `/settings`.
+  A real cheat-sheet is fine for Phase 8.
+- Helix-style multi-key buffer (`g i`) display in the StatusBar is
+  still a static dot — wiring the actual buffer state belongs with the
+  shortcut handler refactor in Phase 5 / 8.
+- Folder commands jump to the *first feed* in the folder, not a
+  proper "filter to folder" mode, because the data model doesn't carry
+  a folder filter today. A real folder filter would require a
+  `lib/queries.ts` change, which is out of scope for a UI-only phase.
+- Article scope cap is 60. If queues grow much larger we may want
+  proper FTS-backed search inside the palette (`/`) — that would be a
+  Phase 8/9 enhancement, gated on whether the queue redesign in
+  Phase 5 changes how articles are paged.
+
 ## Screenshots
 
 | View                     | Screenshot | Notes |
@@ -494,6 +630,9 @@ single `BBC News` feed seeded.
 | Phase 3 desktop shell    | [`phase3-shell.png`](../screenshots/concepts/02-command-center/phase3-shell.png) | 1440×900. ContextBar, NavRail, Sidebar, ArticleList, ReadingPane (empty), StatusBar. Inbox active. |
 | Phase 3 command palette  | [`phase3-command-open.png`](../screenshots/concepts/02-command-center/phase3-command-open.png) | 1440×900. ⌘K invoked from the launcher pill; existing palette dialog renders over the dimmed shell. |
 | Phase 3 mobile check     | [`phase3-mobile-check.png`](../screenshots/concepts/02-command-center/phase3-mobile-check.png) | 390×844. Mobile top bar with hamburger + heading + compact ⌘K launcher. State machine preserved. |
+| Phase 4 command palette  | [`phase4-command-palette.png`](../screenshots/concepts/02-command-center/phase4-command-palette.png) | 1440×900. ⌘K open with sectioned results (Navigate, Actions, Feeds, Help, Articles), scope chip row, kbd hints, footer status. |
+| Phase 4 command search   | [`phase4-command-search.png`](../screenshots/concepts/02-command-center/phase4-command-search.png) | 1440×900. Typed scope `> ref` activated — cyan **COMMAND** badge in input, filtered to matching commands only, result count in footer. |
+| Phase 4 mobile palette   | [`phase4-mobile-command.png`](../screenshots/concepts/02-command-center/phase4-mobile-command.png) | 414×896. Same palette on mobile width — scope chips, sections, kbd hints all stack cleanly. |
 | Desktop overview         | TBD (Phase 9) | Inbox mode, queue centered, inspector open. |
 | Desktop article selected | TBD (Phase 9) | Inbox + inspector populated; bulk-action toolbar visible after multi-select. |
 | Reader view              | TBD (Phase 9) | Focus mode (`f`), inspector full-width. |

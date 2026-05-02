@@ -600,11 +600,36 @@ export function AppShell({
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
         feeds={feeds}
+        folders={folders}
+        articles={displayedArticles}
+        selectedArticleId={selectedArticleId}
+        currentArticleLink={currentArticle?.link ?? null}
+        currentArticleStarred={Boolean(currentArticle?.isStarred)}
+        currentArticleRead={
+          displayedArticles.find((a) => a.id === selectedArticleId)?.isRead ?? false
+        }
         onSelectAll={() => handleSelectFeed(null)}
         onSelectStarred={handleSelectStarred}
         onSelectFeed={(id) => handleSelectFeed(id)}
+        onSelectArticle={(id) => handleSelectArticle(id)}
         onRefreshAll={handleRefreshAll}
         onMarkAllRead={handleMarkAllRead}
+        onToggleStar={handleToggleStar}
+        onToggleRead={async (id) => {
+          const article = displayedArticles.find((a) => a.id === id);
+          if (!article) return;
+          if (article.isRead) {
+            await markUnread(id);
+          } else {
+            await markRead(id);
+          }
+          refresh();
+        }}
+        onOpenOriginal={() => {
+          if (currentArticle?.link) {
+            window.open(currentArticle.link, "_blank", "noopener,noreferrer");
+          }
+        }}
       />
     </div>
   );
