@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useTransition } from "react";
+import { useState, useCallback, useEffect, useMemo, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,10 @@ import { useCommandPalette } from "@/hooks/use-command-palette";
 import { useSwipe } from "@/hooks/use-swipe";
 import { formatCustomRangeParam, type DateRange } from "@/lib/date-range";
 import { CommandPalette } from "@/components/CommandPalette";
+import { ContextBar } from "@/components/command/ContextBar";
+import { NavRail } from "@/components/command/NavRail";
+import { StatusBar } from "@/components/command/StatusBar";
+import { CommandLauncher } from "@/components/command/CommandLauncher";
 
 interface AppShellProps {
   feeds: FeedWithCount[];
@@ -348,6 +352,39 @@ export function AppShell({
       ? feeds.find((f) => f.id === selectedFeedId)?.title ?? "Articles"
       : "All Articles";
 
+  const railActiveMode = isStarredView
+    ? "starred"
+    : selectedFeedId
+      ? null
+      : "inbox";
+
+  const modeLabel = isStarredView
+    ? "Starred"
+    : selectedFeedId
+      ? "Feed"
+      : "Inbox";
+
+  const crumbs = useMemo(() => {
+    const parts: { label: string; className?: string }[] = [
+      { label: "Feed", className: "text-muted-foreground/80" },
+      { label: modeLabel },
+    ];
+    if (selectedFeedId && !isStarredView) {
+      parts.push({
+        label: feeds.find((f) => f.id === selectedFeedId)?.title ?? "Feed",
+      });
+    }
+    return parts;
+  }, [feeds, isStarredView, modeLabel, selectedFeedId]);
+
+  const visibleArticleCount = displayedArticles.length;
+  const visibleUnreadCount = useMemo(
+    () => displayedArticles.filter((a) => !a.isRead).length,
+    [displayedArticles],
+  );
+
+  const openPalette = () => setPaletteOpen(true);
+
   return (
     <div className="h-dvh w-screen overflow-hidden">
       <a
@@ -361,9 +398,12 @@ export function AppShell({
         Skip to main content
       </a>
       <main id="main-content" tabIndex={-1} className="h-full outline-none">
-      {/* Mobile: stacked single-pane layout */}
+      {/* Mobile: stacked single-pane layout. Phase 7 will replace this with
+          a bottom command bar; for now we keep the existing state machine
+          and add the ⌘K launcher to the top bar so the palette is
+          discoverable on mobile too. */}
       <div className="flex h-full flex-col md:hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
-        <div className="flex h-14 shrink-0 items-center gap-2 border-b px-3">
+        <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border/60 px-3">
           {mobileView === "sidebar" ? (
             <Button
               variant="ghost"
@@ -398,7 +438,14 @@ export function AppShell({
               <Menu className="h-5 w-5" aria-hidden="true" />
             </Button>
           )}
-          <h1 className="truncate text-base font-semibold tracking-tight">{heading}</h1>
+          <h1 className="flex-1 truncate text-base font-semibold tracking-tight">
+            {heading}
+          </h1>
+          <CommandLauncher
+            onClick={openPalette}
+            hint="⌘K"
+            className="h-7 px-2"
+          />
         </div>
         <div className="min-h-0 flex-1">
           {mobileView === "sidebar" && (
@@ -406,17 +453,12 @@ export function AppShell({
               feeds={feeds}
               folders={folders}
               selectedFeedId={selectedFeedId}
-              totalUnread={totalUnread}
-              starredCount={starredCount}
               onSelectFeed={handleSelectFeed}
-              onSelectStarred={handleSelectStarred}
               onDeleteFeed={handleDeleteFeed}
               onRefreshFeed={handleRefreshFeed}
               onUpdateFeed={refresh}
-              onRefreshAll={handleRefreshAll}
               onFeedAdded={refresh}
               isStarredView={isStarredView}
-              isRefreshing={isRefreshing || isPending}
             />
           )}
           {mobileView === "list" && (
@@ -453,77 +495,106 @@ export function AppShell({
         </div>
       </div>
 
-      {/* Desktop: three-pane resizable layout */}
-      <ResizablePanelGroup
-        orientation="horizontal"
-        id="app-layout"
-        className="hidden md:flex"
-      >
-        <ResizablePanel
-          id="sidebar"
-          defaultSize="28%"
-          minSize="200px"
-          maxSize="38%"
-          className="bg-card"
-        >
-          <Sidebar
-            feeds={feeds}
-            folders={folders}
-            selectedFeedId={selectedFeedId}
+      {/* Desktop: cockpit shell — context bar + nav rail + (sidebar | list |
+          reader) + status bar. The middle band keeps the existing
+          ResizablePanelGroup so resize/scroll behavior is preserved. */}
+      <div className="hidden md:flex h-full flex-col">
+        <ContextBar
+          crumbs={crumbs}
+          onOpenPalette={openPalette}
+          onRefreshAll={handleRefreshAll}
+          isRefreshing={isRefreshing || isPending}
+        />
+
+        <div className="flex min-h-0 flex-1">
+          <NavRail
+            activeMode={railActiveMode}
             totalUnread={totalUnread}
             starredCount={starredCount}
-            onSelectFeed={handleSelectFeed}
+            onSelectInbox={() => handleSelectFeed(null)}
             onSelectStarred={handleSelectStarred}
-            onDeleteFeed={handleDeleteFeed}
-            onRefreshFeed={handleRefreshFeed}
-            onUpdateFeed={refresh}
-            onRefreshAll={handleRefreshAll}
             onFeedAdded={refresh}
-            isStarredView={isStarredView}
-            isRefreshing={isRefreshing || isPending}
           />
-        </ResizablePanel>
 
-        <ResizableHandle />
+          <ResizablePanelGroup
+            orientation="horizontal"
+            id="app-layout"
+            className="flex-1"
+          >
+            <ResizablePanel
+              id="sidebar"
+              defaultSize="22%"
+              minSize="180px"
+              maxSize="32%"
+              className="bg-card"
+            >
+              <Sidebar
+                feeds={feeds}
+                folders={folders}
+                selectedFeedId={selectedFeedId}
+                onSelectFeed={handleSelectFeed}
+                onDeleteFeed={handleDeleteFeed}
+                onRefreshFeed={handleRefreshFeed}
+                onUpdateFeed={refresh}
+                onFeedAdded={refresh}
+                isStarredView={isStarredView}
+              />
+            </ResizablePanel>
 
-        <ResizablePanel
-          id="article-list"
-          defaultSize="30%"
-          minSize="250px"
-          className="bg-background"
-        >
-          <ArticleList
-            articles={displayedArticles}
-            selectedArticleId={selectedArticleId}
-            onSelectArticle={handleSelectArticle}
-            heading={heading}
-            searchQuery={search.query}
-            onSearchChange={search.onChange}
-            isSearching={search.isSearching}
-            dateRange={dateRange}
-            customFrom={customFrom}
-            customTo={customTo}
-            onDateRangeChange={handleDateRangeChange}
-            onMarkAllRead={handleMarkAllRead}
-            searchError={search.error}
-            hasFeeds={feeds.length > 0}
-            onRefreshAll={handleRefreshAll}
-            hasMore={!search.results && nextCursor !== null}
-            isLoadingMore={isLoadingMore}
-            onLoadMore={handleLoadMore}
-          />
-        </ResizablePanel>
+            <ResizableHandle />
 
-        <ResizableHandle />
+            <ResizablePanel
+              id="article-list"
+              defaultSize="32%"
+              minSize="250px"
+              className="bg-background"
+            >
+              <ArticleList
+                articles={displayedArticles}
+                selectedArticleId={selectedArticleId}
+                onSelectArticle={handleSelectArticle}
+                heading={heading}
+                searchQuery={search.query}
+                onSearchChange={search.onChange}
+                isSearching={search.isSearching}
+                dateRange={dateRange}
+                customFrom={customFrom}
+                customTo={customTo}
+                onDateRangeChange={handleDateRangeChange}
+                onMarkAllRead={handleMarkAllRead}
+                searchError={search.error}
+                hasFeeds={feeds.length > 0}
+                onRefreshAll={handleRefreshAll}
+                hasMore={!search.results && nextCursor !== null}
+                isLoadingMore={isLoadingMore}
+                onLoadMore={handleLoadMore}
+              />
+            </ResizablePanel>
 
-        <ResizablePanel id="reading-pane" defaultSize="50%" minSize="400px" className="bg-background">
-          <ReadingPane
-            article={currentArticle}
-            isLoading={isArticleLoading}
-            onToggleStar={handleToggleStar}
-          />
-        </ResizablePanel>
-      </ResizablePanelGroup>
+            <ResizableHandle />
+
+            <ResizablePanel
+              id="reading-pane"
+              defaultSize="46%"
+              minSize="380px"
+              className="bg-[var(--cockpit-inspector-bg)]"
+            >
+              <ReadingPane
+                article={currentArticle}
+                isLoading={isArticleLoading}
+                onToggleStar={handleToggleStar}
+              />
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </div>
+
+        <StatusBar
+          modeLabel={modeLabel}
+          itemCount={visibleArticleCount}
+          unreadCount={visibleUnreadCount}
+          isRefreshing={isRefreshing || isPending}
+        />
+      </div>
       </main>
       <CommandPalette
         open={paletteOpen}

@@ -1,12 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { Newspaper, Star, RefreshCw, FolderPlus, ChevronDown, ChevronRight, Pencil, Trash2, Activity, BarChart3, Settings } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { FolderPlus, ChevronDown, ChevronRight, Pencil, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AddFeedDialog } from "./AddFeedDialog";
 import { FeedItem } from "./FeedItem";
 import { OpmlActions } from "./OpmlActions";
 import { groupFeedsByFolder } from "@/lib/group-feeds";
@@ -56,34 +53,24 @@ interface SidebarProps {
   feeds: FeedWithCount[];
   folders: FolderRef[];
   selectedFeedId: string | null;
-  totalUnread: number;
-  starredCount: number;
+  isStarredView: boolean;
   onSelectFeed: (feedId: string | null) => void;
-  onSelectStarred: () => void;
   onDeleteFeed: (feedId: string) => void;
   onRefreshFeed: (feedId: string) => void;
   onUpdateFeed: () => void;
-  onRefreshAll: () => void;
   onFeedAdded: () => void;
-  isStarredView: boolean;
-  isRefreshing: boolean;
 }
 
 export function Sidebar({
   feeds,
   folders,
   selectedFeedId,
-  totalUnread,
-  starredCount,
+  isStarredView,
   onSelectFeed,
-  onSelectStarred,
   onDeleteFeed,
   onRefreshFeed,
   onUpdateFeed,
-  onRefreshAll,
   onFeedAdded,
-  isStarredView,
-  isRefreshing,
 }: SidebarProps) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -156,8 +143,10 @@ export function Sidebar({
 
   return (
     <nav aria-label="Feeds" className="flex h-full flex-col">
-      <div className="flex h-11 items-center justify-between gap-2 border-b px-4">
-        <h1 className="text-sm font-semibold tracking-tight">Feed</h1>
+      <div className="flex h-11 items-center justify-between gap-2 border-b border-border/60 px-4">
+        <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+          Feeds
+        </span>
         <div className="flex items-center gap-0.5">
           <Button
             variant="ghost"
@@ -169,67 +158,12 @@ export function Sidebar({
           >
             <FolderPlus className="h-4 w-4" aria-hidden="true" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={onRefreshAll}
-            disabled={isRefreshing}
-            aria-label="Refresh all feeds"
-            title="Refresh all feeds"
-          >
-            <RefreshCw
-              className={cn("h-4 w-4", isRefreshing && "animate-spin")}
-              aria-hidden="true"
-            />
-          </Button>
-          <AddFeedDialog onFeedAdded={onFeedAdded} />
           <OpmlActions onImportComplete={onFeedAdded} />
         </div>
       </div>
 
       <ScrollArea className="flex-1">
         <div className="p-2">
-          {/* All Articles */}
-          <button
-            onClick={() => onSelectFeed(null)}
-            className={cn(
-              "flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
-              !selectedFeedId && !isStarredView
-                ? "bg-accent text-accent-foreground"
-                : "hover:bg-accent/50 text-foreground"
-            )}
-          >
-            <Newspaper className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="flex-1">All Articles</span>
-            {totalUnread > 0 && (
-              <span className="text-xs text-muted-foreground tabular-nums">
-                {totalUnread}
-              </span>
-            )}
-          </button>
-
-          {/* Starred */}
-          <button
-            onClick={onSelectStarred}
-            className={cn(
-              "flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
-              isStarredView
-                ? "bg-accent text-accent-foreground"
-                : "hover:bg-accent/50 text-foreground"
-            )}
-          >
-            <Star className="h-4 w-4 shrink-0 text-star" />
-            <span className="flex-1">Starred</span>
-            {starredCount > 0 && (
-              <span className="text-xs text-muted-foreground tabular-nums">
-                {starredCount}
-              </span>
-            )}
-          </button>
-
-          <div className="h-3" aria-hidden="true" />
-
           {feeds.length === 0 && folders.length === 0 ? (
             <p className="px-2 py-4 text-center text-xs text-muted-foreground">
               No feeds yet. Click + to add one.
@@ -335,42 +269,6 @@ export function Sidebar({
           )}
         </div>
       </ScrollArea>
-
-      <div className="flex items-center gap-1 border-t px-3 py-1.5">
-        <Link
-          href="/health"
-          className={cn(
-            buttonVariants({ variant: "ghost", size: "icon" }),
-            "h-7 w-7 text-muted-foreground hover:text-foreground",
-          )}
-          aria-label="Feed health dashboard"
-          title="Feed health dashboard"
-        >
-          <Activity className="h-4 w-4" aria-hidden="true" />
-        </Link>
-        <Link
-          href="/stats"
-          className={cn(
-            buttonVariants({ variant: "ghost", size: "icon" }),
-            "h-7 w-7 text-muted-foreground hover:text-foreground",
-          )}
-          aria-label="Reading stats"
-          title="Reading stats"
-        >
-          <BarChart3 className="h-4 w-4" aria-hidden="true" />
-        </Link>
-        <Link
-          href="/settings"
-          className={cn(
-            buttonVariants({ variant: "ghost", size: "icon" }),
-            "ml-auto h-7 w-7 text-muted-foreground hover:text-foreground",
-          )}
-          aria-label="Settings"
-          title="Settings"
-        >
-          <Settings className="h-4 w-4" aria-hidden="true" />
-        </Link>
-      </div>
 
       <Dialog
         open={newFolderOpen}
