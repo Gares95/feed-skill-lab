@@ -293,6 +293,8 @@ Each phase requires its own go-ahead.
 1. **Concept architecture and docs** — ✅ Complete. Doc + scaffolding.
 2. **Design-system / visual foundation** — ✅ Complete. See Phase 2
    Implementation Notes below.
+3. **App shell + command surface skeleton** — ✅ Complete. See Phase 3
+   Implementation Notes below.
 3. **App shell + command surface** — new `AppShell` grid skeleton with
    ContextBar + NavRail + Inspector + StatusBar shells (queue still
    mounts the existing `ArticleList`). Mode state machine introduced.
@@ -373,17 +375,131 @@ the new chrome.
 - Whether to introduce a *light cockpit* mode at all (current Phase 2
   light-mode tokens are parity-only; the concept is dark-first).
 
+## Phase 3 Implementation Notes
+
+Done on child branch `concept/02-command-center-03-shell`. Scope:
+shell + command surface skeleton only. The shell consumes the Phase 2
+visual foundation (cool slate + cyan, kbd chips, density tokens,
+cockpit surface aliases) and frames the existing article list and
+reader without changing their behavior.
+
+**New top-level chrome (in `src/components/command/`)**
+
+- `ContextBar.tsx` — full-width 40px bar at the top. Left: breadcrumb
+  (`Feed › Inbox` / `Feed › Starred` / `Feed › Feed › <name>`). Center:
+  `CommandLauncher` pill with ⌘K Kbd chips (visible on `md+`). Right:
+  refresh-all button. Hairline `border-border/60` separator.
+- `NavRail.tsx` — left-side 52px vertical icon rail. Modes: Inbox
+  (active when no feed selected), Starred (active in starred view),
+  with unread/star counts. Subordinate views: Health, Stats links.
+  Bottom: Add Feed (mounts the existing `AddFeedDialog` trigger),
+  Settings link. Active mode shows a 2px cyan left-edge indicator and
+  a tinted background. Hover/focus reveals a popover-style label.
+  `aria-current="page"` on the active mode.
+- `StatusBar.tsx` — full-width 28px bar at the bottom. Left:
+  cyan-pulse dot (animates while refreshing) + uppercase mode label.
+  Center: article count + unread count using `cockpit-mono`. Right:
+  hidden on small screens; `Palette ⌘K` hint cluster on `sm+`.
+  `role="status"` with `aria-live="polite"`.
+- `CommandLauncher.tsx` — pill button showing a search icon,
+  hint text, and `⌘ K` Kbd chips. Opens the existing palette via the
+  shared `useCommandPalette` hook. Used in the desktop ContextBar and
+  in the mobile top bar (compact variant, `hint="⌘K"`).
+
+**`AppShell.tsx` rewrite**
+
+- Desktop: outer flex column = ContextBar / middle band / StatusBar.
+  Middle band = NavRail + ResizablePanelGroup(Sidebar | ArticleList |
+  ReadingPane). Default panel sizes adjusted for the new rail
+  (sidebar shrunk 28→22%, list 30→32%, reader 50→46%); the existing
+  resize handles still work. Inspector panel uses the new
+  `--cockpit-inspector-bg` token.
+- Mobile: existing single-pane state machine
+  (`sidebar` | `list` | `reader`) preserved verbatim. The top bar gains
+  a compact `CommandLauncher` (just `⌘K`) so the palette is
+  discoverable on touch too. Phase 7 will replace this with a bottom
+  command bar; Phase 3 deliberately leaves the state machine intact.
+- Skip-to-content link, focus management, and all existing keyboard
+  shortcuts (`j`/`k`, `s`, `m`, `r`, `Shift+R`, `o`, `Enter`, `⌘K`)
+  preserved.
+
+**`Sidebar.tsx` reframed as the Feeds tree panel**
+
+- Removed: `All Articles` and `Starred` row buttons (now Inbox /
+  Starred in the rail), the bottom Health / Stats / Settings footer
+  rail (now in the rail), the header `Refresh All` button (now in the
+  ContextBar), the header `AddFeedDialog` (now at the bottom of the
+  rail).
+- Kept: header `New folder` button, `OpmlActions`, the full feed-tree
+  with folder collapse / rename / delete / drag-to-folder behavior.
+- Header `<h1>Feed</h1>` replaced with a small uppercase
+  `Feeds` eyebrow that fits the cockpit register.
+- Props slimmed: `totalUnread`, `starredCount`, `onSelectStarred`,
+  `onRefreshAll`, `isRefreshing` no longer accepted (handled at the
+  shell level by ContextBar / NavRail / StatusBar).
+
+**Verification — browser smoke test**
+
+Captured against a freshly built dev server at `localhost:3020` with a
+single `BBC News` feed seeded.
+
+- Desktop shell renders end-to-end: ContextBar visible at top, Nav
+  Rail on left, Sidebar / Article List / Reader in the middle band,
+  Status Bar at bottom.
+- Command launcher opens the existing palette (⌘K from button, ⌘K
+  from keyboard).
+- Sidebar/nav actions remain reachable: Inbox / Starred via rail,
+  Health / Stats / Settings via rail, Add Feed via rail bottom, New
+  folder + OPML via sidebar header, feed-tree feed selection works.
+- Article list and reader still work — selecting a feed updates the
+  URL via `router.push` and the reader populates on row click.
+- Resizable handles still drag between Sidebar / List / Reader.
+- Mobile: top bar has hamburger / back chevron + heading + ⌘K
+  launcher; underneath the existing list / sidebar / reader state
+  machine continues to work.
+- Keyboard focus: skip-to-content link visible on focus; rail icons
+  receive focus rings; launcher pill receives focus rings; status bar
+  is reachable as `role="status"`.
+
+**Validation results**
+
+- `npm run lint` — pass (0 issues)
+- `npm run test` — pass (175 passed, 1 skipped, 22 files)
+- `npm run build` — pass (10/10 static pages, no TS errors)
+- `npm audit` — 0 vulnerabilities
+
+**Deviations / follow-ups**
+
+- The desktop shell still has the existing three resizable panels
+  inside the rail. The architecture brief proposed an inspector that
+  collapses on `<1280px` and a focus-mode reader; both are deferred
+  to Phase 6 (reader / inspector).
+- The rail does not yet include `Search` or a typed-scope launcher;
+  those land in Phase 4 (palette overhaul).
+- `AddFeedDialog`'s trigger button still uses the polish-baseline
+  Plus icon; the icon styling in the rail context could be tuned to
+  match the rail register in a Phase 3.1 polish pass if wanted.
+- Status-bar buffer indicator (the Helix-style `j…` keystroke buffer)
+  is wired as a static dot for now; the actual buffer state will
+  arrive with Phase 4's command registry.
+- Branch nesting note: the child branch is named
+  `concept/02-command-center-03-shell` (dash-separated) because git
+  refuses to create a branch ref nested under an existing ref of the
+  same prefix.
+
 ## Screenshots
 
 | View                     | Screenshot | Notes |
 | ------------------------ | ---------- | ----- |
-| Desktop overview         | TBD        | Inbox mode, queue centered, inspector open. |
-| Desktop article selected | TBD        | Inbox + inspector populated; bulk-action toolbar visible after multi-select. |
-| Reader view              | TBD        | Focus mode (`f`), inspector full-width. |
-| Command palette open     | TBD        | Cmd/K open with typed-scope cluster visible. |
-| Mobile list              | TBD        | Bottom command bar, queue, status strip. |
-| Mobile reader            | TBD        | Reader full-screen with top mini-bar. |
-| Empty / loading state    | TBD        | Cockpit-register empty state. |
+| Phase 3 desktop shell    | [`phase3-shell.png`](../screenshots/concepts/02-command-center/phase3-shell.png) | 1440×900. ContextBar, NavRail, Sidebar, ArticleList, ReadingPane (empty), StatusBar. Inbox active. |
+| Phase 3 command palette  | [`phase3-command-open.png`](../screenshots/concepts/02-command-center/phase3-command-open.png) | 1440×900. ⌘K invoked from the launcher pill; existing palette dialog renders over the dimmed shell. |
+| Phase 3 mobile check     | [`phase3-mobile-check.png`](../screenshots/concepts/02-command-center/phase3-mobile-check.png) | 390×844. Mobile top bar with hamburger + heading + compact ⌘K launcher. State machine preserved. |
+| Desktop overview         | TBD (Phase 9) | Inbox mode, queue centered, inspector open. |
+| Desktop article selected | TBD (Phase 9) | Inbox + inspector populated; bulk-action toolbar visible after multi-select. |
+| Reader view              | TBD (Phase 9) | Focus mode (`f`), inspector full-width. |
+| Mobile list              | TBD (Phase 9) | Bottom command bar, queue, status strip. |
+| Mobile reader            | TBD (Phase 9) | Reader full-screen with top mini-bar. |
+| Empty / loading state    | TBD (Phase 9) | Cockpit-register empty state. |
 
 ## Local Run Instructions
 
