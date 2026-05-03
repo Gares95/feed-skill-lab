@@ -301,6 +301,7 @@ Each phase requires its own go-ahead.
 4. **Command palette overhaul** — ✅ Complete. See Phase 4 Implementation
    Notes below.
 5. **Article queue / list redesign** — ✅ Complete. See Phase 5
+6. **Reader / inspector** — ✅ Complete. See Phase 6
    Implementation Notes below.
 6. **Reader / inspector** — `ReadingPane` adapted to inspect-vs-focus
    densities, inspector slide animation.
@@ -799,6 +800,57 @@ the existing single-id server actions (`markRead`, `markUnread`,
   with screen reader narration in the Chromium DevTools a11y panel —
   both controls announce correctly.
 
+## Phase 6 Implementation Notes
+
+**Status**: Complete — reader pane reframed as cockpit Inspector with a UI-only Focus mode.
+
+**What changed**
+
+- `ReadingPane.tsx` rewritten around an **Inspector toolbar** (`h-9`, hairline divider): a cyan dot + cockpit-mono `INSPECT` / `FOCUS` mode label, a `›` separator, the feed crumb in mono uppercase tracking, then a focus-toggle button (`Maximize2` / `Minimize2` icon + `F` Kbd chip) and the existing `TypographySettings` popover. Toolbar stays mounted in both modes; in focus it goes transparent so the reading surface dominates.
+- New UI-only `focusMode` state inside `ReadingPane` (no persistence, no extraction). It's deliberately distinct from `readerMode` (which still controls Readability extraction). Focus mode bumps the article max-width by 80px (capped at 880px), grows vertical padding, and switches the header into editorial density.
+- `ArticleHeader.tsx` rewritten with a `density` prop (`"inspect" | "focus"`).
+  - **Inspect** (default): mono feed eyebrow at 10px / `0.18em`, 20–22px title, mono meta line (author · date · `Clock` reading-time), action strip with `h-7` buttons — `Reader`, `Star` + `S` Kbd hint, `Open original` + `O` Kbd hint. Reader-on state uses a cyan-tinted secondary fill instead of the generic shadcn `secondary` so it reads as "armed", not "selected".
+  - **Focus**: editorial 28–32px title, larger spacing, same action strip stays compact.
+- New **`f` keyboard shortcut** to toggle focus, registered locally inside `ReadingPane` (only when an article is mounted). Mirrors the existing `useKeyboardShortcuts` skip-when-typing logic so it doesn't fight inputs.
+- Empty state replaced with a cockpit `InspectorEmptyState`: bordered cyan-tinted square with `Inspect` icon, mono `INSPECTOR IDLE` eyebrow, and a kbd-chip hint row (`J/K` navigate queue · `⌘K` palette).
+- Skeleton restyled to match the new toolbar (cockpit-mono `Inspect` label with a pulsing dot) and the new dense header (smaller title bars, tighter action-strip placeholders, hairline border).
+- Highlights list restyled: cockpit-mono `HIGHLIGHTS 03` heading with cyan `Highlighter` glyph, items get a 2px left edge in accent and a subtle accent-tinted card fill. Note textarea focus border switches to the cockpit accent.
+- Highlight popover: rounded-sm, mono `HIGHLIGHT` label, cyan-tinted bg + accent text + accent border so it reads as a cockpit chip rather than a default shadcn button.
+
+**What stayed stable**
+
+- Article fetching, sanitization (`dangerouslySetInnerHTML` source unchanged), highlights data flow (`getHighlights`, `addHighlight`, `deleteHighlight`, `updateHighlightNote`), Readability extraction (`extractArticle`), star toggle, image-error hide effect, mouse-up selection / `rangeTextOffset` math.
+- `readerMode` semantics (full extraction) preserved exactly — Reader button still calls `extractArticle`, still caches the result, still flips back to original on second press, still skips highlight application against the extracted DOM.
+- `useTypography` storage key, defaults, and clamps untouched.
+- `AppShell.tsx`, `StatusBar.tsx`, `globals.css`, and the keyboard shortcuts hook were **not** changed this phase (focus shortcut handled inside `ReadingPane` to keep the surface area minimal). Mobile `mobileView` state machine and reader swipe wiring untouched.
+
+**Validation**
+
+- `npm run lint` — clean
+- `npx tsc --noEmit` — clean
+- `npm run test` — 175 passed, 1 skipped
+- `npm run build` — succeeds; route sizes unchanged in shape (no measurable bundle impact)
+- `npm audit` — 0 vulnerabilities
+- `git diff --stat main..HEAD -- src/actions/ src/app/api/ src/lib/ prisma/ package.json package-lock.json` — empty
+
+**Browser observations**
+
+- Selecting an article from the queue mounts the inspector with the dense header and mono meta line; the cyan dot + `INSPECT` label make the right pane read as an instrument rather than a generic reader.
+- `f` toggles focus from anywhere on the page (not just the inspector); the toolbar fades to transparent, max-width grows, the header reflows to editorial 32px. `f` again returns to inspect with no scroll loss.
+- Reader mode on top of focus mode works — the cyan-armed Reader button is legible against either header density.
+- Highlighting selection still pops the floating chip; it now reads as a cockpit affordance instead of a popover button. Save / delete / note-edit all functional. Highlights list at the bottom renders with the new cyan edge.
+- Empty state is the right register for "no article selected" — no longer a soft `BookOpen` editorial nudge; it's a parked instrument with kbd hints.
+- Mobile reader: same toolbar, kbd chips compress (some hide via `sm:` breakpoint, others stay) — the inspector frame still reads correctly at 390px.
+- Command palette contextual article actions (Star / Mark read / Open original) still drive the reader because `ReadingPane` props were not changed.
+- Console clean across mount, focus toggle, reader extraction, highlight create/delete.
+
+**Deviations / follow-ups**
+
+- The `f` shortcut listens at the document level inside `ReadingPane` rather than going through `useKeyboardShortcuts`. If we accumulate more reader-local shortcuts (`.` to collapse, `g` for go-to-top, etc.) it's worth promoting them into the central hook in a later phase.
+- `readerMode` was not renamed to "Reader extraction" anywhere user-facing — the doc clarifies the distinction (Reader extraction vs Focus density) but the button still says "Reader". Renaming is a Phase 8 copy pass.
+- Inspector currently shares the `ResizablePanel` with the rest of the layout; the doc-level proposal to fade cockpit chrome to a 1px outline when focus mode is on is **not** implemented in Phase 6 (would require AppShell changes). Focus density alone gave enough separation to be useful; chrome-fade can be re-evaluated when the reader/inspector behavior is reviewed against the Phase 9 timed-triage test.
+- Mobile bottom command bar (Phase 7) will add a top mini-bar for the reader; current mobile reader still reuses the existing top bar and is left as-is for this phase.
+
 ## Screenshots
 
 | View                     | Screenshot | Notes |
@@ -812,6 +864,9 @@ the existing single-id server actions (`markRead`, `markUnread`,
 | Phase 5 article queue    | [`phase5-article-queue.png`](../screenshots/concepts/02-command-center/phase5-article-queue.png) | 1440×900. Dense queue, cyan unread dots in the leading gutter, mono time-ago, eyebrow heading row, footer kbd-hint strip (`J/K`, `X`, `S`, `M`). |
 | Phase 5 bulk selection   | [`phase5-bulk-selection.png`](../screenshots/concepts/02-command-center/phase5-bulk-selection.png) | 1440×900. Three rows checked — heading row replaced by cyan bulk toolbar (`3 selected · Read · Unread · Star · esc clear`). StatusBar shows cyan `3 SELECTED` chip. |
 | Phase 5 mobile queue     | [`phase5-mobile-queue.png`](../screenshots/concepts/02-command-center/phase5-mobile-queue.png) | 414×896. Mobile queue with the same density and gutter; selection model carries over but is hidden until rows are tapped. |
+| Phase 6 inspector        | [`phase6-inspector.png`](../screenshots/concepts/02-command-center/phase6-inspector.png) | 1440×900. Inspector toolbar (cyan dot · `INSPECT` · feed crumb · `Focus F` · `AA`), dense article header at 22px, mono meta line, action strip with `Reader`, `Star S`, `Open original O` Kbd chips. |
+| Phase 6 focus reader     | [`phase6-focus-reader.png`](../screenshots/concepts/02-command-center/phase6-focus-reader.png) | 1440×900. After pressing `f` — toolbar goes transparent, label flips to cyan `FOCUS`, title grows to editorial 32px, content padding expands. |
+| Phase 6 mobile reader    | [`phase6-mobile-reader.png`](../screenshots/concepts/02-command-center/phase6-mobile-reader.png) | 390×844. Mobile reader retains the inspector toolbar and dense header. |
 | Desktop overview         | TBD (Phase 9) | Inbox mode, queue centered, inspector open. |
 | Desktop article selected | TBD (Phase 9) | Inbox + inspector populated; bulk-action toolbar visible after multi-select. |
 | Reader view              | TBD (Phase 9) | Focus mode (`f`), inspector full-width. |
