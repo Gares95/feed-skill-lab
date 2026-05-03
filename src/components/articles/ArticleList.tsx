@@ -26,6 +26,76 @@ import { DateRangePicker } from "./DateRangePicker";
 import type { DateRangeSelection } from "@/components/layout/AppShell";
 import { cn } from "@/lib/utils";
 
+interface QueueEmptyStateProps {
+  eyebrow: string;
+  icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
+  title: string;
+  description: string;
+  tone?: "default" | "error";
+  action?: React.ReactNode;
+  hints?: React.ReactNode;
+}
+
+function QueueEmptyState({
+  eyebrow,
+  icon: Icon,
+  title,
+  description,
+  tone = "default",
+  action,
+  hints,
+}: QueueEmptyStateProps) {
+  const isError = tone === "error";
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center"
+    >
+      <div
+        aria-hidden="true"
+        className={cn(
+          "relative inline-flex h-12 w-12 items-center justify-center rounded-md border",
+          isError
+            ? "border-destructive/40 bg-[color-mix(in_oklch,var(--destructive)_14%,transparent)]"
+            : "border-[color-mix(in_oklch,var(--cockpit-accent)_38%,transparent)] bg-[color-mix(in_oklch,var(--cockpit-accent)_14%,transparent)]",
+        )}
+      >
+        <Icon
+          className={cn(
+            "h-5 w-5",
+            isError ? "text-destructive" : "text-[var(--cockpit-accent)]",
+          )}
+          aria-hidden={true}
+        />
+      </div>
+      <div className="space-y-1.5">
+        <p
+          className={cn(
+            "cockpit-mono text-[10px] uppercase tracking-[0.22em]",
+            isError
+              ? "text-destructive/85"
+              : "text-[var(--cockpit-accent)]/85",
+          )}
+        >
+          {eyebrow}
+        </p>
+        <p
+          className={cn(
+            "text-balance text-[14px] font-medium tracking-[-0.01em]",
+            isError ? "text-destructive" : "text-foreground",
+          )}
+        >
+          {title}
+        </p>
+        <p className="text-[12px] text-muted-foreground">{description}</p>
+      </div>
+      {action}
+      {hints && <div className="pt-1">{hints}</div>}
+    </div>
+  );
+}
+
 export interface ArticleWithFeed {
   id: string;
   title: string;
@@ -300,32 +370,31 @@ export function ArticleList({
       )}
 
       {searchError ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center text-muted-foreground">
-          <AlertCircle className="h-8 w-8 text-destructive" aria-hidden="true" />
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-destructive">{searchError}</p>
-            <p className="text-xs">Try a different query or clear the search.</p>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onSearchChange("")}
-            className="h-7"
-          >
-            Clear search
-          </Button>
-        </div>
+        <QueueEmptyState
+          tone="error"
+          eyebrow="Search failed"
+          icon={AlertCircle}
+          title={searchError}
+          description="Try a different query or clear the search."
+          action={
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onSearchChange("")}
+              className="h-7"
+            >
+              Clear search
+            </Button>
+          }
+        />
       ) : articles.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center text-muted-foreground">
-          {searchQuery ? (
-            <>
-              <Search className="h-8 w-8" aria-hidden="true" />
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-foreground">
-                  No results for &ldquo;{searchQuery}&rdquo;
-                </p>
-                <p className="text-xs">Try different keywords, or clear the search.</p>
-              </div>
+        searchQuery ? (
+          <QueueEmptyState
+            eyebrow="No matches"
+            icon={Search}
+            title={`No results for “${searchQuery}”`}
+            description="Try different keywords, or clear the search."
+            action={
               <Button
                 variant="outline"
                 size="sm"
@@ -334,26 +403,33 @@ export function ArticleList({
               >
                 Clear search
               </Button>
-            </>
-          ) : !hasFeeds ? (
-            <>
-              <Inbox className="h-8 w-8" aria-hidden="true" />
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-foreground">No feeds yet</p>
-                <p className="text-xs">
-                  Add your first feed from the sidebar to start reading.
-                </p>
-              </div>
-            </>
-          ) : (
-            <>
-              <FileText className="h-8 w-8" aria-hidden="true" />
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-foreground">All caught up</p>
-                <p className="text-xs">
-                  No articles in this view. Refresh to check for new items.
-                </p>
-              </div>
+            }
+          />
+        ) : !hasFeeds ? (
+          <QueueEmptyState
+            eyebrow="Queue empty"
+            icon={Inbox}
+            title="No feeds yet"
+            description="Add your first feed from the rail or run “Add feed” from the palette."
+            hints={
+              <>
+                <span className="cockpit-mono inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                  <KbdGroup>
+                    <Kbd>⌘</Kbd>
+                    <Kbd>K</Kbd>
+                  </KbdGroup>
+                  open palette
+                </span>
+              </>
+            }
+          />
+        ) : (
+          <QueueEmptyState
+            eyebrow="All clear"
+            icon={FileText}
+            title="All caught up"
+            description="No articles in this view. Refresh to check for new items."
+            action={
               <Button
                 variant="outline"
                 size="sm"
@@ -363,9 +439,18 @@ export function ArticleList({
                 <RefreshCw className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
                 Refresh feeds
               </Button>
-            </>
-          )}
-        </div>
+            }
+            hints={
+              <span className="cockpit-mono inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                <KbdGroup>
+                  <Kbd>⇧</Kbd>
+                  <Kbd>R</Kbd>
+                </KbdGroup>
+                refresh all
+              </span>
+            }
+          />
+        )
       ) : (
         <ScrollArea className="flex-1">
           {articles.map((article) => (
