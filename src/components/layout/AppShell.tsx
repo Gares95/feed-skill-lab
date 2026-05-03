@@ -2,8 +2,9 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Menu } from "lucide-react";
+import { ChevronLeft, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -40,7 +41,7 @@ import { CommandPalette } from "@/components/CommandPalette";
 import { ContextBar } from "@/components/command/ContextBar";
 import { NavRail } from "@/components/command/NavRail";
 import { StatusBar } from "@/components/command/StatusBar";
-import { CommandLauncher } from "@/components/command/CommandLauncher";
+import { MobileCommandBar } from "@/components/command/MobileCommandBar";
 
 interface AppShellProps {
   feeds: FeedWithCount[];
@@ -532,54 +533,67 @@ export function AppShell({
         Skip to main content
       </a>
       <main id="main-content" tabIndex={-1} className="h-full outline-none">
-      {/* Mobile: stacked single-pane layout. Phase 7 will replace this with
-          a bottom command bar; for now we keep the existing state machine
-          and add the ⌘K launcher to the top bar so the palette is
-          discoverable on mobile too. */}
-      <div className="flex h-full flex-col md:hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
-        <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border/60 px-3">
-          {mobileView === "sidebar" ? (
+      {/* Mobile: cockpit-styled stacked layout. Top mode badge + heading,
+          a bottom command bar with primary mode buttons and a centered
+          ⌘K trigger. The mobileView state machine ("sidebar" | "list" |
+          "reader") is preserved verbatim. */}
+      <div className="flex h-full flex-col md:hidden pt-[env(safe-area-inset-top)]">
+        <div className="flex h-12 shrink-0 items-center gap-2 border-b border-border/60 bg-[var(--cockpit-bg)] px-3">
+          {mobileView === "reader" && (
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-8 w-8 -ml-1"
               onClick={() => setMobileView("list")}
-              aria-label="Back to article list"
-              title="Back"
+              aria-label="Back to queue"
+              title="Back to queue"
             >
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-            </Button>
-          ) : mobileView === "reader" ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => setMobileView("list")}
-              aria-label="Back to article list"
-              title="Back to list"
-            >
-              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => setMobileView("sidebar")}
-              aria-label="Open feeds sidebar"
-              title="Open feeds"
-            >
-              <Menu className="h-5 w-5" aria-hidden="true" />
             </Button>
           )}
-          <h1 className="flex-1 truncate text-base font-semibold tracking-tight">
+          <span
+            className="cockpit-mono inline-flex shrink-0 items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
+            aria-hidden="true"
+          >
+            <span
+              className={cn(
+                "h-1.5 w-1.5 rounded-full bg-[var(--cockpit-accent)]",
+                (isRefreshing || isPending) && "animate-pulse",
+              )}
+            />
+            <span className="text-foreground/85">
+              {mobileView === "reader"
+                ? "Reader"
+                : mobileView === "sidebar"
+                  ? "Feeds"
+                  : isStarredView
+                    ? "Starred"
+                    : "Queue"}
+            </span>
+          </span>
+          <span aria-hidden="true" className="text-muted-foreground/40">·</span>
+          <h1 className="flex-1 truncate text-[13px] font-semibold tracking-tight">
             {heading}
           </h1>
-          <CommandLauncher
-            onClick={openPalette}
-            hint="⌘K"
-            className="h-7 px-2"
-          />
+          {mobileView !== "reader" && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              onClick={handleRefreshAll}
+              disabled={isRefreshing || isPending}
+              aria-label="Refresh all feeds"
+              title="Refresh all feeds"
+            >
+              <RefreshCw
+                className={cn(
+                  "h-4 w-4",
+                  (isRefreshing || isPending) && "animate-spin",
+                )}
+                aria-hidden="true"
+              />
+            </Button>
+          )}
         </div>
         <div className="min-h-0 flex-1">
           {mobileView === "sidebar" && (
@@ -635,6 +649,26 @@ export function AppShell({
             </div>
           )}
         </div>
+        <MobileCommandBar
+          mobileView={mobileView}
+          isStarredView={isStarredView}
+          hasReader={Boolean(selectedArticleId)}
+          totalUnread={totalUnread}
+          starredCount={starredCount}
+          onSelectFeeds={() => setMobileView("sidebar")}
+          onSelectQueue={() => {
+            if (isStarredView) {
+              handleSelectFeed(null);
+            } else {
+              setMobileView("list");
+            }
+          }}
+          onSelectStarred={handleSelectStarred}
+          onSelectReader={() => {
+            if (selectedArticleId) setMobileView("reader");
+          }}
+          onOpenPalette={openPalette}
+        />
       </div>
 
       {/* Desktop: cockpit shell — context bar + nav rail + (sidebar | list |

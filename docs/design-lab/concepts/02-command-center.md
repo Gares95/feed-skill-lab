@@ -305,8 +305,8 @@ Each phase requires its own go-ahead.
    Implementation Notes below.
 6. **Reader / inspector** — `ReadingPane` adapted to inspect-vs-focus
    densities, inspector slide animation.
-7. **Mobile command-center layout** — bottom command bar, palette
-   overlay, reader full-screen, gestures.
+7. **Mobile command-center layout** — ✅ Complete. See Phase 7
+   Implementation Notes below.
 8. **Dialogs / empty / loading / secondary states** — Add Feed, OPML
    import/export, Health, Stats, Settings; all empty / loading flavors.
 9. **Screenshots, validation, concept-doc closure** — capture the
@@ -851,6 +851,67 @@ the existing single-id server actions (`markRead`, `markUnread`,
 - Inspector currently shares the `ResizablePanel` with the rest of the layout; the doc-level proposal to fade cockpit chrome to a 1px outline when focus mode is on is **not** implemented in Phase 6 (would require AppShell changes). Focus density alone gave enough separation to be useful; chrome-fade can be re-evaluated when the reader/inspector behavior is reviewed against the Phase 9 timed-triage test.
 - Mobile bottom command bar (Phase 7) will add a top mini-bar for the reader; current mobile reader still reuses the existing top bar and is left as-is for this phase.
 
+## Phase 7 Implementation Notes
+
+**Branch:** `concept/02-command-center-07-mobile` (child of `concept/02-command-center`).
+
+### What changed
+
+- New `src/components/command/MobileCommandBar.tsx` — bottom command bar with five primary surfaces: **Feeds** (sidebar), **Queue** (Inbox), elevated centered **⌘** palette trigger, **Starred**, **Reader**. Each non-elevated button has a 12×12 touch target, a Lucide glyph, a cockpit-mono label, an optional unread/starred count badge, and a 2px cyan top-edge bar that lights up when active. The center button is a 14×14 circular pill with a cyan radial wash and the Lucide `Command` glyph — discoverable, thumb-reachable, and visually anchored.
+- Mobile section of `src/components/layout/AppShell.tsx` rewritten:
+  - Top bar dropped from h-14 to h-12 and re-skinned in cockpit register: cockpit-mono mode badge (`QUEUE` / `STARRED` / `FEEDS` / `READER`) with a pulsing cyan dot when refreshing, a `·` separator, then the heading, then a refresh button on the right (hidden in reader mode where the inspector toolbar already exposes the relevant chrome).
+  - Hamburger removed; primary navigation now lives entirely in the bottom command bar.
+  - Back chevron only appears in reader mode (returns to queue/list).
+  - The `mobileView` state machine ("sidebar" | "list" | "reader") is preserved verbatim — the bottom bar maps onto the existing handlers.
+  - Mobile layout no longer adds `pb-[env(safe-area-inset-bottom)]` to the outer wrapper; the command bar applies `pb-[max(env(safe-area-inset-bottom),6px)]` itself, so the bar visually sits flush with the home indicator on iOS without a doubled gap.
+
+### Mapping bottom-bar buttons to existing handlers
+
+| Button | Behavior |
+| --- | --- |
+| Feeds | `setMobileView("sidebar")` |
+| Queue | If currently in starred view: `handleSelectFeed(null)` (clears starred + jumps to list). Otherwise: `setMobileView("list")` (preserves the active feed filter). |
+| ⌘ (centered) | `setPaletteOpen(true)` |
+| Starred | `handleSelectStarred()` |
+| Reader | `setMobileView("reader")` if there is a `selectedArticleId`; otherwise disabled (40% opacity, `disabled` attribute). |
+
+This keeps Phase 5/6 selection + reader state intact: tapping Reader returns to the previously opened article, swipe-right on the reader still goes back to the list, and ⌘K opens the same scope-aware palette as desktop.
+
+### What stayed stable
+
+- No changes to `src/actions/`, `src/app/api/`, `src/lib/`, `prisma/`, generated client, `package.json`, `package-lock.json`. `git diff --stat main..HEAD` for those paths is empty.
+- No new dependencies. The bar is built from existing Lucide icons + Tailwind + the cockpit token set.
+- `mobileView` state machine, swipe gestures (`useSwipe` on the reader), keyboard shortcuts (`useKeyboardShortcuts`), command palette behavior, article fetching, sanitization — all untouched.
+- Desktop shell (ContextBar + NavRail + StatusBar + ResizablePanelGroup) untouched; only the mobile branch of `AppShell` changed.
+
+### Validation
+
+| Gate | Result |
+| --- | --- |
+| `npm run lint` | Clean (no warnings, no errors). |
+| `npm run test` | 175 passed, 1 skipped. |
+| `npm run build` | Build succeeds. `/` route remains 143 kB / 257 kB First Load. |
+| `npm audit` | 0 vulnerabilities. |
+| Backend invariant | `git diff --stat main..HEAD -- src/actions/ src/app/api/ src/lib/ prisma/ package.json package-lock.json` is empty. |
+
+### Browser observations (390×844)
+
+- **Mobile queue**: top mode badge reads `· QUEUE · All Articles` with refresh on the right; queue density and unread dots from Phase 5 carry over; bottom bar shows `QUEUE` active (cyan top edge). 99+ unread badge renders on the Queue glyph; `2` starred badge renders on the Starred glyph.
+- **Mobile inspector**: tapping an article switches the top bar to `· READER · All Articles` with back chevron, the Phase 6 inspector toolbar (cyan dot · `INSPECT` · feed crumb · `Focus F` · `AA`) appears below the top bar, and the bottom-bar Reader button takes the cyan active state.
+- **Mobile palette**: tapping the centered ⌘ button opens the same Phase 4 scoped palette (typed `>`/`#`/`@`/`/` chips, kbd hints, result count footer). `Esc` closes it.
+- **Star/unstar from reader**: the `Star` button in `ArticleHeader` works (still routed through `handleToggleStar`), as does `S` if a hardware keyboard is attached.
+- **Multi-select**: Phase 5 row checkboxes remain visible at mobile width; long-press equivalents are still a Phase 7/8 follow-up (kept out of scope here).
+- **Swipe gestures**: swipe-left advances to the next article, swipe-right returns to the queue (preserved from Phase 6).
+- **Desktop smoke check**: ContextBar + NavRail + queue + inspector + StatusBar render unchanged at 1440×900; no console errors.
+
+### Deviations and follow-ups
+
+- **Reader/Star/Open original button row** in `ArticleHeader` already provides per-article actions; we did **not** add a duplicate quick-action strip above the bottom command bar. The original Phase 7 plan in the architecture brief calls out such a strip, but it would duplicate `ArticleHeader` and add visual noise on a 390-wide screen. Revisit if user testing shows the toolbar isn't discoverable enough.
+- **Swipe-from-edge to open palette** was not implemented; the centered ⌘ button covered the discoverability brief without adding gesture surface area.
+- **Long-press to multi-select** (mobile equivalent of `x`) is still deferred to Phase 8.
+- **Helix-style multi-key buffer** indicator on the StatusBar still pending — desktop only, so unchanged for this phase.
+- **Reader full-screen with chrome fade** (the doc-level proposal to fade cockpit chrome in focus mode) remains unimplemented; on mobile the inspector already takes the whole content area below the top bar.
+
 ## Screenshots
 
 | View                     | Screenshot | Notes |
@@ -867,6 +928,9 @@ the existing single-id server actions (`markRead`, `markUnread`,
 | Phase 6 inspector        | [`phase6-inspector.png`](../screenshots/concepts/02-command-center/phase6-inspector.png) | 1440×900. Inspector toolbar (cyan dot · `INSPECT` · feed crumb · `Focus F` · `AA`), dense article header at 22px, mono meta line, action strip with `Reader`, `Star S`, `Open original O` Kbd chips. |
 | Phase 6 focus reader     | [`phase6-focus-reader.png`](../screenshots/concepts/02-command-center/phase6-focus-reader.png) | 1440×900. After pressing `f` — toolbar goes transparent, label flips to cyan `FOCUS`, title grows to editorial 32px, content padding expands. |
 | Phase 6 mobile reader    | [`phase6-mobile-reader.png`](../screenshots/concepts/02-command-center/phase6-mobile-reader.png) | 390×844. Mobile reader retains the inspector toolbar and dense header. |
+| Phase 7 mobile queue     | [`phase7-mobile-queue.png`](../screenshots/concepts/02-command-center/phase7-mobile-queue.png) | 390×844. Top bar shows cyan dot + `QUEUE` mode badge + heading + refresh. Bottom command bar with five surfaces — `FEEDS`, active `QUEUE` (cyan top edge), elevated cyan `⌘` trigger, `STARRED`, `READER`. |
+| Phase 7 mobile inspector | [`phase7-mobile-inspector.png`](../screenshots/concepts/02-command-center/phase7-mobile-inspector.png) | 390×844. After tapping an article. Top bar flips to `READER` badge with back chevron. Bottom command bar Reader button is active (cyan top accent). Inspector toolbar + article header stack cleanly above the bar. |
+| Phase 7 mobile palette   | [`phase7-mobile-command.png`](../screenshots/concepts/02-command-center/phase7-mobile-command.png) | 390×844. Centered ⌘ button on the bottom bar opens the same scope-aware palette used on desktop, with kbd hints and result counts. |
 | Desktop overview         | TBD (Phase 9) | Inbox mode, queue centered, inspector open. |
 | Desktop article selected | TBD (Phase 9) | Inbox + inspector populated; bulk-action toolbar visible after multi-select. |
 | Reader view              | TBD (Phase 9) | Focus mode (`f`), inspector full-width. |
