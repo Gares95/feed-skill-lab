@@ -307,8 +307,8 @@ Each phase requires its own go-ahead.
    densities, inspector slide animation.
 7. **Mobile command-center layout** — ✅ Complete. See Phase 7
    Implementation Notes below.
-8. **Dialogs / empty / loading / secondary states** — Add Feed, OPML
-   import/export, Health, Stats, Settings; all empty / loading flavors.
+8. **Dialogs / empty / loading / secondary states** — ✅ Complete. See
+   Phase 8 Implementation Notes below.
 9. **Screenshots, validation, concept-doc closure** — capture the
    screenshot table, fill the validation checklist, write the Decision.
 
@@ -912,6 +912,55 @@ This keeps Phase 5/6 selection + reader state intact: tapping Reader returns to 
 - **Helix-style multi-key buffer** indicator on the StatusBar still pending — desktop only, so unchanged for this phase.
 - **Reader full-screen with chrome fade** (the doc-level proposal to fade cockpit chrome in focus mode) remains unimplemented; on mobile the inspector already takes the whole content area below the top bar.
 
+## Phase 8 Implementation Notes
+
+**Branch:** `concept/02-command-center-08-secondary-states` (child of `concept/02-command-center`).
+
+### What changed
+
+- **`src/components/articles/ArticleList.tsx`** — extracted a small `QueueEmptyState` helper (UI-only, file-local) used by all four secondary states: search-error, no-results, no-feeds, and all-caught-up. Each state now renders a square-bordered cyan-tinted (or destructive-tinted) glyph tile, a cockpit-mono uppercase eyebrow (`No matches`, `Search failed`, `Queue empty`, `All clear`), a balanced display title, a muted description, an outline action button, and an optional kbd-chip hints row (`⌘K open palette`, `⇧R refresh all`).
+- **`src/components/sidebar/AddFeedDialog.tsx`** — re-skinned in cockpit register: cyan-on-slate `New feed` eyebrow with Lucide `Rss`, dense title, mono URL input with a `↵` Kbd hint pinned to the right edge, primary button uses `Plus` glyph and a `Loader2` spinner during submit, error rendered as a hairline destructive chip. The "Try one of these" list became a `Discover` cockpit-mono section with hairline-on-hover rows that reveal a cyan `Use →` indicator on the right. Footer strip with an `esc close` Kbd hint sits at the bottom of the dialog body.
+- **`src/components/sidebar/FeedSettingsDialog.tsx`** — same eyebrow + cockpit-mono labels treatment; refresh interval input uses `font-mono` and a `· minutes` suffix in the label; error chip matches the AddFeed surface.
+- **`src/components/sidebar/FeedItem.tsx`** — delete confirmation alert dialog gets a destructive cockpit-mono `Destructive` eyebrow with `Trash2`, tightened title typography, balanced description text. Behavior, focus order, and shadcn primitives unchanged.
+
+### What stayed stable
+
+- No changes to `src/actions/`, `src/app/api/`, `src/lib/`, `prisma/`, generated client, `package.json`, `package-lock.json`. Backend invariant `git diff --stat main..HEAD -- src/actions/ src/app/api/ src/lib/ prisma/ package.json package-lock.json` is empty.
+- No new dependencies. Treatments use existing cockpit tokens (`--cockpit-accent`, `.cockpit-mono`), `Kbd`/`KbdGroup` primitives, and existing Lucide icons.
+- Dialog primitives (`src/components/ui/dialog.tsx`, `src/components/ui/alert-dialog.tsx`) **not** edited — restyling is per-instance via `className` overrides so other consumers keep their look.
+- All form behavior, validation, server-action calls, focus management, and dialog open/close semantics are byte-for-byte preserved.
+- Reader empty / loading states from Phase 6 (`InspectorEmptyState`, `ReadingPaneSkeleton`) are already in cockpit register — left untouched.
+- Bulk-selection toolbar from Phase 5 already cockpit-styled — left untouched.
+- Highlight popover from Phase 6 already cockpit-styled — left untouched.
+
+### Validation
+
+| Gate | Result |
+| --- | --- |
+| `npm run lint` | Clean. |
+| `npm run test` | 175 passed, 1 skipped. |
+| `npm run build` | Build succeeds. |
+| `npm audit` | 0 vulnerabilities. |
+| Backend invariant | Empty diff vs `main` for backend paths. |
+
+### Browser observations
+
+- **Add Feed dialog (1440×900)**: cyan `RSS · NEW FEED` eyebrow, dense `Add a feed` title, mono URL placeholder with `↵` Kbd, "Add feed" primary button. `DISCOVER` section lists six suggested feeds with hover-only `Use →` cockpit-mono indicator. Footer line shows `ESC · CLOSE`. No console errors.
+- **Empty / no-matches state (1440×900)**: queue center renders the new tile + `NO MATCHES` cyan eyebrow + `No results for "…"` title + `Clear search` button. Inspector still shows `INSPECTOR IDLE` (Phase 6 empty state); they read as a coherent cockpit pair.
+- **Mobile no-matches (390×844)**: same treatment scaled down — square tile, cyan eyebrow, `Clear search` button, mobile command bar visible underneath with `QUEUE` active. Touch targets ≥ 40px.
+- **Delete confirmation**: opens with `TRASH · DESTRUCTIVE` red-tinted eyebrow above the title; Cancel + destructive Delete buttons unchanged.
+- **Feed settings dialog**: cockpit `Settings2 · FEED CONFIG` eyebrow, mono labels, mono interval input. Save / Cancel buttons unchanged.
+- **No console errors** on any of the captured states.
+- **Desktop smoke check**: no regression on the cockpit shell, queue, inspector, palette, or status bar.
+
+### Deviations and follow-ups
+
+- **OPML import/export surface** (`OpmlActions`) was not restyled — it lives behind a small button in the sidebar footer and didn't visually clash with cockpit register. Revisit only if Phase 9 visual review flags it.
+- **Health / Stats / Settings pages** (`/health`, `/stats`, `/settings`) are full route pages, not dialogs. They are reachable via the rail and the palette but were left out of scope for this phase — they are listed in the architecture brief as Phase 8 candidates but the diff would be too large for a "secondary states" pass and would dilute the Phase 9 review. Marked as Phase 9 follow-up.
+- **Loading skeleton variants** for the queue list (between filter switches) were not redesigned — the existing transition is essentially instantaneous on local data, so the placeholder isn't visible long enough to justify a treatment. Add a deliberate skeleton if Phase 9's perf audit shows otherwise.
+- **`readerMode` rename copy pass** (Reader button → "Extract" or similar) deferred again — still not blocking, still a Phase 9 cleanup.
+- **`cn` utility import** is required from the new `QueueEmptyState`; `ArticleList.tsx` already imports it from Phase 5, so no new imports were needed.
+
 ## Screenshots
 
 | View                     | Screenshot | Notes |
@@ -931,6 +980,9 @@ This keeps Phase 5/6 selection + reader state intact: tapping Reader returns to 
 | Phase 7 mobile queue     | [`phase7-mobile-queue.png`](../screenshots/concepts/02-command-center/phase7-mobile-queue.png) | 390×844. Top bar shows cyan dot + `QUEUE` mode badge + heading + refresh. Bottom command bar with five surfaces — `FEEDS`, active `QUEUE` (cyan top edge), elevated cyan `⌘` trigger, `STARRED`, `READER`. |
 | Phase 7 mobile inspector | [`phase7-mobile-inspector.png`](../screenshots/concepts/02-command-center/phase7-mobile-inspector.png) | 390×844. After tapping an article. Top bar flips to `READER` badge with back chevron. Bottom command bar Reader button is active (cyan top accent). Inspector toolbar + article header stack cleanly above the bar. |
 | Phase 7 mobile palette   | [`phase7-mobile-command.png`](../screenshots/concepts/02-command-center/phase7-mobile-command.png) | 390×844. Centered ⌘ button on the bottom bar opens the same scope-aware palette used on desktop, with kbd hints and result counts. |
+| Phase 8 dialog           | [`phase8-dialog.png`](../screenshots/concepts/02-command-center/phase8-dialog.png) | 1440×900. Add-feed dialog with cockpit eyebrow (`RSS · NEW FEED`), mono URL input + `↵` Kbd, primary `Add feed` button, `DISCOVER` section listing six suggested feeds with hover-only cyan `Use →`, `ESC · CLOSE` footer strip. |
+| Phase 8 empty state      | [`phase8-empty-state.png`](../screenshots/concepts/02-command-center/phase8-empty-state.png) | 1440×900. Search returning zero results — square cyan-bordered tile with `Search` glyph, `NO MATCHES` cockpit-mono eyebrow, balanced title `No results for "…"`, muted description, outline `Clear search` button. Inspector still shows Phase 6 idle state — they read as a coherent pair. |
+| Phase 8 mobile empty     | [`phase8-mobile-empty.png`](../screenshots/concepts/02-command-center/phase8-mobile-empty.png) | 390×844. Same no-results treatment scaled down for mobile, sitting above the bottom command bar with `QUEUE` active. |
 | Desktop overview         | TBD (Phase 9) | Inbox mode, queue centered, inspector open. |
 | Desktop article selected | TBD (Phase 9) | Inbox + inspector populated; bulk-action toolbar visible after multi-select. |
 | Reader view              | TBD (Phase 9) | Focus mode (`f`), inspector full-width. |
