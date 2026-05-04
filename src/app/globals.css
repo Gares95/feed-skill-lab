@@ -71,6 +71,51 @@
   --input: oklch(0.90 0 0);
   --ring: oklch(0.50 0.18 250);
   --star: oklch(0.65 0.15 85);
+
+  /* ── Today Edition foundation (Concept 03 / Phase 2) ────────────────
+     Tokens introduced for the editorial issue surface. Defined in
+     parallel with the existing tokens above so current UI keeps
+     rendering unchanged while later phases adopt them. No Google Font;
+     a system serif stack is used during the concept phase.
+  */
+  --font-serif-display:
+    ui-serif, "Iowan Old Style", "Charter", "Source Serif 4",
+    "Newsreader", Georgia, "Times New Roman", serif;
+
+  /* Warm paper-tinted neutrals (light fallback). Hue 60 keeps the page
+     warm without becoming sepia. */
+  --edition-paper: oklch(0.985 0.003 60);
+  --edition-paper-elevated: oklch(1 0 0);
+  --edition-ink: oklch(0.16 0.005 60);
+  --edition-ink-muted: oklch(0.45 0.007 60);
+  --edition-ink-faint: oklch(0.62 0.007 60);
+
+  /* Hairline rules — single weight, two contrasts. */
+  --edition-rule: oklch(0 0 0 / 10%);
+  --edition-rule-strong: oklch(0 0 0 / 18%);
+
+  /* Single deep accent — rust / oxblood. Saturation < 0.18. */
+  --edition-accent: oklch(0.48 0.16 32);
+  --edition-accent-strong: oklch(0.42 0.17 30);
+  --edition-accent-on: oklch(0.985 0 0);
+
+  /* Editorial spacing scale (issue rhythm). Sections are real chapters. */
+  --edition-space-1: 0.5rem;
+  --edition-space-2: 1rem;
+  --edition-space-3: 1.75rem;
+  --edition-space-4: 3rem;
+  --edition-space-5: 5rem;
+  --edition-space-section: clamp(3rem, 6vw, 6rem);
+
+  /* Display headline scale — `clamp()` keeps the cover headline at 2–3
+     lines across viewports per the gpt-taste 2-line iron rule. */
+  --edition-display-cover: clamp(2.25rem, 4.6vw, 4.25rem);
+  --edition-display-second: clamp(1.4rem, 2.4vw, 2rem);
+  --edition-display-section: 0.78rem; /* eyebrow size */
+
+  /* Drop-cap sizing. */
+  --edition-drop-cap-size: 3.6em;
+  --edition-drop-cap-leading: 0.85;
   --chart-1: oklch(0.50 0.18 250);
   --chart-2: oklch(0.55 0.2 25);
   --chart-3: oklch(0.65 0.15 85);
@@ -134,6 +179,23 @@
   --sidebar-accent-foreground: oklch(0.94 0.003 250);
   --sidebar-border: oklch(1 0 0 / 7%);
   --sidebar-ring: oklch(0.68 0.10 250);
+
+  /* ── Today Edition foundation (dark) ───────────────────────────────
+     Warm-dark "ink on paper" surface. Hue 60 (warm neutral) instead of
+     the cool indigo (hue 250) used by the polished baseline. These
+     tokens are scoped to .edition-issue surfaces in later phases — they
+     do not override the existing dark palette globally.
+  */
+  --edition-paper: oklch(0.155 0.008 60);
+  --edition-paper-elevated: oklch(0.195 0.009 60);
+  --edition-ink: oklch(0.94 0.005 60);
+  --edition-ink-muted: oklch(0.66 0.008 60);
+  --edition-ink-faint: oklch(0.46 0.007 60);
+  --edition-rule: oklch(1 0 0 / 12%);
+  --edition-rule-strong: oklch(1 0 0 / 22%);
+  --edition-accent: oklch(0.66 0.14 35);
+  --edition-accent-strong: oklch(0.58 0.15 32);
+  --edition-accent-on: oklch(0.985 0 0);
 }
 
 @layer base {
@@ -285,4 +347,130 @@
   font-size: 0.875rem;
   color: var(--muted-foreground);
   margin-top: 0.5em;
+}
+
+/* ── Today Edition foundation utilities (Concept 03 / Phase 2) ─────────
+   Plain-CSS utilities for the editorial issue surface. These do not
+   touch any existing component class. Intended consumers: Phase 3+
+   shell + module work. Listed here so designers/reviewers can audit
+   the typographic system before any layout lands.
+
+   Convention: every editorial class is namespaced `.edition-*`.
+*/
+
+/* Issue surface wrapper. Scopes the warm-dark palette and editorial
+   spacing rhythm without overriding the global theme. Reader content
+   inside the issue must not inherit these tokens — keep
+   `.article-content` outside or above this wrapper. */
+.edition-issue {
+  background: var(--edition-paper);
+  color: var(--edition-ink);
+  font-feature-settings: "ss01", "ss02", "kern";
+}
+
+/* Display headline — serif, tight tracking, balanced wrap, capped at
+   2–3 lines via `clamp()` font scaling on the cover. */
+.edition-display {
+  font-family: var(--font-serif-display);
+  font-weight: 600;
+  letter-spacing: -0.018em;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+.edition-display-cover {
+  font-size: var(--edition-display-cover);
+  font-weight: 600;
+  letter-spacing: -0.022em;
+}
+
+.edition-display-second {
+  font-size: var(--edition-display-second);
+  font-weight: 600;
+  letter-spacing: -0.014em;
+  line-height: 1.15;
+}
+
+/* Section eyebrow — small caps, tracked, accent-colored. */
+.edition-eyebrow {
+  font-family: var(--font-sans);
+  font-size: var(--edition-display-section);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--edition-accent);
+}
+
+/* Article dek (lead paragraph beneath a headline). Geist sans body,
+   pretty wrap, comfortable measure. */
+.edition-dek {
+  font-family: var(--font-sans);
+  font-size: 0.96875rem; /* ~15.5px */
+  line-height: 1.55;
+  color: var(--edition-ink-muted);
+  text-wrap: pretty;
+  max-width: 65ch;
+}
+
+/* Edition stamp / dateline — Geist mono, tabular nums, small caps off. */
+.edition-stamp {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--edition-ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hairline rules. Use as `border-top` / `border-bottom` colors via the
+   token, or as a standalone `<hr>` style. */
+.edition-rule {
+  border: 0;
+  border-top: 1px solid var(--edition-rule);
+  margin: 0;
+}
+
+.edition-rule-strong {
+  border: 0;
+  border-top: 1px solid var(--edition-rule-strong);
+  margin: 0;
+}
+
+/* Drop cap. Apply to the *first* `<p>` of the cover dek only. */
+.edition-drop-cap::first-letter {
+  font-family: var(--font-serif-display);
+  font-size: var(--edition-drop-cap-size);
+  line-height: var(--edition-drop-cap-leading);
+  float: left;
+  padding: 0.05em 0.08em 0 0;
+  color: var(--edition-accent);
+  font-weight: 600;
+}
+
+/* Cardless surface helper — useful for the cover/seconds wells which
+   intentionally have no card boxes; provides only inner padding. */
+.edition-surface {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: var(--edition-space-3);
+}
+
+/* Editorial entry-stagger animation. Pure CSS, no library. Delay is
+   driven by `--edition-index` set per child in markup. Falls back to a
+   single fade under prefers-reduced-motion (handled by the existing
+   global rule). */
+@keyframes edition-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.edition-stagger > * {
+  animation: edition-rise var(--motion-base) var(--ease-out-quint) both;
+  animation-delay: calc(var(--edition-index, 0) * 60ms);
 }
