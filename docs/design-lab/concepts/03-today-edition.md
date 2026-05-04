@@ -228,7 +228,7 @@ Phase 1 lands directly on `concept/03-today-edition` (docs only). Each subsequen
 | # | Branch | Scope |
 | --- | --- | --- |
 | 1 | `concept/03-today-edition` (this branch) | Concept architecture and docs — *this phase*. Doc + scaffolding only. |
-| 2 | `concept/03-today-edition-02-foundation` | Design-system / visual foundation. Extend `globals.css` with paper-tinted dark, rust accent, system-serif var, drop-cap utility, rule and editorial spacing scales. Add `Eyebrow`, `Rule`, `EditionStamp`, `Dek` primitives. No layout change yet. **No Google Font addition** — system serif stack only. |
+| 2 | `concept/03-today-edition-02-foundation` | Design-system / visual foundation. Extend `globals.css` with paper-tinted warm-dark, rust accent, system-serif var, drop-cap utility, rule and editorial spacing scales. Add `Eyebrow`, `Rule`, `EditionStamp`, `Dek` primitives. No layout change yet. **No Google Font addition** — system serif stack only. **Status: implemented (uncommitted) on this branch.** |
 | 3 | `concept/03-today-edition-03-shell` | App shell rewrite on `/`: retire three-pane shell, mount `Masthead` + `IssueGrid` skeleton with patterns A–D, day-seeded selection, semantic landmarks, keyboard tab order. Edition composer (`lib/edition.ts` *or* component-local fallback) introduced as a pure client utility, read-only over existing data. Unit tests for cover selection, dedup, section grouping, later tray, empty state. |
 | 4 | `concept/03-today-edition-04-edition-modules` | Issue content modules: `CoverWell`, `SecondaryWell`, `SectionRibbon`, `SectionItem`, drop cap, hero image with duotone, hairline rules; `LaterTray` with collapse + read-state strikethrough/dim. |
 | 5 | `concept/03-today-edition-05-reader` | Reader slide-over hosts existing `ReadingPane` verbatim. `/feeds` page mounts existing sidebar components in a single-pane editorial layout. Focus restore on slide-over close. |
@@ -239,6 +239,71 @@ Phase 1 lands directly on `concept/03-today-edition` (docs only). Each subsequen
 A possible **Phase 9 (`concept/03-today-edition-09-polish`)** invokes `emil-design-eng` for hover/focus/transition micro-polish *after* Phase 8 baseline screenshots exist — this is intentional sequencing so the polish skill operates on a real artifact, not on a sketch.
 
 A possible **finalization step** (only if the concept becomes a finalist) adds the Google Font (Newsreader / Source Serif 4) via `next/font/google` as a deliberate identity move — captured as a follow-up, not a phase.
+
+## Phase 2 Implementation Notes
+
+Done on child branch `concept/03-today-edition-02-foundation`. Scope: visual foundation only — tokens and utilities — no layout, no shell changes, no component redesign.
+
+### What changed
+
+`src/app/globals.css` only.
+
+- **Editorial token namespace `--edition-*`** introduced under both `:root` (light fallback) and `.dark` (primary). Defined in *parallel* with the existing palette so the current UI keeps rendering unchanged.
+  - Surfaces: `--edition-paper`, `--edition-paper-elevated`, `--edition-ink`, `--edition-ink-muted`, `--edition-ink-faint` — warm neutrals at hue 60 (warm), distinct from the cool indigo (hue 250) of the polished baseline.
+  - Hairline rules: `--edition-rule`, `--edition-rule-strong`. Single weight, two contrasts. No card boxes anywhere.
+  - Single accent: `--edition-accent`, `--edition-accent-strong`, `--edition-accent-on` — rust/oxblood at hue 32–35, saturation < 0.18, intentionally below the AI-tells line.
+  - Editorial spacing scale: `--edition-space-1..5` and `--edition-space-section` (`clamp(3rem, 6vw, 6rem)` — sections are real chapters per the gpt-taste massive-spacing rule).
+  - Display scale: `--edition-display-cover` (`clamp(2.25rem, 4.6vw, 4.25rem)`), `--edition-display-second`, `--edition-display-section`. The cover scale is the encoded form of the 2-line iron rule from `gpt-taste`.
+  - Drop cap: `--edition-drop-cap-size`, `--edition-drop-cap-leading`.
+- **System serif stack** (`--font-serif-display`): `ui-serif, "Iowan Old Style", "Charter", "Source Serif 4", "Newsreader", Georgia, "Times New Roman", serif`. **No Google Font added.** Decision recorded in this doc; finalization-only follow-up.
+- **Plain-CSS utilities** under the `.edition-*` namespace, defined at the end of the file:
+  - `.edition-issue` — issue surface wrapper. Scopes warm-dark + ligature feature settings without overriding the global theme.
+  - `.edition-display`, `.edition-display-cover`, `.edition-display-second` — serif headlines with tight tracking, balanced wrap.
+  - `.edition-eyebrow` — small caps, `tracking-[0.12em]`, accent-colored.
+  - `.edition-dek` — Geist sans body, `text-wrap: pretty`, `max-width: 65ch`.
+  - `.edition-stamp` — Geist mono, tabular-nums, the print-press signature.
+  - `.edition-rule`, `.edition-rule-strong` — hairline `<hr>` styles.
+  - `.edition-drop-cap` — first-letter drop cap on the cover dek.
+  - `.edition-surface` — cardless inner padding helper.
+  - `.edition-stagger` — pure-CSS entry-stagger keyframe driven by `--edition-index` per child. No motion library. Honors `prefers-reduced-motion` via the existing global rule (which collapses transitions and animations to ~0ms).
+
+No component file was modified. No new dependency. No new font network request. No primitive React component was added — Phase 2 is CSS-only foundation; primitives (`Eyebrow`, `Rule`, `EditionStamp`, `Dek`) will be introduced as small React wrappers in Phase 3+ when they actually have a consumer.
+
+### What stayed stable
+
+- All existing tokens (`--background`, `--foreground`, `--primary`, `--accent`, `--sidebar*`, motion tokens) untouched. Existing components render identically.
+- No change to `src/actions/`, `src/app/api/`, `src/lib/`, `prisma/`, generated Prisma client, `package.json`, `package-lock.json`. Backend invariant holds.
+- No new dependency installed.
+- Existing dark-mode UI on `/`, `/health`, `/settings`, `/stats` rendered HTTP 200 and visually unchanged in spot-check.
+
+### Validation results
+
+- `npm run lint` — clean (eslint exits 0, no output).
+- `npm run test` — **175 passed, 1 skipped**, 21 test files passed, 1 skipped. 7.46s.
+- `npm run build` — succeeds. All routes generated. Shared CSS chunk grew slightly (CSS-only addition).
+- `npm audit` — **found 0 vulnerabilities**.
+- `git diff --stat main..HEAD -- src/actions/ src/app/api/ src/lib/ prisma/ package.json package-lock.json` — empty. Backend invariant holds.
+
+### Browser observations (dev server, port 3001)
+
+- `/` renders 200, baseline three-pane shell visually unchanged. No layout break, no contrast regression, scrolling intact.
+- `/health`, `/settings`, `/stats` render 200, no regressions.
+- Editorial tokens (`--edition-*`, `--font-serif-display`) confirmed shipped in the route CSS bundle (verified via `grep` on `/_next/static/chunks/*.css`).
+- No console errors observed in the server log during the smoke test.
+
+### Google Font deferred — note
+
+Per the user's Phase 2 instruction (2026-05-04): no Google Font added during the concept phase. The `--font-serif-display` token uses a system serif stack with `Iowan Old Style` (macOS), `Charter` (macOS / iOS / various), `Source Serif 4` (if locally available), `Newsreader` (if locally available), `Georgia` (universal), `Times New Roman`, generic `serif` fallback. The font *identity* of Today Edition is therefore typeface-agnostic during the concept phase — what's tested is the editorial register (display weight, tracking, hierarchy, drop cap, eyebrow contrast), not a specific named typeface. If the concept becomes a finalist, the finalization follow-up adds one Google Font via `next/font/google`.
+
+### Deviations from plan
+
+- Phase 2 originally listed `Eyebrow`, `Rule`, `EditionStamp`, `Dek` as React primitives. They were instead introduced as plain-CSS utility classes under the `.edition-*` namespace. React wrappers are deferred to Phase 3+ where they will have actual consumers — adding empty wrapper components in Phase 2 would be premature abstraction without a caller.
+
+### Follow-ups carried into later phases
+
+- Phase 3+: introduce React primitives `Eyebrow`, `Rule`, `EditionStamp`, `Dek` only when consumed by `Masthead` / `IssueGrid` / `CoverWell`.
+- Phase 8: contrast audit on `--edition-accent` (rust) over `--edition-paper` (warm-dark) at body and small sizes — Phase 2 did not gate on this because no foreground content yet uses the accent at small sizes.
+- Phase 8: verify `prefers-reduced-motion` collapses `.edition-stagger` cleanly (the global rule already forces transitions/animations to ~0ms, so this should be a verification, not a fix).
 
 ## Risks and Tradeoffs
 
