@@ -229,8 +229,8 @@ Phase 1 lands directly on `concept/03-today-edition` (docs only). Each subsequen
 | --- | --- | --- |
 | 1 | `concept/03-today-edition` (this branch) | Concept architecture and docs — *this phase*. Doc + scaffolding only. |
 | 2 | `concept/03-today-edition-02-foundation` | Design-system / visual foundation. Extend `globals.css` with paper-tinted warm-dark, rust accent, system-serif var, drop-cap utility, rule and editorial spacing scales. Add `Eyebrow`, `Rule`, `EditionStamp`, `Dek` primitives. No layout change yet. **No Google Font addition** — system serif stack only. **Status: implemented (uncommitted) on this branch.** |
-| 3 | `concept/03-today-edition-03-shell` | App shell rewrite on `/`: retire three-pane shell, mount `Masthead` + `IssueGrid` skeleton with patterns A–D, day-seeded selection, semantic landmarks, keyboard tab order. Edition composer (`lib/edition.ts` *or* component-local fallback) introduced as a pure client utility, read-only over existing data. Unit tests for cover selection, dedup, section grouping, later tray, empty state. |
-| 4 | `concept/03-today-edition-04-edition-modules` | Issue content modules: `CoverWell`, `SecondaryWell`, `SectionRibbon`, `SectionItem`, drop cap, hero image with duotone, hairline rules; `LaterTray` with collapse + read-state strikethrough/dim. |
+| 3 | `concept/03-today-edition-03-shell` | Edition shell + masthead. Mount `EditionMasthead` above the existing layout on desktop; nameplate, edition stamp (date + day-of-year), counters (unread/starred/sources), command-palette launcher pill, refresh and mark-all actions, nav links to Starred/Health/Stats/Settings. Three-pane layout temporarily preserved beneath the masthead — content modules and `IssueGrid` are Phase 4. Edition composer + unit tests deferred to Phase 4. **Status: implemented (uncommitted) on this branch.** |
+| 4 | `concept/03-today-edition-04-edition-modules` | Edition composer (`lib/edition.ts` *or* component-local fallback — pure client, read-only, deterministic) and issue content modules: `IssueGrid` with patterns A–D and day-seeded selection, `CoverWell`, `SecondaryWell`, `SectionRibbon`, `SectionItem`, drop cap, hero image with duotone, hairline rules; `LaterTray` with collapse + read-state strikethrough/dim. Unit tests for cover selection, dedup, section grouping, later tray, empty state. |
 | 5 | `concept/03-today-edition-05-reader` | Reader slide-over hosts existing `ReadingPane` verbatim. `/feeds` page mounts existing sidebar components in a single-pane editorial layout. Focus restore on slide-over close. |
 | 6 | `concept/03-today-edition-06-mobile` | Mobile issue: vertical scroll, sticky masthead, pull-to-refresh, bottom tab bar (Today / Feeds / Search). Gesture wiring with reduced-motion fallback. |
 | 7 | `concept/03-today-edition-07-secondary-states` | Empty edition, low-volume Pattern E, error state, loading skeletons matching the issue grid. Palette entries updated. |
@@ -304,6 +304,70 @@ Per the user's Phase 2 instruction (2026-05-04): no Google Font added during the
 - Phase 3+: introduce React primitives `Eyebrow`, `Rule`, `EditionStamp`, `Dek` only when consumed by `Masthead` / `IssueGrid` / `CoverWell`.
 - Phase 8: contrast audit on `--edition-accent` (rust) over `--edition-paper` (warm-dark) at body and small sizes — Phase 2 did not gate on this because no foreground content yet uses the accent at small sizes.
 - Phase 8: verify `prefers-reduced-motion` collapses `.edition-stagger` cleanly (the global rule already forces transitions/animations to ~0ms, so this should be a verification, not a fix).
+
+## Phase 3 Implementation Notes
+
+Done on child branch `concept/03-today-edition-03-shell`. Scope: edition frame and masthead only — no content-module work, no edition composer, no mobile redesign, no reader changes.
+
+### What changed
+
+- **New component** `src/components/edition/EditionMasthead.tsx` (client component). Editorial masthead displayed above the app shell on desktop (`hidden md:flex`):
+  - Top row: serif **"Today"** nameplate (links to `/`), eyebrow weekday + Geist-mono **edition stamp** in the form `№124 · May 4, 2026` (day-of-year zero-padded), and a right cluster with the **command-palette launcher pill** (`⌘K`), refresh-all icon button, and mark-all-read icon button.
+  - Lower row: `<dl>` of counters (Unread / Starred / Sources) using small-caps `.edition-eyebrow` labels and tabular-nums `.edition-stamp` values, plus an `aria-label`-ed `<nav>` with **Starred** (toggles starred view, `aria-pressed`), **Health**, **Stats**, **Settings** links.
+  - Date computation lazy-initialized via `useEffect` to avoid hydration mismatch between server-time and client-time. The date span is also marked `suppressHydrationWarning` defensively. Updates every minute so the day-of-year flips on a session that crosses midnight.
+  - Built entirely from Phase 2 tokens (`--edition-paper`, `--edition-ink*`, `--edition-rule*`, `--edition-accent`, `--font-serif-display`) and utility classes (`.edition-display`, `.edition-eyebrow`, `.edition-stamp`). No new tokens.
+  - Uses `<button>` for actions (palette, refresh, mark-all, starred-toggle) and Next.js `<Link>` for routed nav. `role="banner"` on the `<header>`. `aria-pressed`, `aria-label`, `aria-hidden` applied appropriately. Focus-visible rings use the rust accent.
+- **Modified** `src/components/layout/AppShell.tsx`:
+  - Root container changed from `h-dvh w-screen overflow-hidden` to `edition-issue flex h-dvh w-screen flex-col overflow-hidden` so the masthead and main can stack as flex children.
+  - `<EditionMasthead>` mounted between the skip-link and `<main>`, wired to the existing AppShell state: `totalUnread`, `starredCount`, `feeds.length`, `isRefreshing || isPending`, `isStarredView`, plus handlers `handleRefreshAll`, `handleMarkAllRead`, `setPaletteOpen`, `handleSelectStarred`.
+  - `<main>` switched from `h-full` to `min-h-0 flex-1` so it fills the remaining viewport beneath the masthead. Both the mobile flex-column layout and the desktop `ResizablePanelGroup` continue to render unchanged inside.
+
+### What stayed stable
+
+- All routes, server actions, API endpoints, Prisma schema, lib utilities — untouched.
+- Existing keyboard shortcuts, reader behavior, sidebar, article list, command palette dialog, search, date-range filter, refresh, mark-all-read, star toggle, swipe gestures — all still wired through the same handlers; the masthead only adds new entry points to the same actions.
+- Mobile shell unchanged. Masthead is desktop-only; mobile keeps the existing hamburger + heading top bar (per the "do not redesign mobile deeply yet" constraint).
+- Reader unchanged; still mounted in the desktop reading-pane and mobile `mobileView === "reader"` state.
+- All existing tokens preserved; no dependencies added; no fonts added.
+
+### Validation results
+
+- `npm run lint` — clean.
+- `npm run test` — **175 passed, 1 skipped** (22 files).
+- `npm run build` — succeeds. `/` route grew slightly (+~1 kB) for the masthead client code.
+- `npm audit` — **0 vulnerabilities**.
+- `git diff --stat main..HEAD -- src/actions/ src/app/api/ src/lib/ prisma/ package.json package-lock.json` — empty. Backend invariant holds.
+
+### Browser observations (dev server, port 3000)
+
+- **Desktop `/`** renders the editorial masthead at the top: serif "Today" nameplate, "MONDAY" eyebrow, "№124 · May 4, 2026" mono stamp, palette pill, refresh + mark-all icon buttons, counters row (UNREAD 326 / STARRED 2 / SOURCES 2), nav (Starred / Health / Stats / Settings). Underneath, the existing three-pane sidebar/list/reader layout is preserved and fully functional.
+- **Existing list/reader behavior** verified: feed selection, article selection, search, date-range filter, mark-all-read, refresh, star toggle still work through the masthead and the unchanged in-list controls.
+- **Routes** `/health`, `/settings`, `/stats` all return 200. Settings reachable from masthead nav.
+- **Command palette** opens via the masthead pill (in addition to `⌘K`); palette content unchanged.
+- **Mobile** smoke at 414×820: existing layout intact (hamburger + heading + list). No regressions.
+- **No console errors** reported by the dev server during the smoke; the `suppressHydrationWarning` on the date span prevents the expected SSR/CSR difference from logging.
+
+### Screenshots
+
+| File | Notes |
+| --- | --- |
+| `phase3-shell.png` | Desktop overview at 1440×900: masthead atop, three-pane preserved beneath. |
+| `phase3-masthead.png` | Desktop masthead crop at 1440×200, after hydration: nameplate, weekday eyebrow, edition stamp, counters, palette pill, actions, nav. |
+| `phase3-mobile-check.png` | Mobile at 414×820: existing chrome unchanged (masthead intentionally desktop-only this phase). |
+
+(All under `docs/design-lab/screenshots/concepts/03-today-edition/`. The small "N" overlay at the lower-right of `phase3-shell.png` is the Next.js dev-mode devtools button, not part of the UI.)
+
+### Deviations from plan
+
+- The original Phase 3 listed `IssueGrid` skeleton, day-seeded patterns A–D, and the edition composer as in-scope. Those were **deferred to Phase 4** so this phase ships a focused, reviewable masthead+frame change without preempting the layout-grammar work. The Phase 4 row in the implementation table has been updated to absorb the composer + IssueGrid.
+- The masthead is desktop-only (`hidden md:flex`). Mobile masthead is intentionally deferred to Phase 6 (mobile pass) per the explicit "do not redesign mobile deeply" constraint.
+
+### Follow-ups carried into later phases
+
+- Phase 4: build `IssueGrid` + composer + content modules; replace the three-pane content area beneath the masthead with the issue document.
+- Phase 6: mobile masthead variant (compact single-row with nameplate + edition stamp + palette button).
+- Phase 8: verify masthead contrast, focus rings, `prefers-reduced-motion`, and tab order across the new chrome.
+- Optional refinement: the bottom counter row could move into the `IssueGrid` masthead-band in Phase 4, leaving the desktop masthead as a single thinner top bar. Decide once the issue document exists.
 
 ## Risks and Tradeoffs
 

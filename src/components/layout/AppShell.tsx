@@ -37,6 +37,7 @@ import { useCommandPalette } from "@/hooks/use-command-palette";
 import { useSwipe } from "@/hooks/use-swipe";
 import { formatCustomRangeParam, type DateRange } from "@/lib/date-range";
 import { CommandPalette } from "@/components/CommandPalette";
+import { EditionMasthead } from "@/components/edition/EditionMasthead";
 
 interface AppShellProps {
   feeds: FeedWithCount[];
@@ -349,7 +350,7 @@ export function AppShell({
       : "All Articles";
 
   return (
-    <div className="h-dvh w-screen overflow-hidden">
+    <div className="edition-issue flex h-dvh w-screen flex-col overflow-hidden">
       <a
         href="#main-content"
         onClick={(e) => {
@@ -360,7 +361,22 @@ export function AppShell({
       >
         Skip to main content
       </a>
-      <main id="main-content" tabIndex={-1} className="h-full outline-none">
+      <EditionMasthead
+        totalUnread={totalUnread}
+        starredCount={starredCount}
+        feedCount={feeds.length}
+        isRefreshing={isRefreshing || isPending}
+        isStarredView={isStarredView}
+        onRefreshAll={handleRefreshAll}
+        onMarkAllRead={handleMarkAllRead}
+        onOpenPalette={() => setPaletteOpen(true)}
+        onSelectStarred={handleSelectStarred}
+      />
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="min-h-0 flex-1 outline-none"
+      >
       {/* Mobile: stacked single-pane layout */}
       <div className="flex h-full flex-col md:hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
         <div className="flex h-14 shrink-0 items-center gap-2 border-b px-3">
