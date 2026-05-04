@@ -62,7 +62,7 @@ See [`docs/design-lab/initial-design-skill-audit.md`](docs/design-lab/initial-de
 | Concept | Branch | PR | Status | Screenshot | Notes |
 |---|---|---|---|---|---|
 | Impeccable Redesign / Reading Lamp | `concept/01-impeccable-redesign` | [#1](https://github.com/Gares95/feed-skill-lab/pull/1) | Candidate finalist | [`docs/design-lab/gallery/01-impeccable-redesign.png`](docs/design-lab/gallery/01-impeccable-redesign.png) | Warm, editorial, reader-first redesign generated through Impeccable. |
-| Command Center | `concept/02-command-center` | TBD | Planned | TBD | Keyboard/action-first direction |
+| Command Center | `concept/02-command-center` | TBD | Candidate finalist | [`docs/design-lab/gallery/02-command-center.png`](docs/design-lab/gallery/02-command-center.png) | Fast, keyboard-first information cockpit driven by `redesign-existing-projects`. |
 | Compact Pro | `concept/03-compact-pro` | TBD | Planned | TBD | Dense power-user direction |
 | Magazine Dashboard | `concept/04-magazine-dashboard` | TBD | Planned | TBD | More visual discovery direction |
 
@@ -77,6 +77,19 @@ The first **radical** concept on the post-polish track, branched from the polish
 - **What's not preserved.** The cool indigo dark theme, the always-three-pane shell as the entire identity, and the SaaS-card register on lists, dialogs, and empty states.
 - **Status.** **Candidate finalist** — kept on its branch for side-by-side comparison against future concepts (`concept/02-…`, `concept/03-…`) before any merge to `main` or upstream call. **Not** automatically intended to merge.
 - **Read more.** The full concept doc lives on the concept branch at [`docs/design-lab/concepts/01-impeccable-redesign.md`](https://github.com/Gares95/feed-skill-lab/blob/concept/01-impeccable-redesign/docs/design-lab/concepts/01-impeccable-redesign.md), with per-phase implementation notes, screenshots, validation results, and follow-ups.
+
+## Concept 02 — Command Center
+
+![Command Center concept](docs/design-lab/gallery/02-command-center.png)
+
+The second **radical** concept on the post-polish track, branched from the polished baseline (`lab-polish-v1`) and intentionally aimed at the opposite pole from Concept 01. Driven primarily by the [`redesign-existing-projects`](.claude/skills/redesign-existing-projects/) skill across nine phases (tokens → shell → palette → queue → inspector → mobile → secondary states → closure).
+
+- **Direction.** Fast, keyboard-first, command-driven — an "information cockpit" for triaging many feeds per session. Cool slate surfaces, a single cyan accent, mono `Kbd` chips as a visual signature, hairline borders, no card-shadow soup.
+- **What's new.** A visible `⌘K` launcher pill, a left navigation rail, a context bar, a status bar, a scope-aware command palette (`>` commands, `@` feeds, `#` folders), an article queue with multi-select + bulk toolbar, an on-demand inspector reader with a focus mode, and a mobile bottom command bar with a centered `⌘` trigger.
+- **What's preserved.** Feed's data model, server actions, Prisma schema, API routes, SQLite-backed persistence, sanitization, safe-fetch, OPML, and core RSS/Atom behavior are unchanged. The concept lives entirely in the design surface.
+- **What's not preserved.** The always-three-pane shell as identity, the always-visible reader, the always-visible feed tree, the cool indigo accent, and the dialog-first secondary surface register.
+- **Status.** **Candidate finalist** — kept on its branch for side-by-side comparison against Concept 01 and any future concept before any merge to `main` or upstream call. **Not** automatically intended to merge.
+- **Read more.** The full concept doc lives on the concept branch at [`docs/design-lab/concepts/02-command-center.md`](https://github.com/Gares95/feed-skill-lab/blob/concept/02-command-center/docs/design-lab/concepts/02-command-center.md), with per-phase implementation notes, screenshots, validation results, and follow-ups.
 
 ## How to Run Locally
 
