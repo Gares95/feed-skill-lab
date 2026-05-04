@@ -1,23 +1,22 @@
 # Concept 02 — Command Center
 
-> Planning-phase concept doc. Architecture only — no implementation files have
-> been touched. Status will move from **Planning** to **In progress** when the
-> user approves the architecture below and Phase 2 (design-system foundation)
-> begins.
+> Closure-phase concept doc. All nine phases are complete. The concept is a
+> **candidate finalist** ready for side-by-side comparison against the polished
+> baseline and Concept 01 (Reading Lamp).
 
 ## Metadata
 
 - Concept name: **Command Center**
 - Branch: `concept/02-command-center`
-- PR: TBD
-- Status: Planning
+- PR: TBD (draft on closure)
+- Status: **Candidate finalist — ready for comparison**
 - Created: 2026-05-02
 - Last updated from main: `ac30c39` — Merge Impeccable concept gallery entry
 - Baseline: `lab-polish-v1`
 - Skills/tools explicitly used:
-  - `redesign-existing-projects` (primary driver)
-  - Claude Code
-  - Supporting design skills (`minimalist-ui`, `design-taste-frontend`,
+  - `redesign-existing-projects` (primary driver across all phases)
+  - Claude Code (execution shell)
+  - Project design skills (`minimalist-ui`, `design-taste-frontend`,
     `gpt-taste`, `emil-design-eng`) for visual critique only
 - Screenshot directory: `docs/design-lab/screenshots/concepts/02-command-center/`
 
@@ -291,26 +290,14 @@ All existing keyboard shortcuts (`j`/`k`, `s`, `m`, `r`, `Shift+R`, `o`,
 Each phase requires its own go-ahead.
 
 1. **Concept architecture and docs** — ✅ Complete. Doc + scaffolding.
-2. **Design-system / visual foundation** — ✅ Complete. See Phase 2
-   Implementation Notes below.
-3. **App shell + command surface skeleton** — ✅ Complete. See Phase 3
-   Implementation Notes below.
-3. **App shell + command surface** — new `AppShell` grid skeleton with
-   ContextBar + NavRail + Inspector + StatusBar shells (queue still
-   mounts the existing `ArticleList`). Mode state machine introduced.
-4. **Command palette overhaul** — ✅ Complete. See Phase 4 Implementation
-   Notes below.
-5. **Article queue / list redesign** — ✅ Complete. See Phase 5
-6. **Reader / inspector** — ✅ Complete. See Phase 6
-   Implementation Notes below.
-6. **Reader / inspector** — `ReadingPane` adapted to inspect-vs-focus
-   densities, inspector slide animation.
-7. **Mobile command-center layout** — ✅ Complete. See Phase 7
-   Implementation Notes below.
-8. **Dialogs / empty / loading / secondary states** — ✅ Complete. See
-   Phase 8 Implementation Notes below.
-9. **Screenshots, validation, concept-doc closure** — capture the
-   screenshot table, fill the validation checklist, write the Decision.
+2. **Design-system / visual foundation** — ✅ Complete. See Phase 2 notes.
+3. **App shell + command surface skeleton** — ✅ Complete. See Phase 3 notes.
+4. **Command palette overhaul** — ✅ Complete. See Phase 4 notes.
+5. **Article queue / list redesign** — ✅ Complete. See Phase 5 notes.
+6. **Reader / inspector** — ✅ Complete. See Phase 6 notes.
+7. **Mobile command-center layout** — ✅ Complete. See Phase 7 notes.
+8. **Dialogs / empty / loading / secondary states** — ✅ Complete. See Phase 8 notes.
+9. **Screenshots, validation, concept-doc closure** — ✅ Complete. See Phase 9 notes.
 
 ## Phase 2 Implementation Notes
 
@@ -961,7 +948,80 @@ This keeps Phase 5/6 selection + reader state intact: tapping Reader returns to 
 - **`readerMode` rename copy pass** (Reader button → "Extract" or similar) deferred again — still not blocking, still a Phase 9 cleanup.
 - **`cn` utility import** is required from the new `QueueEmptyState`; `ArticleList.tsx` already imports it from Phase 5, so no new imports were needed.
 
+## Phase 9 Implementation Notes
+
+Done on child branch `concept/02-command-center-09-closure`. Scope:
+**closure only** — no new UI. The phase finalizes the concept doc,
+curates the canonical screenshot set, runs the full validation suite,
+and moves the concept to **candidate finalist**.
+
+### What changed
+
+- Concept doc metadata moved from `Planning` to
+  `Candidate finalist — ready for comparison`.
+- Implementation Phases list cleaned up (duplicate / out-of-order
+  entries removed, all nine phases marked complete).
+- New canonical screenshot set under stable `final-*.png` names, copied
+  from the strongest per-phase captures so future re-shoots can drop
+  in without breaking external links.
+- New "How to Review Locally" section with a click-through script for
+  reviewers.
+- Validation Checklist filled in (lint / test / build / audit / backend
+  invariant / a11y / motion).
+- Decision section filled in with the per-criterion rationale.
+
+### What stayed stable
+
+- No app code touched. The diff is doc + screenshots only.
+- All phase 2–8 implementation notes are preserved verbatim — Phase 9
+  is additive, not a rewrite.
+- `/health`, `/stats`, `/settings` route pages untouched. They render
+  inside the cockpit shell, but a full cockpit-register restyle of
+  those pages is a deferred follow-up (see below).
+
+### Validation
+
+- `npm run lint` — clean.
+- `npm run test` — 21 files / 175 tests passed (1 pre-existing skip).
+- `npm run build` — succeeds; route table unchanged from baseline.
+- `npm audit` — `found 0 vulnerabilities`.
+- `git diff --stat main..HEAD -- src/actions/ src/app/api/ src/lib/
+  prisma/ package.json package-lock.json` — empty.
+
+### Deviations and follow-ups
+
+- The full-page restyle of `/health`, `/stats`, `/settings` into the
+  cockpit register is **not** done. Those pages currently inherit the
+  cockpit chrome (rail, context bar, status bar) but their internal
+  composition is the polished-baseline layout. Pulled out of Phase 8
+  to keep that phase tight; tracked as a follow-up.
+- The Helix-style multi-key buffer indicator in the StatusBar is a
+  specced affordance that is not yet implemented; it is decorative
+  copy in the StatusBar today.
+- Mobile long-press multi-select (the touch equivalent of `x`) is
+  deferred — selection model carries over from desktop but is not
+  surfaced on touch yet.
+
 ## Screenshots
+
+### Final canonical set (Phase 9)
+
+These are the screenshots to use for cross-concept comparison and any
+gallery / README link. They are copies of the strongest per-phase
+captures, renamed for stability so future phases can update them in
+place without breaking links.
+
+| View                       | Screenshot | Notes |
+| -------------------------- | ---------- | ----- |
+| Desktop — Command Center   | [`final-command-center-desktop.png`](../screenshots/concepts/02-command-center/final-command-center-desktop.png) | 1440×900. Full cockpit shell — ContextBar, NavRail, dense article queue, inspector closed, StatusBar. |
+| Desktop — Command palette  | [`final-command-palette.png`](../screenshots/concepts/02-command-center/final-command-palette.png) | 1440×900. ⌘K open with sectioned results, scope chips, kbd hints, footer. |
+| Desktop — Article queue    | [`final-article-queue.png`](../screenshots/concepts/02-command-center/final-article-queue.png) | 1440×900. Triage queue: cyan unread dots, mono time-ago, kbd hint footer (`J/K`, `X`, `S`, `M`). |
+| Desktop — Bulk selection   | [`final-bulk-selection.png`](../screenshots/concepts/02-command-center/final-bulk-selection.png) | 1440×900. Three rows checked → cyan bulk toolbar (`3 selected · Read · Unread · Star · esc clear`) + StatusBar `3 SELECTED` chip. |
+| Desktop — Inspector        | [`final-inspector.png`](../screenshots/concepts/02-command-center/final-inspector.png) | 1440×900. Inspector toolbar (`INSPECT`, feed crumb, `Focus F`, `AA`), dense 22px header, kbd action strip. |
+| Mobile — Queue             | [`final-mobile-queue.png`](../screenshots/concepts/02-command-center/final-mobile-queue.png) | 390×844. Top bar `QUEUE` badge + heading + refresh. Bottom command bar with five surfaces (FEEDS / QUEUE active / ⌘ elevated / STARRED / READER). |
+| Mobile — Command palette   | [`final-mobile-command.png`](../screenshots/concepts/02-command-center/final-mobile-command.png) | 390×844. Centered ⌘ trigger opens the same scope-aware palette used on desktop. |
+
+### Per-phase reference captures
 
 | View                     | Screenshot | Notes |
 | ------------------------ | ---------- | ----- |
@@ -983,41 +1043,51 @@ This keeps Phase 5/6 selection + reader state intact: tapping Reader returns to 
 | Phase 8 dialog           | [`phase8-dialog.png`](../screenshots/concepts/02-command-center/phase8-dialog.png) | 1440×900. Add-feed dialog with cockpit eyebrow (`RSS · NEW FEED`), mono URL input + `↵` Kbd, primary `Add feed` button, `DISCOVER` section listing six suggested feeds with hover-only cyan `Use →`, `ESC · CLOSE` footer strip. |
 | Phase 8 empty state      | [`phase8-empty-state.png`](../screenshots/concepts/02-command-center/phase8-empty-state.png) | 1440×900. Search returning zero results — square cyan-bordered tile with `Search` glyph, `NO MATCHES` cockpit-mono eyebrow, balanced title `No results for "…"`, muted description, outline `Clear search` button. Inspector still shows Phase 6 idle state — they read as a coherent pair. |
 | Phase 8 mobile empty     | [`phase8-mobile-empty.png`](../screenshots/concepts/02-command-center/phase8-mobile-empty.png) | 390×844. Same no-results treatment scaled down for mobile, sitting above the bottom command bar with `QUEUE` active. |
-| Desktop overview         | TBD (Phase 9) | Inbox mode, queue centered, inspector open. |
-| Desktop article selected | TBD (Phase 9) | Inbox + inspector populated; bulk-action toolbar visible after multi-select. |
-| Reader view              | TBD (Phase 9) | Focus mode (`f`), inspector full-width. |
-| Mobile list              | TBD (Phase 9) | Bottom command bar, queue, status strip. |
-| Mobile reader            | TBD (Phase 9) | Reader full-screen with top mini-bar. |
-| Empty / loading state    | TBD (Phase 9) | Cockpit-register empty state. |
 
-## Local Run Instructions
+## How to Review Locally
 
 ```bash
 git fetch origin
 git checkout concept/02-command-center
-npm run setup
-npm run dev
+npm run setup    # first-time only: deps + Prisma generate + migrate
+npm run dev      # http://localhost:3000
 ```
+
+Suggested click-through:
+
+1. Land on **Inbox**. Note the launcher pill in the context bar, the rail
+   on the left, and the kbd-hint footer under the queue.
+2. Press `⌘K` (or click the launcher pill). Try a typed scope: `> ref`,
+   `@`, `#`. `Esc` to close.
+3. Select a few rows with `x` (or click the gutter). Watch the heading
+   row swap to the cyan bulk toolbar; the StatusBar shows `N SELECTED`.
+4. Open an article (`Enter` or click). Inspector slides in. Press `f`
+   for full-width focus mode. Press `.` to toggle the inspector.
+5. Resize to ≤768px. Mobile shell takes over: top mode badge, bottom
+   command bar, ⌘ trigger opens the full-width palette.
+6. Open Add Feed from the rail or palette to see Phase 8 dialog
+   styling. Empty / no-results states render the cockpit-register
+   tiles described in Phase 8.
 
 ## Validation Checklist
 
-- [ ] `npm run lint`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] `npm audit`
-- [ ] `git diff --stat main..HEAD -- src/actions/ src/app/api/ src/lib/ prisma/ package.json package-lock.json` is empty
-- [ ] Desktop screenshot captured (Inbox, article selected, focus mode)
-- [ ] Mobile screenshot captured (queue, reader)
-- [ ] Reader view checked (inspector + focus)
-- [ ] Article list / queue selection model checked
-- [ ] Sidebar / Feeds mode + nav rail navigation checked
-- [ ] Command palette typed scopes checked
-- [ ] Empty / loading / error states checked
-- [ ] Keyboard navigation checked: existing shortcuts, new `g _` shortcuts, `.`, `f`, `?`, `Esc`, `x`, `Shift+j/k`
-- [ ] Skip-to-content link still works
-- [ ] WCAG AA contrast holds on chrome and on the cockpit accent
-- [ ] `prefers-reduced-motion: reduce` honored on every transition
-- [ ] No data / API / schema / dependency changes
+- [x] `npm run lint` — clean.
+- [x] `npm run test` — 21 files / 175 tests passed (1 skipped, pre-existing).
+- [x] `npm run build` — succeeds; route table unchanged from baseline.
+- [x] `npm audit` — `found 0 vulnerabilities`.
+- [x] `git diff --stat main..HEAD -- src/actions/ src/app/api/ src/lib/ prisma/ package.json package-lock.json` is empty.
+- [x] Desktop screenshots captured (shell, queue, bulk selection, inspector, focus, palette).
+- [x] Mobile screenshots captured (queue, inspector, palette, empty).
+- [x] Reader view checked (inspector + focus).
+- [x] Article list / queue selection model checked.
+- [x] Sidebar / Feeds mode + nav rail navigation checked.
+- [x] Command palette typed scopes checked (`>`, `@`, `#`).
+- [x] Empty / loading / error states checked (Phase 8).
+- [x] Keyboard navigation checked: existing shortcuts, new `g _` shortcuts, `.`, `f`, `?`, `Esc`, `x`, `Shift+j/k`.
+- [x] Skip-to-content link still works (preserved in `AppShell`).
+- [x] WCAG AA contrast holds on chrome and on the cockpit accent (Phase 2 audit).
+- [x] `prefers-reduced-motion: reduce` honored on every transition.
+- [x] No data / API / schema / dependency changes.
 
 ## Skills Usage Notes
 
@@ -1116,13 +1186,39 @@ Reading Lamp and Command Center are intentionally opposite-pole concepts.
 
 ## Decision
 
-(Filled at the end of Phase 9.)
-
 - [ ] Keep exploring
 - [ ] Mine for parts
-- [ ] Candidate finalist
+- [x] **Candidate finalist** — ready for side-by-side comparison against
+      `lab-polish-v1` and Concept 01 (Reading Lamp).
 - [ ] Discard
-- [ ] Upstream selected pieces to canonical Feed
+- [ ] Upstream selected pieces to canonical Feed (deferred — evaluate
+      after the comparison; the `Kbd` primitive and the typed-scope
+      palette are the most upstream-credible pieces).
+
+How the concept clears the criteria above:
+
+1. **Reads as a different product from Reading Lamp.** Cool slate vs warm
+   sepia, dense triage queue vs editorial list, demoted three-pane vs
+   always-visible reader, kbd chips and tabular numerics vs lamp glow.
+2. **Triage speed.** Multi-select (`x`, `Shift+J/K`) + bulk toolbar +
+   single-keystroke `r/s/m` reduce a 30-unread sweep to a fraction of
+   the keystrokes the polished baseline requires. Informal benchmark
+   only — no instrumentation added.
+3. **Backend unchanged.** `git diff --stat main..HEAD -- src/actions/
+   src/app/api/ src/lib/ prisma/ package.json package-lock.json` is
+   empty.
+4. **A11y.** Skip link preserved. Combobox roles on the palette
+   (`role="combobox"`, `aria-expanded`, `aria-controls`,
+   `aria-activedescendant`). `aria-current` on the active rail item.
+   Focus-visible rings on every interactive element. Reduced-motion
+   honored.
+5. **Discoverability without docs.** The launcher pill is always
+   visible in the context bar; the rail surfaces every primary mode
+   icon-first; Add Feed is reachable from the rail, the Feeds mode,
+   and the palette; `?` opens a cheat-sheet entry.
+6. **Anti-slop.** Single cyan accent (no gradient), mono kbd chips,
+   hairline borders (no card-shadow soup), Geist Sans/Mono only (no
+   new fonts), no AI-style indigo wash.
 
 Decision criteria the concept must clear:
 
@@ -1144,12 +1240,26 @@ Decision criteria the concept must clear:
 
 ## Follow-up Tasks
 
-- [ ] Approve the architecture above before any code lands.
-- [ ] On approval, decide whether Phases 2–9 land on this branch
-      directly or split into child branches.
-- [ ] Pick the final cockpit accent value in Phase 2 with a contrast
-      audit attached.
-- [ ] Decide in Phase 3 whether `react-resizable-panels` survives in
-      the new shell or is removed (no replacement dependency).
-- [ ] Decide in Phase 3 whether the status bar is on by default on
-      desktop.
+Open follow-ups carried out of Phase 9. None block the candidate-finalist
+decision; all are post-comparison work.
+
+- [ ] Open the draft PR from `concept/02-command-center` against `main`
+      for side-by-side comparison.
+- [ ] Run a recorded triage benchmark (clear 30 unread) on
+      `lab-polish-v1` vs this concept and paste the timing here.
+- [ ] Restyle `/health`, `/stats`, `/settings` page bodies into the
+      cockpit register (cockpit chrome already wraps them).
+- [ ] Implement the Helix-style multi-key buffer indicator in the
+      StatusBar (specced; currently decorative copy).
+- [ ] Mobile long-press multi-select to mirror desktop `x`.
+- [ ] OPML actions (import/export) restyle into cockpit-aligned popovers.
+- [ ] After comparison, decide whether to upstream the `Kbd` primitive
+      and the typed-scope command palette to canonical Feed, or
+      ship Command Center as the lab's selected finalist.
+
+Closed follow-ups (resolved during the implementation phases):
+
+- ✅ Final cockpit accent value picked in Phase 2 with contrast audit.
+- ✅ Phase 3 decision on `react-resizable-panels`: kept for the
+      desktop inspector resize, dropped for the shell skeleton.
+- ✅ Phase 3 decision on the status bar: on by default on desktop.
