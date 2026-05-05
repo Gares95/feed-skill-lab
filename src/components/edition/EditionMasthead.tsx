@@ -13,6 +13,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { DateRange } from "@/lib/date-range";
+import type { DateRangeSelection } from "@/components/layout/AppShell";
+import { EditionDateControl } from "./EditionDateControl";
 
 interface EditionMastheadProps {
   totalUnread: number;
@@ -24,6 +27,9 @@ interface EditionMastheadProps {
   onMarkAllRead: () => void;
   onOpenPalette: () => void;
   onSelectStarred: () => void;
+  dateRange: DateRange;
+  onDateRangeChange: (next: DateRangeSelection) => void;
+  showDateControl: boolean;
 }
 
 interface EditionStamp {
@@ -61,6 +67,9 @@ export function EditionMasthead({
   onMarkAllRead,
   onOpenPalette,
   onSelectStarred,
+  dateRange,
+  onDateRangeChange,
+  showDateControl,
 }: EditionMastheadProps) {
   const [stamp, setStamp] = useState<EditionStamp | null>(null);
 
@@ -88,10 +97,10 @@ export function EditionMasthead({
         <div className="flex min-w-0 items-end gap-5">
           <Link
             href="/"
-            aria-label="Today edition home"
+            aria-label="The Edition — home"
             className="edition-display select-none leading-none tracking-[-0.025em] text-[2rem] lg:text-[2.4rem] font-semibold text-[color:var(--edition-ink)] hover:text-[color:var(--edition-accent)] transition-colors"
           >
-            Today
+            The Edition
           </Link>
           <div className="flex min-w-0 flex-col gap-0.5 pb-1.5">
             <span className="edition-eyebrow text-[0.68rem]">
@@ -162,6 +171,7 @@ export function EditionMasthead({
 
       {/* Lower row: counters + nav links */}
       <div className="mt-3 flex items-center justify-between gap-4 border-t border-[color:var(--edition-rule)] pt-2.5">
+        <div className="flex min-w-0 items-center gap-4">
         <dl className="flex items-baseline gap-5 text-xs">
           <div className="flex items-baseline gap-1.5">
             <dt className="edition-eyebrow text-[0.62rem]">Unread</dt>
@@ -182,6 +192,13 @@ export function EditionMasthead({
             </dd>
           </div>
         </dl>
+          {showDateControl && (
+            <EditionDateControl
+              range={dateRange}
+              onChange={onDateRangeChange}
+            />
+          )}
+        </div>
 
         <nav
           aria-label="Edition navigation"

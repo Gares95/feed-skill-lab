@@ -720,6 +720,57 @@ Done on child branch `concept/03-today-edition-08-closure`. Scope: closure pass 
 - Optional Phase 9 polish (`emil-design-eng` against the final screenshots): hover transitions, focus-visible micro-tuning, drop-cap rendering on the cover dek (currently no dek paragraph because article descriptions aren't in `ArticleWithFeed`).
 - Smart re-fetch on `Try again` in `EditionStoryError` (lift fetch state to parent so the retry doesn't reload the page).
 
+## Phase 9 Implementation Notes — Pre-PR date/range affordance fix
+
+### Context
+
+While preparing the concept PR, a missing affordance surfaced: the Today Edition front page exposed no date/range control. Date filtering only became reachable after switching into a source/feed (the canonical `ArticleList` fallback), which forced users out of the edition metaphor just to change the range. This was a **missing affordance**, not an intentional omission — Phase 4 inherited the canonical date-range state from `AppShell` but never surfaced a control on the edition surface itself.
+
+### What changed
+
+- **New component** `src/components/edition/EditionDateControl.tsx`. A small concept-native pill (border-radius full, `--edition-rule-strong` border, `edition-eyebrow` typography). Click opens a popover with four presets — **Today / This week / This month / All editions** — mapped onto the existing `DateRange` enum (`today` / `week` / `month` / `all`). When `range === "custom"` (only reachable today via the canonical `DateRangePicker` in source-filter views), the popover surfaces a one-line note to that effect; the preset list resets it.
+- **Desktop masthead** — `EditionMasthead.tsx` accepts new props `dateRange`, `onDateRangeChange`, `showDateControl`. The control is rendered in the lower row, inline with the unread/starred/sources counters, just before the Health/Stats/Settings nav. `showDateControl` is true only when in edition mode (no feed filter, not starred view, no search). In fallback views the canonical `DateRangePicker` in `ArticleList` still owns the control, so we don't double-render.
+- **Mobile masthead** — `EditionMobileMasthead.tsx` accepts the same date-range props. The control is rendered as a thin sub-row below the title row (right-aligned), to avoid crowding the title + palette + refresh trio.
+- **`AppShell.tsx`** — passes existing `dateRange` / `handleDateRangeChange` into both mastheads. No new state, no new handlers — purely a wiring change.
+
+### What stayed stable
+
+- `src/actions/`, `src/app/api/`, `src/lib/`, `prisma/`, `package.json`, `package-lock.json` — empty diff vs `main`.
+- `DateRange` semantics, `DATE_RANGE_LABELS`, `dateRangeToBounds`, server-side filtering — all untouched.
+- `DateRangePicker` (canonical) — untouched. Edition control is a thin alternative trigger that calls the same `onDateRangeChange` handler.
+- Single source of truth for range remains `AppShell.dateRange`. Edition control and canonical `DateRangePicker` reflect/mutate the same state.
+
+### Validation results
+
+- `npm run lint` — clean.
+- `npm run test` — 184 passed / 1 skipped, all pre-existing tests still green; no edition-specific tests added (component is a thin presentational wrapper around existing state, exercised through `AppShell` flow).
+- `npm run build` — succeeded; `/` First Load JS 255 kB (was 254 kB; +1 kB for the new component).
+- `npm audit` — 0 vulnerabilities.
+- `git diff --stat main..HEAD -- src/actions/ src/app/api/ src/lib/ prisma/ package.json package-lock.json` — empty.
+
+### Browser observations
+
+- Desktop (1440×900): control reads as part of the masthead grammar, not as a generic dashboard filter. Pill matches the palette pill's border weight and roundness, sits one row below it. Switching presets re-renders the issue; cover and section selection update consistently with the existing `composeIssue` flow.
+- Mobile (414×820): thin sub-row below the title is unobtrusive when collapsed; popover anchors right and stays within viewport. Tap target is a comfortable 32 px high.
+- Fallback views (source filter / starred / search): edition control is hidden (`showDateControl=false`); canonical `DateRangePicker` in `ArticleList` continues to own the affordance — no double control.
+- No console errors.
+
+### Screenshots updated
+
+- `docs/design-lab/screenshots/concepts/03-today-edition/final-today-edition-desktop.png` — recapture deferred to finalization (the existing canonical screenshot still represents the edition; the new control is one small addition in the lower row of the masthead). Logged as a follow-up rather than a Phase 9 hard requirement.
+- `final-cover-story.png` and `final-mobile-edition.png` — unchanged; the cover/grid surface itself was not touched.
+
+### Deviations from plan
+
+- The brief allowed an `EditionDateControl` component "if useful". It was useful: keeping the control out of `EditionMasthead` itself avoids ballooning that component's prop surface and keeps the styling testable in isolation.
+- Skipped the custom range / day picker branch in the edition control. Rationale: the four presets cover the daily-edition mental model; users who need a custom range can still reach it via the canonical `DateRangePicker` once they enter a fallback view. Adding the day picker into the edition popover would have re-introduced the dashboard-filter aesthetic the concept is trying to avoid.
+
+### Follow-ups carried into finalization
+
+- Recapture `final-today-edition-desktop.png` showing the date control in the masthead lower row.
+- If Today Edition is selected as the finalist: consider exposing custom-range entry inside the edition popover (e.g. an "Other dates…" affordance that opens the canonical day picker), styled to match the editorial register.
+- Consider syncing the edition stamp (`№NNN · Date`) on the masthead with the active range — e.g. when `range === "week"`, replace the day stamp with `Week of MMM D – MMM D`. Not done in Phase 9 to keep scope tight; logged for finalization.
+
 ## Risks and Tradeoffs
 
 - **Magazine-pastiche risk.** The single biggest risk per `gpt-taste`. Mitigation: serif + drop cap + rust accent + hairline rules are *intentionally specific* and verified against Apple News / Flipboard *not* to copy them; layout grammar is bounded to four patterns; an "edition stamp" with the actual day-of-year is allowed (it is authentic) but no other meta-labels per the skill's ban.

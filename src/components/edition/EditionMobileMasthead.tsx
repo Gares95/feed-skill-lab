@@ -5,11 +5,16 @@ import { useEffect, useState } from "react";
 import { Command, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { DateRange } from "@/lib/date-range";
+import type { DateRangeSelection } from "@/components/layout/AppShell";
+import { EditionDateControl } from "./EditionDateControl";
 
 interface EditionMobileMastheadProps {
   isRefreshing: boolean;
   onRefreshAll: () => void;
   onOpenPalette: () => void;
+  dateRange: DateRange;
+  onDateRangeChange: (next: DateRangeSelection) => void;
 }
 
 interface EditionStamp {
@@ -36,6 +41,8 @@ export function EditionMobileMasthead({
   isRefreshing,
   onRefreshAll,
   onOpenPalette,
+  dateRange,
+  onDateRangeChange,
 }: EditionMobileMastheadProps) {
   const [stamp, setStamp] = useState<EditionStamp | null>(null);
 
@@ -62,14 +69,14 @@ export function EditionMobileMasthead({
         <div className="flex min-w-0 items-end gap-3">
           <Link
             href="/"
-            aria-label="Today edition home"
+            aria-label="The Edition — home"
             className={cn(
               "edition-display select-none leading-none tracking-[-0.025em]",
               "text-[1.6rem] font-semibold",
               "text-[color:var(--edition-ink)]",
             )}
           >
-            Today
+            The Edition
           </Link>
           <span
             className="edition-stamp truncate pb-1 text-[0.66rem] text-[color:var(--edition-ink-faint)]"
@@ -109,6 +116,13 @@ export function EditionMobileMasthead({
             />
           </Button>
         </div>
+      </div>
+      <div className="mt-1.5 flex items-center justify-end">
+        <EditionDateControl
+          range={dateRange}
+          onChange={onDateRangeChange}
+          variant="mobile"
+        />
       </div>
     </header>
   );
