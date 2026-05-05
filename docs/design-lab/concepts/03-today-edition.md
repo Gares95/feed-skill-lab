@@ -438,6 +438,13 @@ Unit-tested in `composeIssue.test.ts` (9 cases): empty input, cover-only, second
 - Patterns A–D (layout grammar by `dayOfYear % patternCount`) collapsed to **one** pattern in this phase — the cover + seconds + section + later structure. The day-of-year rotation lives in section ordering instead. Multiple layout patterns are deferred to Phase 7.
 - The default-desktop-only mounting strategy keeps the existing three-pane fully reachable: any feed click, starred toggle, search, or selected article falls back to the canonical layout. This was the simplest way to preserve the brief's "keep three-pane reachable" requirement without reskinning the reader (Phase 5).
 
+### Phase 4 follow-up fixes
+
+After review, two visual issues were caught in the masthead screenshot and fixed on this branch:
+
+1. **Weekday localized to Spanish ("MARTES").** `EditionMasthead.computeStamp()` was calling `toLocaleDateString(undefined, …)`, which picked up the user's OS / browser locale. Pinned the locale to `"en-US"` (named constant `EDITION_LOCALE`) for both the weekday and the long date so the masthead always reads as an English-language edition stamp regardless of the runtime environment, keeping the issue deterministic.
+2. **Bright white scrollbar against the warm-dark issue surface.** Added a scoped `.edition-scroll` utility in `globals.css` (Firefox `scrollbar-width` / `scrollbar-color`, WebKit `::-webkit-scrollbar*`). Thumb uses `color-mix(in oklch, var(--edition-rule-strong) 70%, transparent)` against a transparent track; brightens to `--edition-ink-faint` on hover/focus-within. Applied via class on the `<article>` scroll container in `EditionIssue.tsx`. Other concepts/pages keep their default browser scrollbars.
+
 ### Follow-ups carried into later phases
 
 - Phase 5: open the reader as a slide-over **without** falling back to the three-pane, so the issue stays visible behind it.
