@@ -376,6 +376,11 @@ export function AppShell({
         onMarkAllRead={handleMarkAllRead}
         onOpenPalette={() => setPaletteOpen(true)}
         onSelectStarred={handleSelectStarred}
+        dateRange={dateRange}
+        onDateRangeChange={handleDateRangeChange}
+        showDateControl={
+          !selectedFeedId && !isStarredView && !search.results
+        }
       />
       {!selectedFeedId &&
         !isStarredView &&
@@ -386,6 +391,8 @@ export function AppShell({
             isRefreshing={isRefreshing || isPending}
             onRefreshAll={handleRefreshAll}
             onOpenPalette={() => setPaletteOpen(true)}
+            dateRange={dateRange}
+            onDateRangeChange={handleDateRangeChange}
           />
         )}
       <main
