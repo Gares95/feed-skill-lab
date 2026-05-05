@@ -63,7 +63,7 @@ See [`docs/design-lab/initial-design-skill-audit.md`](docs/design-lab/initial-de
 |---|---|---|---|---|---|
 | Impeccable Redesign / Reading Lamp | `concept/01-impeccable-redesign` | [#1](https://github.com/Gares95/feed-skill-lab/pull/1) | Candidate finalist | [`docs/design-lab/gallery/01-impeccable-redesign.png`](docs/design-lab/gallery/01-impeccable-redesign.png) | Warm, editorial, reader-first redesign generated through Impeccable. |
 | Command Center | `concept/02-command-center` | TBD | Candidate finalist | [`docs/design-lab/gallery/02-command-center.png`](docs/design-lab/gallery/02-command-center.png) | Fast, keyboard-first information cockpit driven by `redesign-existing-projects`. |
-| Compact Pro | `concept/03-compact-pro` | TBD | Planned | TBD | Dense power-user direction |
+| Today Edition | `concept/03-today-edition` | [#3](https://github.com/Gares95/feed-skill-lab/pull/3) | Candidate finalist | [`docs/design-lab/gallery/03-today-edition.png`](docs/design-lab/gallery/03-today-edition.png) | Browse-first local daily edition driven by `redesign-existing-projects`, `design-taste-frontend`, and `gpt-taste`. |
 | Magazine Dashboard | `concept/04-magazine-dashboard` | TBD | Planned | TBD | More visual discovery direction |
 
 ## Concept 01 — Impeccable Redesign / Reading Lamp
@@ -90,6 +90,19 @@ The second **radical** concept on the post-polish track, branched from the polis
 - **What's not preserved.** The always-three-pane shell as identity, the always-visible reader, the always-visible feed tree, the cool indigo accent, and the dialog-first secondary surface register.
 - **Status.** **Candidate finalist** — kept on its branch for side-by-side comparison against Concept 01 and any future concept before any merge to `main` or upstream call. **Not** automatically intended to merge.
 - **Read more.** The full concept doc lives on the concept branch at [`docs/design-lab/concepts/02-command-center.md`](https://github.com/Gares95/feed-skill-lab/blob/concept/02-command-center/docs/design-lab/concepts/02-command-center.md), with per-phase implementation notes, screenshots, validation results, and follow-ups.
+
+## Concept 03 — Today Edition
+
+![Today Edition concept](docs/design-lab/gallery/03-today-edition.png)
+
+The third **radical** concept on the post-polish track, branched from the polished baseline (`lab-polish-v1`) and aimed at a third pole distinct from both Concept 01 (reader-first lamp) and Concept 02 (keyboard-first cockpit). Driven by the [`redesign-existing-projects`](.claude/skills/redesign-existing-projects/) skill, with critique passes from [`design-taste-frontend`](.claude/skills/design-taste-frontend/) and [`gpt-taste`](.claude/skills/gpt-taste/) across nine phases (tokens → masthead → issue grid → cover → story detail → mobile → secondary states → closure → date controls).
+
+- **Direction.** Browse-first local daily edition — a printed-edition metaphor with a serif masthead, an edition stamp (`№NNN · weekday, date`), a cover story, a small set of secondary stories, and section blocks composed each day from the user's feeds. Warm-dark paper with a rust accent and hairline rules; deliberately **not** a dashboard, **not** a queue.
+- **What's new.** A magazine-style desktop and mobile masthead, a layout-grammar `composeIssue` engine that picks a cover and arranges stories into four reusable patterns, a full-width story detail view with an "Up next" handoff, an editorial empty-state register, and a concept-native edition date control (Today / This week / This month / All editions) on the front page itself.
+- **What's preserved.** Feed's data model, server actions, Prisma schema, API routes, SQLite-backed persistence, sanitization, safe-fetch, OPML, and core RSS/Atom behavior are unchanged. The concept lives entirely in the design surface.
+- **What's not preserved.** The three-pane shell as identity for the front page, the cool indigo accent, the SaaS-card register on lists and empty states, and the always-on date-range picker buried inside the article list.
+- **Status.** **Candidate finalist** — kept on its branch for side-by-side comparison against Concept 01, Concept 02, and any future concept before any merge to `main` or upstream call. **Not** automatically intended to merge.
+- **Read more.** The full concept doc lives on the concept branch at [`docs/design-lab/concepts/03-today-edition.md`](https://github.com/Gares95/feed-skill-lab/blob/concept/03-today-edition/docs/design-lab/concepts/03-today-edition.md), with per-phase implementation notes, screenshots, validation results, and follow-ups.
 
 ## How to Run Locally
 
