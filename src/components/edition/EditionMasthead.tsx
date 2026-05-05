@@ -33,9 +33,13 @@ interface EditionStamp {
   iso: string;
 }
 
+// Pin to en-US so the masthead reads as an English-language edition stamp
+// regardless of the user's OS / browser locale. Keeps the issue deterministic.
+const EDITION_LOCALE = "en-US";
+
 function computeStamp(d: Date): EditionStamp {
-  const weekday = d.toLocaleDateString(undefined, { weekday: "long" });
-  const date = d.toLocaleDateString(undefined, {
+  const weekday = d.toLocaleDateString(EDITION_LOCALE, { weekday: "long" });
+  const date = d.toLocaleDateString(EDITION_LOCALE, {
     month: "long",
     day: "numeric",
     year: "numeric",

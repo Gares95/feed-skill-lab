@@ -42,7 +42,7 @@ export function EditionIssue({
   return (
     <article
       aria-label="Today edition front page"
-      className="edition-issue mx-auto h-full w-full max-w-[1180px] overflow-y-auto px-6 lg:px-12 pb-24 pt-6"
+      className="edition-issue edition-scroll mx-auto h-full w-full max-w-[1180px] overflow-y-auto px-6 lg:px-12 pb-24 pt-6"
     >
       <CoverStory
         article={issue.cover}
