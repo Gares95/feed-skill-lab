@@ -41,6 +41,8 @@ import { CommandPalette } from "@/components/CommandPalette";
 import { EditionMasthead } from "@/components/edition/EditionMasthead";
 import { EditionIssue } from "@/components/edition/EditionIssue";
 import { EditionStoryDetail } from "@/components/edition/EditionStoryDetail";
+import { EditionMobileMasthead } from "@/components/edition/EditionMobileMasthead";
+import { EditionMobileTabBar } from "@/components/edition/EditionMobileTabBar";
 
 interface AppShellProps {
   feeds: FeedWithCount[];
@@ -375,13 +377,87 @@ export function AppShell({
         onOpenPalette={() => setPaletteOpen(true)}
         onSelectStarred={handleSelectStarred}
       />
+      {!selectedFeedId &&
+        !isStarredView &&
+        !search.results &&
+        !selectedArticleId &&
+        mobileView !== "sidebar" && (
+          <EditionMobileMasthead
+            isRefreshing={isRefreshing || isPending}
+            onRefreshAll={handleRefreshAll}
+            onOpenPalette={() => setPaletteOpen(true)}
+          />
+        )}
       <main
         id="main-content"
         tabIndex={-1}
         className="min-h-0 flex-1 outline-none"
       >
-      {/* Mobile: stacked single-pane layout */}
-      <div className="flex h-full flex-col md:hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+      {/* Mobile: edition-native layout when unfiltered + in default mode. */}
+      {(() => {
+        const inEditionMode =
+          !selectedFeedId && !isStarredView && !search.results;
+        if (!inEditionMode) return null;
+        if (mobileView === "sidebar") {
+          return (
+            <div className="flex h-full flex-col md:hidden pt-[env(safe-area-inset-top)] pb-[calc(env(safe-area-inset-bottom)+3.75rem)]">
+              <Sidebar
+                feeds={feeds}
+                folders={folders}
+                selectedFeedId={selectedFeedId}
+                totalUnread={totalUnread}
+                starredCount={starredCount}
+                onSelectFeed={handleSelectFeed}
+                onSelectStarred={handleSelectStarred}
+                onDeleteFeed={handleDeleteFeed}
+                onRefreshFeed={handleRefreshFeed}
+                onUpdateFeed={refresh}
+                onRefreshAll={handleRefreshAll}
+                onFeedAdded={refresh}
+                isStarredView={isStarredView}
+                isRefreshing={isRefreshing || isPending}
+              />
+            </div>
+          );
+        }
+        if (selectedArticleId) {
+          return (
+            <div className="h-full md:hidden">
+              <EditionStoryDetail
+                article={currentArticle}
+                isLoading={isArticleLoading}
+                onToggleStar={handleToggleStar}
+                onBack={() => {
+                  setSelectedArticleId(null);
+                  setCurrentArticle(null);
+                  setMobileView("list");
+                }}
+                selectedArticleId={selectedArticleId}
+                articles={displayedArticles}
+                onSelectArticle={handleSelectArticle}
+              />
+            </div>
+          );
+        }
+        return (
+          <div className="h-full md:hidden">
+            <EditionIssue
+              articles={displayedArticles}
+              selectedArticleId={selectedArticleId}
+              onSelectArticle={handleSelectArticle}
+              hasFeeds={feeds.length > 0}
+            />
+          </div>
+        );
+      })()}
+
+      {/* Mobile: stacked single-pane layout (filter / starred / search fallback) */}
+      <div
+        className={cn(
+          "flex h-full flex-col md:hidden pt-[env(safe-area-inset-top)] pb-[calc(env(safe-area-inset-bottom)+3.75rem)]",
+          !selectedFeedId && !isStarredView && !search.results && "hidden",
+        )}
+      >
         <div className="flex h-14 shrink-0 items-center gap-2 border-b px-3">
           {mobileView === "sidebar" ? (
             <Button
@@ -585,6 +661,25 @@ export function AppShell({
         </ResizablePanel>
       </ResizablePanelGroup>
       </main>
+      <EditionMobileTabBar
+        active={mobileView === "sidebar" ? "feeds" : "today"}
+        isStarredView={isStarredView}
+        onSelectToday={() => {
+          if (selectedArticleId) {
+            setSelectedArticleId(null);
+            setCurrentArticle(null);
+          }
+          if (isStarredView || selectedFeedId) {
+            handleSelectFeed(null);
+          }
+          setMobileView("list");
+        }}
+        onSelectFeeds={() => {
+          setMobileView("sidebar");
+        }}
+        onSelectStarred={handleSelectStarred}
+        onOpenPalette={() => setPaletteOpen(true)}
+      />
       <CommandPalette
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
