@@ -232,7 +232,7 @@ Phase 1 lands directly on `concept/03-today-edition` (docs only). Each subsequen
 | 3 | `concept/03-today-edition-03-shell` | Edition shell + masthead. Mount `EditionMasthead` above the existing layout on desktop; nameplate, edition stamp (date + day-of-year), counters (unread/starred/sources), command-palette launcher pill, refresh and mark-all actions, nav links to Starred/Health/Stats/Settings. Three-pane layout temporarily preserved beneath the masthead — content modules and `IssueGrid` are Phase 4. Edition composer + unit tests deferred to Phase 4. **Status: implemented (uncommitted) on this branch.** |
 | 4 | `concept/03-today-edition-04-issue-grid` | Edition composer (component-local, pure client, read-only, deterministic) and issue content modules: `EditionIssue` with cover + seconds row + per-feed section ribbons (alphabetic + day-of-year rotation) + later tray. Unit tests for cover selection, seconds cap, section grouping, item-cap overflow, day-rotation wrap, later-sort. **Status: implemented (uncommitted) on this branch.** Patterns A–D layout grammar deferred to Phase 7; hero-image / duotone / drop cap on dek deferred (no description data in `ArticleWithFeed`). |
 | 5 | `concept/03-today-edition-05-reader` | Edition-native article-detail surface (`EditionStoryDetail`) hosts existing `ReadingPane` verbatim, with sticky "Back to edition" bar, story-position stamp, "Up next" module, focus management, and Esc-to-back. `.edition-story` CSS scope re-skins `ArticleHeader` editorially without touching the shared component. **Status: implemented (uncommitted) on this branch.** `/feeds` page deferred to a later phase. |
-| 6 | `concept/03-today-edition-06-mobile` | Mobile issue: vertical scroll, sticky masthead, pull-to-refresh, bottom tab bar (Today / Feeds / Search). Gesture wiring with reduced-motion fallback. |
+| 6 | `concept/03-today-edition-06-mobile` | Mobile edition shell: compact `EditionMobileMasthead` (sticky, single-row nameplate + edition stamp + palette + refresh), `EditionMobileTabBar` (fixed bottom: Today / Search / Starred / Feeds / More), edition-native mobile flow that renders `EditionIssue` and `EditionStoryDetail` full-screen on phones, three-pane mobile fallback retained for filtered/starred/search. **Status: implemented (uncommitted) on this branch.** Pull-to-refresh deferred (would require a gesture/state controller; not in scope for the chrome pass). |
 | 7 | `concept/03-today-edition-07-secondary-states` | Empty edition, low-volume Pattern E, error state, loading skeletons matching the issue grid. Palette entries updated. |
 | 8 | `concept/03-today-edition-08-closure` | Full validation (lint, test, build, audit), browser review desktop+mobile, contrast audit on rust-on-warm-dark, reduced-motion audit, backend-invariant verification, screenshots, concept-doc decision. |
 
@@ -520,6 +520,66 @@ Done on child branch `concept/03-today-edition-05-reader`. Scope: article-detail
 - Phase 8: accessibility audit on the issue grid (landmarks, headings, focus order, contrast on rust on warm-dark).
 - Optional Phase 9: `emil-design-eng` polish on hover transitions, focus-visible rings, drop-cap rendering on the cover dek (currently no dek paragraph because article descriptions aren't in `ArticleWithFeed`).
 
+## Phase 6 Implementation Notes
+
+Done on child branch `concept/03-today-edition-06-mobile`. Scope: the mobile edition experience — the chrome that surrounds the issue and detail surfaces on phones, plus the routing that decides which surface mounts.
+
+### What changed
+
+- **New component** `src/components/edition/EditionMobileMasthead.tsx` (`md:hidden`, sticky top). Compact single-row mobile masthead: serif **"Today"** nameplate at 1.6rem, mono edition stamp (`№NNN · Wkd, Mon D` — the short form so it fits 414px), and a right cluster with a circular palette button (⌘) and refresh icon. Built from the same `--edition-*` tokens as the desktop masthead. Backdrop-blurred warm-dark plane with `safe-area-inset-top` honored.
+- **New component** `src/components/edition/EditionMobileTabBar.tsx` (`md:hidden`, fixed bottom). Five-cell tab bar: **Today / Search / Starred / Feeds / More**. Today/Starred reflect the active mode via rust accent + `aria-current="page"`. Search opens the command palette; Feeds toggles the mobile sidebar mode; More links to `/settings`. `safe-area-inset-bottom` honored.
+- **Modified** `src/components/layout/AppShell.tsx`. Mobile rendering now branches on edition mode:
+  - In edition mode (no feed filter, no starred view, no search results), mobile renders `EditionMobileMasthead` above the main, then either `Sidebar` (when the Feeds tab is active), `EditionStoryDetail` full-screen (when an article is selected), or `EditionIssue` (default). This is the same set of surfaces used on desktop, sized for phones — not a separate mobile-only design.
+  - Outside edition mode (feed filter, starred, or active search), the mobile fallback keeps the original single-pane chrome (top toolbar with hamburger / list / reader). Bottom padding extended (`pb-[calc(env(safe-area-inset-bottom)+3.75rem)]`) so content doesn't sit under the new tab bar.
+  - The bottom `EditionMobileTabBar` is rendered globally on mobile (outside `<main>`), so navigating between Today / Feeds / Starred / Search / More is one tap from anywhere.
+- No CSS changes were required — mobile reuses the Phase 2 token set, `.edition-issue`, `.edition-scroll`, `.edition-story`, and the existing `--edition-*` namespace verbatim.
+
+### What stayed stable
+
+- Article fetching (`/api/articles/[id]`), sanitization, `dangerouslySetInnerHTML` policy, server actions, Prisma, lib utilities, `package.json`, `package-lock.json` — untouched. Backend invariant holds.
+- `EditionIssue`, `EditionStoryDetail`, `EditionMasthead`, `composeIssue`, `ReadingPane`, `ArticleHeader`, `TypographySettings` — untouched in this phase. The mobile masthead is a sibling, not a fork; the desktop masthead remains `hidden md:flex`.
+- All existing keyboard shortcuts (`j`/`k`, `s`, `m`, `r`, `Shift+R`, `o`/Enter, Esc) operate unchanged. The reader-pane swipe gestures (`useSwipe`) on the three-pane fallback still work where present.
+- Three-pane mobile fallback is reachable: tapping a feed in the Feeds tab activates `handleSelectFeed` and the existing single-pane mobile shell takes over (top toolbar with hamburger + list + reader on tap). Nothing was removed.
+- No new dependency, no Google Font, no motion library.
+
+### Validation results
+
+- `npm run lint` — clean.
+- `npm run test` — 184 passed, 1 skipped (22 files).
+- `npm run build` — succeeds; `/` first-load JS 253 kB (was 252 kB Phase 5; +~1 kB for the two new mobile components).
+- `npm audit` — 0 vulnerabilities.
+- `git diff --stat main..HEAD -- src/actions/ src/app/api/ src/lib/ prisma/ package.json package-lock.json` — empty.
+
+### Browser observations (414×820 mobile, headless Chrome with iOS UA)
+
+- `/` on mobile renders the Today edition front page: serif "Today" nameplate, "№125 · Tue, May 5" mono stamp, palette + refresh on the right; cover eyebrow ("COVER · BBC News" in rust), large serif cover headline, dateline, hairline rule, single-column section stories below; bottom tab bar with **TODAY** active in rust, plus SEARCH / STARRED / FEEDS / MORE.
+- Tapping the cover opens the edition-native story detail full-screen: sticky **"← Back to Edition"** rust button (focused on mount, visible focus ring), `01 / 100` mono stamp, BBC NEWS eyebrow in rust, serif title, dateline, Reader-mode / Star / Open-original buttons, body text, "Up next" module at the bottom. Back-bar gesture (button or Esc-equivalent on hardware keyboards) returns to the issue.
+- Tapping the **Feeds** tab swaps the main surface to the canonical `Sidebar` (All Articles, Starred, Uncategorized → BBC News + Hacker News, plus Health/Stats/Settings rail at the bottom) — the existing feed-management surface, reachable in one tap from anywhere.
+- Bottom safe-area insets honored on the masthead and tab bar; `pb-24` on the issue scroll container ensures the last row clears the tab bar.
+- No console errors observed.
+
+### Screenshots
+
+| File | Notes |
+| --- | --- |
+| `phase6-mobile-edition.png` | Mobile front page at 414×820: compact masthead, cover story, single-column section stories, bottom tab bar. |
+| `phase6-mobile-story-detail.png` | Mobile story detail at 414×820: sticky back-bar focused, story-position stamp, edition-styled article header, body, "Up next" module. |
+| `phase6-mobile-nav.png` | Mobile Feeds tab at 414×820: canonical sidebar (feed tree + Health/Stats/Settings rail) reachable inside the edition shell, **FEEDS** active in rust on the tab bar. |
+
+(All under `docs/design-lab/screenshots/concepts/03-today-edition/`. The small "N" overlay at the lower-right is the Next.js dev-mode devtools button, not part of the UI.)
+
+### Deviations from plan
+
+- **Pull-to-refresh deferred.** Implementing pull-to-refresh requires a gesture controller, an idle/loading state machine, and motion that respects `prefers-reduced-motion`. Out of scope for the chrome pass; users can refresh via the masthead refresh icon (and ⌘K → Refresh). Logged as a follow-up.
+- **No mobile redesign of the desktop masthead.** Per the brief, desktop was preserved. The mobile masthead is a separate compact component, not a responsive collapse of the desktop masthead — the two surfaces have different information density needs.
+- **Tab bar uses 5 cells (Today / Search / Starred / Feeds / More)** instead of the original brief's 3 (Today / Feeds / Search). Starred and Settings (More → `/settings`) earned dedicated slots because they are core RSS-reader affordances; burying them inside the palette would have hurt one-thumb operation. Single accent + small caps + Lucide icons keep the bar editorial, not SaaS.
+
+### Follow-ups carried into later phases
+
+- Phase 7: empty/loading/error states on the mobile flow — empty edition reward, low-volume "no cover yet" state, article-fetch error inside `EditionStoryDetail` on mobile.
+- Phase 8: a11y audit on mobile — tab bar `role`/`aria-current`, masthead landmark conflict (two banners on the page when both desktop and mobile masthead mount in their respective `md:` gates — currently disjoint, but verify), focus order on tab bar, contrast at 414px, `prefers-reduced-motion` on backdrop-blur fallback.
+- Optional Phase 9: pull-to-refresh on mobile, swipe-to-back gesture on `EditionStoryDetail`, swipe-between-stories on mobile (the desktop reader-pane already has it via `useSwipe` in the three-pane fallback; bring it to the edition flow).
+
 ## Risks and Tradeoffs
 
 - **Magazine-pastiche risk.** The single biggest risk per `gpt-taste`. Mitigation: serif + drop cap + rust accent + hairline rules are *intentionally specific* and verified against Apple News / Flipboard *not* to copy them; layout grammar is bounded to four patterns; an "edition stamp" with the actual day-of-year is allowed (it is authentic) but no other meta-labels per the skill's ban.
@@ -558,9 +618,9 @@ The concept ships as a candidate finalist if:
 | Section ribbon close-up | TBD (Phase 9) | Hairline rule, eyebrow, item list — no card boxes. |
 | Later tray expanded | TBD (Phase 9) | Dense small-print recovery view. |
 | Empty edition | TBD (Phase 9) | "You finished today's edition" + Yesterday link. |
-| Mobile cover + first second | TBD (Phase 9) | Sticky masthead at top. |
-| Mobile section ribbon | TBD (Phase 9) | Single-column rhythm. |
-| Mobile reader (full screen) | TBD (Phase 9) | Existing reader component reused. |
+| Mobile edition front page | `phase6-mobile-edition.png` | Compact mobile masthead + cover + single-column sections + bottom tab bar — Phase 6. |
+| Mobile story detail | `phase6-mobile-story-detail.png` | Edition-native full-screen story on mobile, sticky back-bar focused — Phase 6. |
+| Mobile Feeds tab | `phase6-mobile-nav.png` | Sidebar reachable via Feeds tab from inside the edition shell — Phase 6. |
 | `/feeds` page | TBD (Phase 9) | Existing sidebar components in editorial single-pane. |
 
 ## Local Run Instructions
