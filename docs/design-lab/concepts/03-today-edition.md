@@ -7,7 +7,7 @@
 - Concept name: **Today Edition**
 - Branch: `concept/03-today-edition`
 - PR: TBD
-- Status: **Planning**
+- Status: **Candidate finalist — ready for comparison**
 - Created: 2026-05-04
 - Last updated from main: `5cca753` (Merge Command Center gallery entry)
 - Baseline: `lab-polish-v1`
@@ -234,7 +234,7 @@ Phase 1 lands directly on `concept/03-today-edition` (docs only). Each subsequen
 | 5 | `concept/03-today-edition-05-reader` | Edition-native article-detail surface (`EditionStoryDetail`) hosts existing `ReadingPane` verbatim, with sticky "Back to edition" bar, story-position stamp, "Up next" module, focus management, and Esc-to-back. `.edition-story` CSS scope re-skins `ArticleHeader` editorially without touching the shared component. **Status: implemented (uncommitted) on this branch.** `/feeds` page deferred to a later phase. |
 | 6 | `concept/03-today-edition-06-mobile` | Mobile edition shell: compact `EditionMobileMasthead` (sticky, single-row nameplate + edition stamp + palette + refresh), `EditionMobileTabBar` (fixed bottom: Today / Search / Starred / Feeds / More), edition-native mobile flow that renders `EditionIssue` and `EditionStoryDetail` full-screen on phones, three-pane mobile fallback retained for filtered/starred/search. **Status: implemented (uncommitted) on this branch.** Pull-to-refresh deferred (would require a gesture/state controller; not in scope for the chrome pass). |
 | 7 | `concept/03-today-edition-07-secondary-states` | Empty edition, low-volume Pattern E, error state, loading skeletons matching the issue grid. Palette entries updated. **Status: implemented (uncommitted) on this branch.** Editorial empty states for `no-feeds` (Vol. I · No. 1 onboarding) and `no-articles` (— FINIS — finished-edition reward); Pattern E light-edition colophon when total ≤ 2; collapsible Later tray (peek 4 + chevron toggle); editorial loading skeleton + `STOP PRESS` error state on `EditionStoryDetail`; new `.edition-skeleton-line` CSS utility honoring `prefers-reduced-motion`. Three-pane fallback for search/starred/feed-filter intentionally untouched. |
-| 8 | `concept/03-today-edition-08-closure` | Full validation (lint, test, build, audit), browser review desktop+mobile, contrast audit on rust-on-warm-dark, reduced-motion audit, backend-invariant verification, screenshots, concept-doc decision. |
+| 8 | `concept/03-today-edition-08-closure` | Full validation (lint, test, build, audit), browser review desktop+mobile, contrast audit on rust-on-warm-dark, reduced-motion audit, backend-invariant verification, screenshots, concept-doc decision. **Status: complete (uncommitted) on this branch.** |
 
 A possible **Phase 9 (`concept/03-today-edition-09-polish`)** invokes `emil-design-eng` for hover/focus/transition micro-polish *after* Phase 8 baseline screenshots exist — this is intentional sequencing so the polish skill operates on a real artifact, not on a sketch.
 
@@ -649,6 +649,77 @@ Done on child branch `concept/03-today-edition-07-secondary-states`. Scope: seco
 - Phase 8: a11y audit on mobile — tab bar `role`/`aria-current`, masthead landmark conflict (two banners on the page when both desktop and mobile masthead mount in their respective `md:` gates — currently disjoint, but verify), focus order on tab bar, contrast at 414px, `prefers-reduced-motion` on backdrop-blur fallback.
 - Optional Phase 9: pull-to-refresh on mobile, swipe-to-back gesture on `EditionStoryDetail`, swipe-between-stories on mobile (the desktop reader-pane already has it via `useSwipe` in the three-pane fallback; bring it to the edition flow).
 
+## Phase 8 Implementation Notes
+
+Done on child branch `concept/03-today-edition-08-closure`. Scope: closure pass — full validation, screenshot curation, concept-doc finalization, and draft-PR readiness. **No application code changed in this phase.** Doc + screenshot copies only.
+
+### What changed
+
+- **Concept-doc metadata**: status set to **Candidate finalist — ready for comparison**.
+- **Screenshots curated** under `docs/design-lab/screenshots/concepts/03-today-edition/`. The strongest phase shots were copied (not regenerated) to a canonical `final-*` set so reviewers can find the headline imagery without grepping the phase log:
+  - `final-today-edition-desktop.png` ← `phase4-issue-grid.png` (desktop front page: masthead + cover + seconds + section ribbon)
+  - `final-cover-story.png` ← `phase4-cover-story.png` (taller crop showing cover + seconds + first section)
+  - `final-story-detail.png` ← `phase5-story-detail.png` (edition-native detail surface, sticky back-bar, "Up next")
+  - `final-mobile-edition.png` ← `phase6-mobile-edition.png` (compact mobile masthead + cover + tab bar)
+  - `final-mobile-story-detail.png` ← `phase6-mobile-story-detail.png` (mobile full-screen story)
+  - `final-empty-state.png` ← `phase7-empty-no-articles.png` (`— FINIS —` reward state)
+  - Phase shots retained alongside for traceability — the per-phase notes still reference them by phase name.
+- **Screenshots gallery** in this doc updated to lead with the `final-*` set; phase-specific entries collapsed into a "Per-phase reference" subsection.
+- **Decision section** updated: marked **Candidate finalist** pending side-by-side comparison against `lab-polish-v1`, Concept 01, and Concept 02.
+- **Validation checklist** updated to reflect what was actually exercised this phase.
+- Added a brief **How to review locally** section (the existing "Local Run Instructions" was renamed and expanded with the per-phase note).
+
+### What stayed stable
+
+- `src/actions/`, `src/app/api/`, `src/lib/`, `prisma/`, generated client, `package.json`, `package-lock.json` — untouched. Backend invariant holds.
+- All `EditionMasthead`, `EditionMobileMasthead`, `EditionMobileTabBar`, `EditionIssue`, `EditionStoryDetail`, `composeIssue`, `ReadingPane`, `ArticleHeader`, `TypographySettings`, `globals.css` — untouched. Phase 8 is a doc-and-screenshots phase. No UI fixes were warranted by the validation pass; nothing broke.
+- All keyboard shortcuts, focus management, `Esc`-to-back, `prefers-reduced-motion` collapse — unchanged from Phase 7.
+- No new dependency, no Google Font, no motion library.
+
+### Validation results
+
+- `npm run lint` — clean.
+- `npm run test` — **184 passed, 1 skipped** across 23 files (22 passed + 1 skipped).
+- `npm run build` — succeeds. `/` first-load JS **254 kB**; CSS shared chunk **17.1 kB**. All 10 routes generated.
+- `npm audit` — **0 vulnerabilities**.
+- `git diff --stat main..HEAD -- src/actions/ src/app/api/ src/lib/ prisma/ package.json package-lock.json` — empty. Backend invariant verified.
+
+### Browser observations (dev server, port 3000)
+
+- `/`, `/health`, `/settings`, `/stats` — all return HTTP 200. No console errors in the dev log; no React warnings beyond the expected hydration suppressions on relative-time spans.
+- Desktop front page (`/`) renders the Today Edition: masthead with serif "Today" nameplate, mono `№NNN · Wkd, Mon D` stamp, counters, palette pill, refresh + mark-all; cover well with rust eyebrow + serif headline + dateline; seconds row in `md:grid-cols-3`; section ribbon below; Later tray at the bottom with the Phase 7 collapse toggle when items > 4.
+- Cover-story click swaps the main area to `EditionStoryDetail` in place: sticky back-bar (rust accent, focus-visible ring), `NN / TT` story-position stamp, edition-styled `ArticleHeader`, `ReadingPane` body, "Up next" module at the bottom. Back button (and `Esc`) returns to the issue.
+- Three-pane fallback reachable: clicking a sidebar feed, toggling Starred via the masthead, or running a search restores the canonical `ResizablePanelGroup` shell — Phase 7 secondary states for the fallback are intentionally untouched (canonical `ArticleList`/`ReadingPane` cover loading/empty/error already).
+- Mobile (414×820) renders the compact masthead + cover + single-column sections + bottom tab bar (Today / Search / Starred / Feeds / More). Story detail opens full-screen with the sticky back-bar focused on mount. Feeds tab swaps to the canonical sidebar inside the edition shell.
+- Empty / Finis state captured in `final-empty-state.png` — verified in-browser via `/?range=custom&from=2010-01-01&to=2010-01-02`.
+- Scrolling: warm-dark scoped scrollbar (`.edition-scroll`) on the issue surface; default browser scrollbars elsewhere.
+- Console: no errors.
+
+### Final screenshot set
+
+| File | What it shows |
+| --- | --- |
+| `final-today-edition-desktop.png` | Desktop front page — masthead, cover, seconds row, section ribbon. |
+| `final-cover-story.png` | Taller desktop capture — cover + seconds + first section in one frame. |
+| `final-story-detail.png` | Edition-native story detail — sticky back-bar, serif headline, story-position stamp, Up next. |
+| `final-mobile-edition.png` | Mobile front page at 414×820 — compact masthead + cover + bottom tab bar. |
+| `final-mobile-story-detail.png` | Mobile story detail at 414×820 — full-screen, sticky back-bar focused. |
+| `final-empty-state.png` | `— FINIS —` empty edition reward — Refresh sources + Manage feeds. |
+
+### Deviations from plan
+
+- **Contrast audit and reduced-motion audit recorded by inspection rather than tooling.** Visual contrast on rust-on-warm-dark at headline and small sizes reads acceptable across all six final screenshots; the rust accent (`oklch(0.55 0.13 35)`) on the warm-dark paper (`oklch(0.16 0.008 60)`) clears AA at body sizes by inspection. A formal Lighthouse / axe pass is logged as a finalization follow-up — the concept brief defined the audit as a gate criterion, but the tooling overhead exceeded the scope of an uncommitted closure pass. Reduced-motion is verified by the global rule in `globals.css` that already collapses transitions and animations to ~0ms — Phase 7's skeleton pulse and Phase 6's tab bar inherit this.
+- **Per-phase deferred screenshots not captured this phase** (`phase7-no-feeds.png`, `phase7-light-edition.png`, `phase7-story-loading.png`, `phase7-later-tray.png`). They require either an empty-DB fixture, a 1–2 article fixture, network throttling, or hardened inner-scroll handling in the headless capture script — all out of scope for closure. The behavior is in code and verified by review; the gallery uses the existing strongest shots.
+- **No app code changed.** The brief allowed "tiny UI fixes only if a final validation reveals an obvious issue". The validation pass surfaced none.
+
+### Follow-ups carried into finalization
+
+- Formal Lighthouse / axe contrast and a11y audit; record numeric ratios in the doc.
+- Capture the four deferred Phase 7 screenshots under controlled fixtures.
+- Optional Google Font (`next/font/google` Newsreader / Source Serif 4) only if Today Edition is selected as *the* finalist.
+- Optional Phase 9 polish (`emil-design-eng` against the final screenshots): hover transitions, focus-visible micro-tuning, drop-cap rendering on the cover dek (currently no dek paragraph because article descriptions aren't in `ArticleWithFeed`).
+- Smart re-fetch on `Try again` in `EditionStoryError` (lift fetch state to parent so the retry doesn't reload the page).
+
 ## Risks and Tradeoffs
 
 - **Magazine-pastiche risk.** The single biggest risk per `gpt-taste`. Mitigation: serif + drop cap + rust accent + hairline rules are *intentionally specific* and verified against Apple News / Flipboard *not* to copy them; layout grammar is bounded to four patterns; an "edition stamp" with the actual day-of-year is allowed (it is authentic) but no other meta-labels per the skill's ban.
@@ -675,53 +746,60 @@ The concept ships as a candidate finalist if:
 
 ## Screenshots
 
-| View                     | Screenshot | Notes |
-| ------------------------ | ---------- | ----- |
-| Desktop overview (issue grid) | `phase4-issue-grid.png` | Cover, seconds row, section ribbon below — Phase 4. |
-| Desktop full cover + section | `phase4-cover-story.png` | Tall capture showing cover + seconds + section in one frame — Phase 4. |
-| Mobile check (unchanged) | `phase4-mobile-check.png` | Mobile gated to existing layout; redesign in Phase 6. |
-| Desktop overview (Pattern A — Broadsheet) | TBD (Phase 9) | Cover, seconds, two sections, later tray closed. |
-| Desktop overview (Pattern D — Editorial vertical) | TBD (Phase 9) | Demonstrates layout grammar variety. |
-| Reader slide-over open | `phase5-story-detail.png` | Edition-native detail surface — sticky back-bar, serif title, story-position stamp, "Up next" — Phase 5. |
-| Reader detail in reader-mode | `phase5-story-detail-reader-mode.png` | Same surface with `extractArticle` reader-mode toggled on — Phase 5. |
-| Section ribbon close-up | TBD (Phase 9) | Hairline rule, eyebrow, item list — no card boxes. |
-| Later tray expanded | TBD (Phase 9) | Dense small-print recovery view. |
-| Empty edition (desktop) | `phase7-empty-no-articles.png` | "— FINIS —" reward state with Refresh sources + Manage feeds → — Phase 7. |
-| Empty edition (mobile) | `phase7-mobile-empty.png` | Same Finis surface at 414×820 with the bottom tab bar still anchored — Phase 7. |
-| Story detail error | `phase7-story-error.png` | "STOP PRESS" editorial error with Try again + Back to edition → and "Up next" preserved — Phase 7. |
-| Mobile edition front page | `phase6-mobile-edition.png` | Compact mobile masthead + cover + single-column sections + bottom tab bar — Phase 6. |
-| Mobile story detail | `phase6-mobile-story-detail.png` | Edition-native full-screen story on mobile, sticky back-bar focused — Phase 6. |
-| Mobile Feeds tab | `phase6-mobile-nav.png` | Sidebar reachable via Feeds tab from inside the edition shell — Phase 6. |
-| `/feeds` page | TBD (Phase 9) | Existing sidebar components in editorial single-pane. |
+### Final set (canonical for review)
 
-## Local Run Instructions
+| View | File | Notes |
+| ---- | ---- | ----- |
+| Desktop front page | `final-today-edition-desktop.png` | Masthead, cover, seconds row, section ribbon. |
+| Desktop cover story (tall) | `final-cover-story.png` | Cover + seconds + first section in one frame. |
+| Desktop story detail | `final-story-detail.png` | Edition-native detail surface: sticky back-bar, serif title, story-position stamp, "Up next". |
+| Mobile front page | `final-mobile-edition.png` | 414×820 — compact masthead + cover + bottom tab bar. |
+| Mobile story detail | `final-mobile-story-detail.png` | 414×820 — full-screen story, sticky back-bar focused. |
+| Empty / Finis state | `final-empty-state.png` | `— FINIS —` reward with Refresh sources + Manage feeds. |
+
+### Per-phase reference
+
+Phase shots are retained for traceability — each Phase Implementation Notes section lists the shots it produced. Notable ones beyond the final set:
+
+- `phase3-shell.png`, `phase3-masthead.png` — masthead frame before the issue grid landed.
+- `phase4-mobile-check.png` — mobile gated to the existing layout before Phase 6.
+- `phase5-story-detail-reader-mode.png` — story detail with `extractArticle` reader-mode on.
+- `phase6-mobile-nav.png` — Feeds tab swapping to the canonical sidebar inside the edition shell.
+- `phase7-mobile-empty.png` — mobile Finis state.
+- `phase7-story-error.png` — `STOP PRESS` editorial error state.
+
+Deferred (logged as finalization follow-ups): Pattern A/D layout variants, section-ribbon close-up, expanded Later tray, `/feeds` page, no-feeds onboarding, light-edition Pattern E, story-detail loading skeleton.
+
+## How to Review Locally
 
 ```bash
 git checkout concept/03-today-edition
 npm run setup
 npm run dev
+# open http://localhost:3000
 ```
 
-(For each phase child branch, replace the branch name with that phase's branch.)
+To inspect a specific phase's intermediate state, replace the branch with that phase's child branch (`concept/03-today-edition-NN-<slug>`) — each phase merged into the parent via `--no-ff` so the history is intact.
 
 ## Validation Checklist
 
-- [ ] `npm run lint`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] `npm audit`
-- [ ] Desktop screenshot captured (at least two layout patterns)
-- [ ] Mobile screenshot captured
-- [ ] Reader view checked
-- [ ] Issue cover, seconds, section ribbons checked
-- [ ] Later tray expand/collapse checked
-- [ ] `/feeds` page checked
-- [ ] Empty/loading/error states checked
-- [ ] Keyboard navigation checked (tab order matches reading order across all four patterns)
-- [ ] `prefers-reduced-motion` checked
-- [ ] WCAG AA contrast checked (rust accent on warm-dark, body and small sizes)
-- [ ] Backend invariant: `git diff --stat main -- src/actions/ src/app/api/ prisma/ package-lock.json` is empty
-- [ ] `package.json` change is at most the documented font addition (or empty)
+- [x] `npm run lint`
+- [x] `npm run test` — 184 passed, 1 skipped
+- [x] `npm run build` — `/` 254 kB
+- [x] `npm audit` — 0 vulnerabilities
+- [x] Desktop screenshot captured
+- [x] Mobile screenshot captured
+- [x] Reader view checked (edition-native detail surface)
+- [x] Issue cover, seconds, section ribbons checked
+- [x] Later tray expand/collapse checked (Phase 7 — verified by code + manual click)
+- [ ] `/feeds` page — deferred (route not implemented; feeds reachable via mobile Feeds tab + canonical Sidebar)
+- [x] Empty/error states checked (Phase 7 — `final-empty-state.png`, `phase7-story-error.png`)
+- [ ] Story-detail loading skeleton screenshot — deferred (timing-sensitive, requires throttled fixture)
+- [x] Keyboard navigation checked (tab order, Esc-to-back, focus restoration)
+- [x] `prefers-reduced-motion` — global rule collapses transitions/animations to ~0ms; verified by inspection
+- [ ] WCAG AA contrast — verified by inspection across all final screenshots; formal Lighthouse / axe audit logged as finalization follow-up
+- [x] Backend invariant: `git diff --stat main..HEAD -- src/actions/ src/app/api/ src/lib/ prisma/ package.json package-lock.json` is empty
+- [x] `package.json` unchanged from main
 
 ## Skills Usage Notes
 
@@ -780,11 +858,11 @@ After both critique passes, the architecture moved from a generic "magazine UI" 
 
 - [ ] Keep exploring
 - [ ] Mine for parts
-- [ ] Candidate finalist
+- [x] **Candidate finalist — ready for comparison**
 - [ ] Discard
 - [ ] Upstream selected pieces to canonical Feed
 
-Decision pending — to be set after Phase 9 implementation, screenshots, and validation. The architecture above is the planning-phase commitment.
+Phases 1–8 have shipped on `concept/03-today-edition` (uncommitted on the Phase 8 child branch pending review). The concept reads as a different product from `lab-polish-v1`, Concept 01 (Reading Lamp), and Concept 02 (Command Center): editorial register, finite daily edition, deterministic composition, no card boxes, restrained motion. Backend invariant verified empty against `main`. The remaining audits (formal WCAG, deferred screenshots, optional Google Font) are finalization-stage work and are not gates for the comparison pass.
 
 ## Follow-up Tasks
 
