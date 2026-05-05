@@ -446,6 +446,8 @@ export function AppShell({
               selectedArticleId={selectedArticleId}
               onSelectArticle={handleSelectArticle}
               hasFeeds={feeds.length > 0}
+              onRefreshAll={handleRefreshAll}
+              isRefreshing={isRefreshing || isPending}
             />
           </div>
         );
@@ -578,6 +580,8 @@ export function AppShell({
               selectedArticleId={selectedArticleId}
               onSelectArticle={handleSelectArticle}
               hasFeeds={feeds.length > 0}
+              onRefreshAll={handleRefreshAll}
+              isRefreshing={isRefreshing || isPending}
             />
           </div>
         );

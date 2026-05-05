@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ReadingPane, type ArticleFull } from "@/components/reader/ReadingPane";
 import type { ArticleWithFeed } from "@/components/articles/ArticleList";
@@ -101,11 +101,17 @@ export function EditionStoryDetail({
 
       <div className="mx-auto w-full max-w-[860px] px-2 pb-24 sm:px-4 lg:px-6">
         <div className="edition-story">
-          <ReadingPane
-            article={article}
-            isLoading={isLoading}
-            onToggleStar={onToggleStar}
-          />
+          {isLoading && !article ? (
+            <EditionStorySkeleton />
+          ) : !article ? (
+            <EditionStoryError onBack={onBack} />
+          ) : (
+            <ReadingPane
+              article={article}
+              isLoading={isLoading}
+              onToggleStar={onToggleStar}
+            />
+          )}
         </div>
         {index >= 0 && index + 1 < total && (
           <div className="mt-10 border-t border-[color:var(--edition-rule)] pt-6">
@@ -135,5 +141,66 @@ export function EditionStoryDetail({
         )}
       </div>
     </section>
+  );
+}
+
+function EditionStorySkeleton() {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      aria-label="Loading story"
+      className="pt-6"
+    >
+      <div className="edition-skeleton-line h-3 w-24" />
+      <div className="mt-5 edition-skeleton-line edition-skeleton-headline h-9 w-[88%]" />
+      <div className="mt-2 edition-skeleton-line edition-skeleton-headline h-9 w-[72%]" />
+      <div className="mt-2 edition-skeleton-line edition-skeleton-headline h-9 w-[58%]" />
+      <div className="mt-6 edition-skeleton-line h-2.5 w-40" />
+      <div className="mt-10 space-y-3">
+        <div className="edition-skeleton-line h-3 w-full" />
+        <div className="edition-skeleton-line h-3 w-[96%]" />
+        <div className="edition-skeleton-line h-3 w-[91%]" />
+        <div className="edition-skeleton-line h-3 w-[78%]" />
+      </div>
+      <span className="sr-only">Loading story…</span>
+    </div>
+  );
+}
+
+function EditionStoryError({ onBack }: { onBack: () => void }) {
+  return (
+    <div role="alert" className="pt-6">
+      <p className="edition-eyebrow text-[0.7rem]">Stop press</p>
+      <h2 className="edition-display mt-3 text-[length:var(--edition-display-second)] font-semibold leading-[1.15] tracking-[-0.012em] text-balance text-[color:var(--edition-ink)]">
+        This story didn’t make it to print.
+      </h2>
+      <p className="edition-dek mt-4">
+        We couldn’t load the article. The source may be offline, the link may
+        have moved, or the connection failed mid-fetch.
+      </p>
+      <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className={cn(
+            "edition-eyebrow inline-flex items-center gap-2 text-[0.72rem]",
+            "text-[color:var(--edition-accent)] hover:text-[color:var(--edition-accent-strong)]",
+            "transition-colors outline-none rounded-sm",
+            "focus-visible:ring-2 focus-visible:ring-[color:var(--edition-accent)]/60",
+          )}
+        >
+          <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+          <span>Try again</span>
+        </button>
+        <button
+          type="button"
+          onClick={onBack}
+          className="edition-stamp text-[0.68rem] text-[color:var(--edition-ink-faint)] hover:text-[color:var(--edition-ink-muted)] transition-colors outline-none rounded-sm focus-visible:ring-2 focus-visible:ring-[color:var(--edition-accent)]/60"
+        >
+          Back to edition →
+        </button>
+      </div>
+    </div>
   );
 }

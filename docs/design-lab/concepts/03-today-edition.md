@@ -233,7 +233,7 @@ Phase 1 lands directly on `concept/03-today-edition` (docs only). Each subsequen
 | 4 | `concept/03-today-edition-04-issue-grid` | Edition composer (component-local, pure client, read-only, deterministic) and issue content modules: `EditionIssue` with cover + seconds row + per-feed section ribbons (alphabetic + day-of-year rotation) + later tray. Unit tests for cover selection, seconds cap, section grouping, item-cap overflow, day-rotation wrap, later-sort. **Status: implemented (uncommitted) on this branch.** Patterns A–D layout grammar deferred to Phase 7; hero-image / duotone / drop cap on dek deferred (no description data in `ArticleWithFeed`). |
 | 5 | `concept/03-today-edition-05-reader` | Edition-native article-detail surface (`EditionStoryDetail`) hosts existing `ReadingPane` verbatim, with sticky "Back to edition" bar, story-position stamp, "Up next" module, focus management, and Esc-to-back. `.edition-story` CSS scope re-skins `ArticleHeader` editorially without touching the shared component. **Status: implemented (uncommitted) on this branch.** `/feeds` page deferred to a later phase. |
 | 6 | `concept/03-today-edition-06-mobile` | Mobile edition shell: compact `EditionMobileMasthead` (sticky, single-row nameplate + edition stamp + palette + refresh), `EditionMobileTabBar` (fixed bottom: Today / Search / Starred / Feeds / More), edition-native mobile flow that renders `EditionIssue` and `EditionStoryDetail` full-screen on phones, three-pane mobile fallback retained for filtered/starred/search. **Status: implemented (uncommitted) on this branch.** Pull-to-refresh deferred (would require a gesture/state controller; not in scope for the chrome pass). |
-| 7 | `concept/03-today-edition-07-secondary-states` | Empty edition, low-volume Pattern E, error state, loading skeletons matching the issue grid. Palette entries updated. |
+| 7 | `concept/03-today-edition-07-secondary-states` | Empty edition, low-volume Pattern E, error state, loading skeletons matching the issue grid. Palette entries updated. **Status: implemented (uncommitted) on this branch.** Editorial empty states for `no-feeds` (Vol. I · No. 1 onboarding) and `no-articles` (— FINIS — finished-edition reward); Pattern E light-edition colophon when total ≤ 2; collapsible Later tray (peek 4 + chevron toggle); editorial loading skeleton + `STOP PRESS` error state on `EditionStoryDetail`; new `.edition-skeleton-line` CSS utility honoring `prefers-reduced-motion`. Three-pane fallback for search/starred/feed-filter intentionally untouched. |
 | 8 | `concept/03-today-edition-08-closure` | Full validation (lint, test, build, audit), browser review desktop+mobile, contrast audit on rust-on-warm-dark, reduced-motion audit, backend-invariant verification, screenshots, concept-doc decision. |
 
 A possible **Phase 9 (`concept/03-today-edition-09-polish`)** invokes `emil-design-eng` for hover/focus/transition micro-polish *after* Phase 8 baseline screenshots exist — this is intentional sequencing so the polish skill operates on a real artifact, not on a sketch.
@@ -568,6 +568,75 @@ Done on child branch `concept/03-today-edition-06-mobile`. Scope: the mobile edi
 
 (All under `docs/design-lab/screenshots/concepts/03-today-edition/`. The small "N" overlay at the lower-right is the Next.js dev-mode devtools button, not part of the UI.)
 
+## Phase 7 Implementation Notes
+
+Done on child branch `concept/03-today-edition-07-secondary-states`. Scope: secondary states, fallback surfaces, and issue polish — make every non-happy path read as part of the same edition, not a generic SaaS empty state or browser error page.
+
+### What changed
+
+- **`EditionEmpty` rewritten** in `src/components/edition/EditionIssue.tsx` from a centered two-line stub into two distinct editorial surfaces:
+  - **No-feeds** ("Vol. I · No. 1"): editorial onboarding — small-caps eyebrow, large serif headline (`Your edition starts with a feed.`), Geist dek explaining the deterministic-issue metaphor, primary `Add your first feed` link to `/settings`, secondary `or press ⌘K to open the palette` hint. Hairline rule above the eyebrow keeps the issue grammar.
+  - **No-articles** ("— Finis —"): finished-edition reward — same anatomy, with `You've finished today's edition.`, an explanation that the next issue arrives when sources publish, a `Refresh sources` action wired to `handleRefreshAll` (with disabled-spin while refreshing), and a `Manage feeds →` secondary link.
+- **New `EditionColophon`** module rendered when the issue has very few articles (`articles.length <= 2` — Pattern E low-volume day). Eyebrow `Light edition`, dek (`Only N stories crossed the desk today. A short edition is still an edition.`), refresh action. Sits below the cover with the same hairline rhythm; replaces the usual seconds row + sections that would otherwise be empty rules.
+- **`LaterTray` is now collapsible.** Default `open=true` so existing behavior is preserved; the toggle only appears when items > 4 (the `PEEK` constant). Header now carries a small-caps `Show all` / `Collapse` button with a rotating chevron and `aria-expanded`. Collapsed state shows the first 4 items plus a colophon line `N more held back. Use "Show all" to recover them.` so the count never disappears silently.
+- **`EditionStoryDetail` gained editorial loading + error states** in `src/components/edition/EditionStoryDetail.tsx`:
+  - **`EditionStorySkeleton`** (rendered while `isLoading && !article`): four hairline placeholder bars matching the issue typography rhythm — eyebrow, three headline lines (88 / 72 / 58% width), dateline, and four body lines — instead of falling through to `ReadingPane`'s SaaS-shape skeleton. Pulses via a slow opacity animation; collapses to a single static frame under `prefers-reduced-motion`. Has `role="status"` + `aria-live="polite"` + sr-only `Loading story…`.
+  - **`EditionStoryError`** (rendered when fetch finishes with no article): `STOP PRESS` eyebrow, serif `This story didn't make it to print.`, dek explaining offline source / moved link / fetch failure, primary `Try again` (full reload) and secondary `Back to edition →` (calls `onBack`). `role="alert"`.
+  - The existing `ReadingPane` is still rendered for the happy path, untouched.
+- **New CSS utilities** in `src/app/globals.css`: `.edition-skeleton-line` (low-contrast hairline placeholder using the editorial rule color), `.edition-skeleton-headline` variant for serif-display lines, and the `edition-skeleton-pulse` keyframe (1.6s, `var(--ease-in-out-quint)`, opacity 0.55 ↔ 0.95). The global `prefers-reduced-motion` rule already forces these to a single static frame.
+- **`AppShell` wiring**: `EditionIssue` now receives `onRefreshAll` and `isRefreshing` so the empty `Finis` state and the light-edition colophon can both trigger a real refresh from inside the issue.
+
+### What stayed stable
+
+- `src/actions/`, `src/app/api/`, `src/lib/`, `prisma/`, `package.json`, `package-lock.json` — untouched. Backend invariant holds.
+- `EditionMasthead`, `EditionMobileMasthead`, `EditionMobileTabBar`, `composeIssue`, `ReadingPane`, `ArticleHeader`, `TypographySettings` — untouched in this phase. The new states are scoped to the issue and detail surfaces.
+- The three-pane fallback (search / starred / feed-filter) — untouched. It uses the canonical `ArticleList` + `ReadingPane`, which already have their own loading/empty/error states; layering Phase 7 over those would have been scope creep with low return.
+- `AddFeedDialog`, OPML dialogs, `Sidebar`, Health, Stats, Settings — untouched. Visited briefly during browser review; no clash with the edition register that warranted Phase 7 work.
+- All keyboard shortcuts and the `Esc`-to-back wiring on the detail surface continue to work. Tab order through the new empty-state actions follows reading order: eyebrow → headline → dek → primary action → secondary link.
+- No new dependency; no Google Font; no motion library. Skeleton pulse is a CSS-only keyframe.
+
+### Validation results
+
+- `npm run lint` — clean.
+- `npm run test` — **184 passed, 1 skipped** (22 files). No new tests added because the new surfaces are pure presentational branches; `composeIssue` (the only logic with tests) was not touched.
+- `npm run build` — succeeds. `/` first-load JS **254 kB** (was 253 kB Phase 6; +~1 kB for the new state components and CSS utility).
+- `npm audit` — **0 vulnerabilities**.
+- `git diff --stat main..HEAD -- src/actions/ src/app/api/ src/lib/ prisma/ package.json package-lock.json` — empty.
+
+### Browser observations (1440×900 desktop + 414×820 mobile, headless Chrome)
+
+- **Default issue** — unchanged from Phase 4/6. Cover, seconds, section ribbons, and Later tray all render. The Later tray header now shows the `Collapse` toggle (chevron) when there are more than 4 items; clicking it folds the tray to 4 items + a "N more held back" line.
+- **No-articles state** (forced via `?range=custom&from=2010-01-01&to=2010-01-02`, which yields zero articles in edition mode): the `Finis` surface renders with eyebrow, serif headline, dek, refresh button, and `Manage feeds →` link. The masthead and tab bar continue to anchor the chrome on both desktop and mobile.
+- **Story-detail error** (forced via Fetch-domain interception of `/api/articles/[id]` returning 500): clicking the cover transitions to the editorial detail surface, the back-bar appears with focus on `Back to edition`, and the body renders the `STOP PRESS` error with `Try again` + secondary back link. The `Up next` module is preserved at the bottom so the reader can advance even when the current article failed.
+- **Story-detail loading** — the editorial skeleton (eyebrow + three serif headline bars + dateline + body lines) flashes briefly during fetch on slow connections; on local dev the fetch resolves before the next paint, so the skeleton is mostly visible by throttling.
+- **No-feeds state** — the editorial onboarding is verified by code path; the local DB has feeds, so reproducing it in the browser requires deleting all feeds. Layout matches the Finis state with the `Vol. I · No. 1` eyebrow + `Add your first feed` primary action.
+- **Light edition (Pattern E)** — verified by code path; the local dataset has hundreds of articles so it never triggers in real use. Will be exercised in Phase 8 alongside the contrast / reduced-motion audit.
+- **Mobile fallbacks** — same surfaces render at 414×820 with the bottom tab bar in place. The empty state's typography reflows to 2 lines as expected; CTAs wrap below the dek.
+- No console errors during the smoke. Hydration-warning suppressions on relative-time spans continue to silence the expected SSR/CSR difference.
+
+### Screenshots
+
+| File | Notes |
+| --- | --- |
+| `phase7-empty-no-articles.png` | Desktop "Finis" state — `— FINIS —` eyebrow, serif `You've finished today's edition.`, dek, `Refresh sources` + `Manage feeds →`. |
+| `phase7-story-error.png` | Desktop story-detail error — `STOP PRESS` eyebrow, serif `This story didn't make it to print.`, `Try again` + `Back to edition →`, `Up next` module preserved at the bottom. |
+| `phase7-mobile-empty.png` | Mobile "Finis" state at 414×820 — same surface, two-line headline reflow, tab bar still anchored. |
+
+(All under `docs/design-lab/screenshots/concepts/03-today-edition/`.)
+
+### Deviations from plan
+
+- **No `phase7-later-tray.png` captured.** The Later tray's collapse toggle is implemented and verified by code review + a manual click in the browser (state changes, items reduce to 4 + footer line), but the headless capture script could not deterministically scroll the inner article scroll container to the Later header in time for a clean shot. Logged as a tooling follow-up; the behavior itself is in code.
+- **No-feeds and Pattern E (light edition) screenshots not captured.** Both render correctly per code review but require either an empty database or a 1–2 article dataset to trigger naturally; manufacturing the state would have required either DB resetting or a feature-flagged test override, both out of scope for a UI-only phase. Phase 8 (closure) will capture them as part of the formal validation pass.
+- **Story-detail loading screenshot not captured.** The skeleton renders for ~50–150 ms on local dev — too short to deterministically time the headless capture. Behavior verified visually with the devtools network throttle. Phase 8 will retry under enforced throttling.
+- **`Try again` is a `window.location.reload()` rather than a smart re-fetch.** The cleaner approach would be to re-trigger the article fetch with the existing `selectedArticleId`. Skipped because it would require lifting fetch state up to the parent (out of UI-polish scope). Logged as a follow-up; a hard reload still recovers correctly.
+
+### Follow-ups carried into later phases
+
+- **Phase 8 (closure):** capture `phase7-no-feeds.png`, `phase7-light-edition.png`, and `phase7-story-loading.png` under controlled fixtures; run the full a11y audit (skip-link, landmarks, `aria-current`, contrast on rust + warm-dark at body and small sizes, `prefers-reduced-motion`); verify the skeleton pulse honors reduced-motion; verify focus restoration on Try again / Back from the error state; document the Decision.
+- **Optional Phase 9:** smart re-fetch on `Try again` (lift fetch state to parent so the error → retry round-trip doesn't reload the page); animated collapse on the Later tray (`details`-style with `prefers-reduced-motion` fallback); per-section "Save for later" affordance to move stories from the Later tray back into a section.
+- **Tooling follow-up:** harden the headless-capture script's inner-scroll handling so per-section screenshots (Later tray, section ribbons, light edition) can be captured deterministically. Currently the script's `scrollContainer` action sets `scrollTop` but the React state doesn't always toggle reliably under simulated clicks; investigate `Input.dispatchMouseEvent` instead of `el.click()` for stateful UI.
+
 ### Deviations from plan
 
 - **Pull-to-refresh deferred.** Implementing pull-to-refresh requires a gesture controller, an idle/loading state machine, and motion that respects `prefers-reduced-motion`. Out of scope for the chrome pass; users can refresh via the masthead refresh icon (and ⌘K → Refresh). Logged as a follow-up.
@@ -617,7 +686,9 @@ The concept ships as a candidate finalist if:
 | Reader detail in reader-mode | `phase5-story-detail-reader-mode.png` | Same surface with `extractArticle` reader-mode toggled on — Phase 5. |
 | Section ribbon close-up | TBD (Phase 9) | Hairline rule, eyebrow, item list — no card boxes. |
 | Later tray expanded | TBD (Phase 9) | Dense small-print recovery view. |
-| Empty edition | TBD (Phase 9) | "You finished today's edition" + Yesterday link. |
+| Empty edition (desktop) | `phase7-empty-no-articles.png` | "— FINIS —" reward state with Refresh sources + Manage feeds → — Phase 7. |
+| Empty edition (mobile) | `phase7-mobile-empty.png` | Same Finis surface at 414×820 with the bottom tab bar still anchored — Phase 7. |
+| Story detail error | `phase7-story-error.png` | "STOP PRESS" editorial error with Try again + Back to edition → and "Up next" preserved — Phase 7. |
 | Mobile edition front page | `phase6-mobile-edition.png` | Compact mobile masthead + cover + single-column sections + bottom tab bar — Phase 6. |
 | Mobile story detail | `phase6-mobile-story-detail.png` | Edition-native full-screen story on mobile, sticky back-bar focused — Phase 6. |
 | Mobile Feeds tab | `phase6-mobile-nav.png` | Sidebar reachable via Feeds tab from inside the edition shell — Phase 6. |

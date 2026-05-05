@@ -563,3 +563,31 @@
 .edition-story .article-content {
   color: var(--edition-ink);
 }
+
+/* Editorial loading shimmer. Hairline placeholder bars that match the
+   issue grammar — no rounded SaaS pill skeletons. The shimmer is a slow
+   opacity pulse that respects prefers-reduced-motion via the global rule. */
+.edition-skeleton-line {
+  display: block;
+  background-color: color-mix(
+    in oklch,
+    var(--edition-rule-strong) 70%,
+    transparent
+  );
+  border-radius: 2px;
+  animation: edition-skeleton-pulse 1.6s var(--ease-in-out-quint) infinite;
+}
+
+.edition-skeleton-headline {
+  background-color: color-mix(
+    in oklch,
+    var(--edition-rule-strong) 92%,
+    transparent
+  );
+  border-radius: 3px;
+}
+
+@keyframes edition-skeleton-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.95; }
+}
