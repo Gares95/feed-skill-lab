@@ -230,7 +230,7 @@ Phase 1 lands directly on `concept/03-today-edition` (docs only). Each subsequen
 | 1 | `concept/03-today-edition` (this branch) | Concept architecture and docs — *this phase*. Doc + scaffolding only. |
 | 2 | `concept/03-today-edition-02-foundation` | Design-system / visual foundation. Extend `globals.css` with paper-tinted warm-dark, rust accent, system-serif var, drop-cap utility, rule and editorial spacing scales. Add `Eyebrow`, `Rule`, `EditionStamp`, `Dek` primitives. No layout change yet. **No Google Font addition** — system serif stack only. **Status: implemented (uncommitted) on this branch.** |
 | 3 | `concept/03-today-edition-03-shell` | Edition shell + masthead. Mount `EditionMasthead` above the existing layout on desktop; nameplate, edition stamp (date + day-of-year), counters (unread/starred/sources), command-palette launcher pill, refresh and mark-all actions, nav links to Starred/Health/Stats/Settings. Three-pane layout temporarily preserved beneath the masthead — content modules and `IssueGrid` are Phase 4. Edition composer + unit tests deferred to Phase 4. **Status: implemented (uncommitted) on this branch.** |
-| 4 | `concept/03-today-edition-04-edition-modules` | Edition composer (`lib/edition.ts` *or* component-local fallback — pure client, read-only, deterministic) and issue content modules: `IssueGrid` with patterns A–D and day-seeded selection, `CoverWell`, `SecondaryWell`, `SectionRibbon`, `SectionItem`, drop cap, hero image with duotone, hairline rules; `LaterTray` with collapse + read-state strikethrough/dim. Unit tests for cover selection, dedup, section grouping, later tray, empty state. |
+| 4 | `concept/03-today-edition-04-issue-grid` | Edition composer (component-local, pure client, read-only, deterministic) and issue content modules: `EditionIssue` with cover + seconds row + per-feed section ribbons (alphabetic + day-of-year rotation) + later tray. Unit tests for cover selection, seconds cap, section grouping, item-cap overflow, day-rotation wrap, later-sort. **Status: implemented (uncommitted) on this branch.** Patterns A–D layout grammar deferred to Phase 7; hero-image / duotone / drop cap on dek deferred (no description data in `ArticleWithFeed`). |
 | 5 | `concept/03-today-edition-05-reader` | Reader slide-over hosts existing `ReadingPane` verbatim. `/feeds` page mounts existing sidebar components in a single-pane editorial layout. Focus restore on slide-over close. |
 | 6 | `concept/03-today-edition-06-mobile` | Mobile issue: vertical scroll, sticky masthead, pull-to-refresh, bottom tab bar (Today / Feeds / Search). Gesture wiring with reduced-motion fallback. |
 | 7 | `concept/03-today-edition-07-secondary-states` | Empty edition, low-volume Pattern E, error state, loading skeletons matching the issue grid. Palette entries updated. |
@@ -369,6 +369,83 @@ Done on child branch `concept/03-today-edition-03-shell`. Scope: edition frame a
 - Phase 8: verify masthead contrast, focus rings, `prefers-reduced-motion`, and tab order across the new chrome.
 - Optional refinement: the bottom counter row could move into the `IssueGrid` masthead-band in Phase 4, leaving the desktop masthead as a single thinner top bar. Decide once the issue document exists.
 
+## Phase 4 Implementation Notes
+
+Done on child branch `concept/03-today-edition-04-issue-grid`. Scope: the issue grid itself — composer + cover + seconds + section ribbons + later tray, mounted as the default desktop surface on `/`.
+
+### Deterministic issue composition rule
+
+`src/components/edition/composeIssue.ts`. Pure function over the article list already in `AppShell`. No backend, no new query, no external data. Given the server-supplied article order (publishedAt desc) and a `dayOfYear`:
+
+1. **Cover** = `articles[0]`. Always exactly one.
+2. **Seconds** = `articles[1..1+maxSeconds]` (default `maxSeconds = 3`).
+3. **Sections** = remaining articles, grouped by `feedTitle`. A group becomes a section when it has at least `minSectionItems` (default 2). Each section caps at `maxSectionItems` (default 5). Items beyond the cap fall through to *Later*.
+4. **Later** = everything else — singleton groups + per-section overflow — sorted by `publishedAt` desc.
+5. **Section order** is alphabetic by `feedTitle`, then **rotated by `dayOfYear`** (`(dayOfYear % sections.length)`). Same dataset on the same calendar day → same edition; different day → predictably reshuffled section sequence. No randomness.
+
+`dayOfYear` is computed client-side after hydration via `useEffect` (same approach as the masthead stamp) so SSR/CSR rendering doesn't disagree on the rotation.
+
+Unit-tested in `composeIssue.test.ts` (9 cases): empty input, cover-only, seconds cap, group-into-section threshold, item-cap overflow into later, section rotation across `dayOfYear` 0/1/2/3 (wraps), later sorted desc, `dayOfYear` boundaries.
+
+### What changed
+
+- `src/components/edition/composeIssue.ts` (new) — composer + `dayOfYear`.
+- `src/components/edition/composeIssue.test.ts` (new) — 9 unit tests, all passing.
+- `src/components/edition/EditionIssue.tsx` (new) — the front page. Hosts `CoverStory`, `StoryCard` (variants `second` + `section`), `EditionSectionBlock`, `LaterTray`, `Dateline`, `RelativeTime`, and an inline `EditionEmpty` for the no-feeds / no-articles states. All composition done client-side from `AppShell`'s existing `articles`.
+- `src/components/layout/AppShell.tsx` (+24 / −2) — desktop renders `<EditionIssue>` full-width when **unfiltered + nothing open** (`!selectedFeedId && !isStarredView && !search.results && !selectedArticleId`); otherwise the existing three-pane `ResizablePanelGroup` is shown. Mobile and reader behavior preserved verbatim.
+
+### Editorial guardrails respected
+
+- **No card boxes.** Modules separate via hairline rules (`--edition-rule` and `--edition-rule-strong`), section eyebrows, vertical rhythm.
+- **No images required.** `ArticleWithFeed` has no image data, so the editorial fallback *is* the design — large serif headline + dateline + rule. Strongly intentional, not a stub.
+- **Source transparency** on every module: feed name appears in the cover eyebrow, in every story-card eyebrow, on each later-tray row, and as the section header itself.
+- **Read-state dimming** via `--edition-ink-muted` instead of strikethrough, preserving editorial tone.
+- **No new dependency.** Uses existing `date-fns`, Lucide, `cn`. No font network call.
+- **Backend invariant intact:** `src/actions/`, `src/app/api/`, `src/lib/`, `prisma/`, `package.json`, `package-lock.json` untouched.
+
+### What stayed stable
+
+- Sidebar feed selection, starred view, search results, article-open state all still flow through the existing three-pane layout. Nothing about the existing reader/list/sidebar wiring changed.
+- Mobile layout untouched (Phase 6).
+- Reader component untouched (Phase 5).
+- Command palette, refresh, mark-all, OPML, feed management, /health, /stats, /settings all reachable as before.
+
+### Validation results
+
+- `npm run lint` — clean.
+- `npm test` — 184 passed / 1 skipped across 22 files (added 9 composer tests).
+- `npm run build` — succeeds; `/` first-load JS 252 kB (was 251 kB Phase 3).
+- `npm audit` — 0 vulnerabilities.
+- `git diff --stat main..HEAD -- src/actions/ src/app/api/ src/lib/ prisma/ package.json package-lock.json` — empty.
+
+### Browser observations (1440×900 desktop, headless Chrome)
+
+- `/` renders the Today Edition front page: rust **COVER · BBC News** eyebrow, large serif cover headline, mono dateline, hairline rule, three secondary stories in a `md:grid-cols-3` row, then a **HACKER NEWS** section ribbon below another rule. Reads as an editorial issue, not a card grid.
+- `/health`, `/settings`, `/stats` all return HTTP 200 and visually unchanged.
+- Mobile (414×820) returns the existing single-pane mobile layout — desktop EditionIssue is gated `hidden md:block` so phones still see the canonical mobile shell. Phase 6 will redesign mobile.
+- Clicking a story selects the article (existing `handleSelectArticle`), which switches the desktop view to the three-pane reader as designed. Re-opening Today via the masthead nameplate (`/`) returns to the issue.
+
+### Screenshots
+
+- `phase4-issue-grid.png` — desktop unfiltered `/` showing masthead + cover + seconds row + section ribbon.
+- `phase4-cover-story.png` — taller capture (1440×1400) showing the cover + seconds + first section in full.
+- `phase4-mobile-check.png` — confirms mobile layout is unchanged at 414×820.
+
+### Deviations from plan
+
+- The original Phase 4 row mentioned hero images with duotone. `ArticleWithFeed` has no image field and the constraint forbids new server actions / API routes / lib changes, so images are intentionally not introduced. The editorial fallback (serif + rule + dateline) is the design. If images become a goal, that is a separate canonical-Feed proposal (extend the article shape upstream).
+- `LaterTray` is rendered always-expanded, not collapsible. Collapsibility is a Phase 7 secondary-state polish, not Phase 4.
+- Patterns A–D (layout grammar by `dayOfYear % patternCount`) collapsed to **one** pattern in this phase — the cover + seconds + section + later structure. The day-of-year rotation lives in section ordering instead. Multiple layout patterns are deferred to Phase 7.
+- The default-desktop-only mounting strategy keeps the existing three-pane fully reachable: any feed click, starred toggle, search, or selected article falls back to the canonical layout. This was the simplest way to preserve the brief's "keep three-pane reachable" requirement without reskinning the reader (Phase 5).
+
+### Follow-ups carried into later phases
+
+- Phase 5: open the reader as a slide-over **without** falling back to the three-pane, so the issue stays visible behind it.
+- Phase 6: mobile issue layout (sticky masthead, bottom tab bar, vertical rhythm).
+- Phase 7: secondary states — empty edition reward, low-volume Pattern E, error skeleton, loading skeleton, multi-pattern layout grammar.
+- Phase 8: accessibility audit on the issue grid (landmarks, headings, focus order, contrast on rust on warm-dark).
+- Optional Phase 9: `emil-design-eng` polish on hover transitions, focus-visible rings, drop-cap rendering on the cover dek (currently no dek paragraph because article descriptions aren't in `ArticleWithFeed`).
+
 ## Risks and Tradeoffs
 
 - **Magazine-pastiche risk.** The single biggest risk per `gpt-taste`. Mitigation: serif + drop cap + rust accent + hairline rules are *intentionally specific* and verified against Apple News / Flipboard *not* to copy them; layout grammar is bounded to four patterns; an "edition stamp" with the actual day-of-year is allowed (it is authentic) but no other meta-labels per the skill's ban.
@@ -397,6 +474,9 @@ The concept ships as a candidate finalist if:
 
 | View                     | Screenshot | Notes |
 | ------------------------ | ---------- | ----- |
+| Desktop overview (issue grid) | `phase4-issue-grid.png` | Cover, seconds row, section ribbon below — Phase 4. |
+| Desktop full cover + section | `phase4-cover-story.png` | Tall capture showing cover + seconds + section in one frame — Phase 4. |
+| Mobile check (unchanged) | `phase4-mobile-check.png` | Mobile gated to existing layout; redesign in Phase 6. |
 | Desktop overview (Pattern A — Broadsheet) | TBD (Phase 9) | Cover, seconds, two sections, later tray closed. |
 | Desktop overview (Pattern D — Editorial vertical) | TBD (Phase 9) | Demonstrates layout grammar variety. |
 | Reader slide-over open | TBD (Phase 9) | Slide-over over the issue; issue dimmed beneath. |

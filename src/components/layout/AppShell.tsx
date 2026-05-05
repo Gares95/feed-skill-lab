@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Menu } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   ResizablePanelGroup,
@@ -38,6 +39,7 @@ import { useSwipe } from "@/hooks/use-swipe";
 import { formatCustomRangeParam, type DateRange } from "@/lib/date-range";
 import { CommandPalette } from "@/components/CommandPalette";
 import { EditionMasthead } from "@/components/edition/EditionMasthead";
+import { EditionIssue } from "@/components/edition/EditionIssue";
 
 interface AppShellProps {
   feeds: FeedWithCount[];
@@ -469,11 +471,38 @@ export function AppShell({
         </div>
       </div>
 
-      {/* Desktop: three-pane resizable layout */}
+      {/* Desktop: Today Edition front page when unfiltered + nothing open */}
+      {(() => {
+        const showEdition =
+          !selectedFeedId &&
+          !isStarredView &&
+          !search.results &&
+          !selectedArticleId;
+        if (!showEdition) return null;
+        return (
+          <div className="hidden h-full md:block">
+            <EditionIssue
+              articles={displayedArticles}
+              selectedArticleId={selectedArticleId}
+              onSelectArticle={handleSelectArticle}
+              hasFeeds={feeds.length > 0}
+            />
+          </div>
+        );
+      })()}
+
+      {/* Desktop: three-pane resizable layout (filtered view / article open) */}
       <ResizablePanelGroup
         orientation="horizontal"
         id="app-layout"
-        className="hidden md:flex"
+        className={cn(
+          "hidden md:flex",
+          (!selectedFeedId &&
+            !isStarredView &&
+            !search.results &&
+            !selectedArticleId) &&
+            "md:hidden",
+        )}
       >
         <ResizablePanel
           id="sidebar"
