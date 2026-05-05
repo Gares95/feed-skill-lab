@@ -517,3 +517,49 @@
 .edition-scroll::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+/* Edition story detail — host for the reader inside the Today Edition
+   surface. Neutralizes ReadingPane's internal scroll/chrome so the back-bar,
+   reader, and "Up next" share a single scroll context, and re-skins the
+   article header in the editorial register. */
+.edition-story > [role="region"][aria-label="Reading pane"] {
+  display: block;
+  height: auto;
+}
+
+.edition-story [data-slot="scroll-area"],
+.edition-story [data-slot="scroll-area-viewport"] {
+  height: auto;
+  overflow: visible;
+  flex: none;
+}
+
+/* Drop the reader's hairline toolbar border — the back-bar already provides
+   a divider above. */
+.edition-story > [role="region"] > div:first-child {
+  border-bottom: 0;
+}
+
+/* Editorial typography for the in-detail article header. */
+.edition-story header {
+  border-bottom-color: var(--edition-rule);
+}
+
+.edition-story header h1 {
+  font-family: var(--font-serif-display);
+  font-weight: 600;
+  letter-spacing: -0.018em;
+  line-height: 1.1;
+  text-wrap: balance;
+  color: var(--edition-ink);
+}
+
+.edition-story header p:first-child {
+  color: var(--edition-accent);
+  letter-spacing: 0.12em;
+  font-weight: 500;
+}
+
+.edition-story .article-content {
+  color: var(--edition-ink);
+}

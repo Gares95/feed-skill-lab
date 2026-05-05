@@ -40,6 +40,7 @@ import { formatCustomRangeParam, type DateRange } from "@/lib/date-range";
 import { CommandPalette } from "@/components/CommandPalette";
 import { EditionMasthead } from "@/components/edition/EditionMasthead";
 import { EditionIssue } from "@/components/edition/EditionIssue";
+import { EditionStoryDetail } from "@/components/edition/EditionStoryDetail";
 
 interface AppShellProps {
   feeds: FeedWithCount[];
@@ -471,14 +472,29 @@ export function AppShell({
         </div>
       </div>
 
-      {/* Desktop: Today Edition front page when unfiltered + nothing open */}
+      {/* Desktop: Today Edition surfaces — issue front page or story detail */}
       {(() => {
-        const showEdition =
-          !selectedFeedId &&
-          !isStarredView &&
-          !search.results &&
-          !selectedArticleId;
-        if (!showEdition) return null;
+        const inEditionMode =
+          !selectedFeedId && !isStarredView && !search.results;
+        if (!inEditionMode) return null;
+        if (selectedArticleId) {
+          return (
+            <div className="hidden h-full md:block">
+              <EditionStoryDetail
+                article={currentArticle}
+                isLoading={isArticleLoading}
+                onToggleStar={handleToggleStar}
+                onBack={() => {
+                  setSelectedArticleId(null);
+                  setCurrentArticle(null);
+                }}
+                selectedArticleId={selectedArticleId}
+                articles={displayedArticles}
+                onSelectArticle={handleSelectArticle}
+              />
+            </div>
+          );
+        }
         return (
           <div className="hidden h-full md:block">
             <EditionIssue
@@ -491,16 +507,15 @@ export function AppShell({
         );
       })()}
 
-      {/* Desktop: three-pane resizable layout (filtered view / article open) */}
+      {/* Desktop: three-pane resizable layout (filtered view / search) */}
       <ResizablePanelGroup
         orientation="horizontal"
         id="app-layout"
         className={cn(
           "hidden md:flex",
-          (!selectedFeedId &&
+          !selectedFeedId &&
             !isStarredView &&
             !search.results &&
-            !selectedArticleId) &&
             "md:hidden",
         )}
       >

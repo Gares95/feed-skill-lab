@@ -231,7 +231,7 @@ Phase 1 lands directly on `concept/03-today-edition` (docs only). Each subsequen
 | 2 | `concept/03-today-edition-02-foundation` | Design-system / visual foundation. Extend `globals.css` with paper-tinted warm-dark, rust accent, system-serif var, drop-cap utility, rule and editorial spacing scales. Add `Eyebrow`, `Rule`, `EditionStamp`, `Dek` primitives. No layout change yet. **No Google Font addition** — system serif stack only. **Status: implemented (uncommitted) on this branch.** |
 | 3 | `concept/03-today-edition-03-shell` | Edition shell + masthead. Mount `EditionMasthead` above the existing layout on desktop; nameplate, edition stamp (date + day-of-year), counters (unread/starred/sources), command-palette launcher pill, refresh and mark-all actions, nav links to Starred/Health/Stats/Settings. Three-pane layout temporarily preserved beneath the masthead — content modules and `IssueGrid` are Phase 4. Edition composer + unit tests deferred to Phase 4. **Status: implemented (uncommitted) on this branch.** |
 | 4 | `concept/03-today-edition-04-issue-grid` | Edition composer (component-local, pure client, read-only, deterministic) and issue content modules: `EditionIssue` with cover + seconds row + per-feed section ribbons (alphabetic + day-of-year rotation) + later tray. Unit tests for cover selection, seconds cap, section grouping, item-cap overflow, day-rotation wrap, later-sort. **Status: implemented (uncommitted) on this branch.** Patterns A–D layout grammar deferred to Phase 7; hero-image / duotone / drop cap on dek deferred (no description data in `ArticleWithFeed`). |
-| 5 | `concept/03-today-edition-05-reader` | Reader slide-over hosts existing `ReadingPane` verbatim. `/feeds` page mounts existing sidebar components in a single-pane editorial layout. Focus restore on slide-over close. |
+| 5 | `concept/03-today-edition-05-reader` | Edition-native article-detail surface (`EditionStoryDetail`) hosts existing `ReadingPane` verbatim, with sticky "Back to edition" bar, story-position stamp, "Up next" module, focus management, and Esc-to-back. `.edition-story` CSS scope re-skins `ArticleHeader` editorially without touching the shared component. **Status: implemented (uncommitted) on this branch.** `/feeds` page deferred to a later phase. |
 | 6 | `concept/03-today-edition-06-mobile` | Mobile issue: vertical scroll, sticky masthead, pull-to-refresh, bottom tab bar (Today / Feeds / Search). Gesture wiring with reduced-motion fallback. |
 | 7 | `concept/03-today-edition-07-secondary-states` | Empty edition, low-volume Pattern E, error state, loading skeletons matching the issue grid. Palette entries updated. |
 | 8 | `concept/03-today-edition-08-closure` | Full validation (lint, test, build, audit), browser review desktop+mobile, contrast audit on rust-on-warm-dark, reduced-motion audit, backend-invariant verification, screenshots, concept-doc decision. |
@@ -451,6 +451,73 @@ After review, two visual issues were caught in the masthead screenshot and fixed
 - Phase 6: mobile issue layout (sticky masthead, bottom tab bar, vertical rhythm).
 - Phase 7: secondary states — empty edition reward, low-volume Pattern E, error skeleton, loading skeleton, multi-pattern layout grammar.
 - Phase 8: accessibility audit on the issue grid (landmarks, headings, focus order, contrast on rust on warm-dark).
+
+## Phase 5 Implementation Notes
+
+Done on child branch `concept/03-today-edition-05-reader`. Scope: article-detail surface — make opening a story from the issue feel native to Today Edition instead of dropping the user back into the canonical three-pane.
+
+### What changed
+
+- **New component** `src/components/edition/EditionStoryDetail.tsx` (client). Editorial detail surface that takes over the desktop main area when the user is in edition mode (`!selectedFeedId && !isStarredView && !search.results`) **and** an article is selected. Anatomy:
+  - Sticky top bar inside the surface: small **"← Back to edition"** button on the left (rust accent on hover/focus, eyebrow type), a mono **`NN / TT` story-position stamp** on the right derived from the article's index in the displayed list. Bar uses `bg-[--edition-paper]/90 backdrop-blur` and a hairline `--edition-rule` divider.
+  - Body: hosts the existing `<ReadingPane>` verbatim, wrapped in an `.edition-story` scope so internal scroll/chrome is neutralized and a single edition-styled scroll context is shared with the back-bar and the "Up next" module.
+  - "Up next" module at the end of the article: editorial card with eyebrow + serif headline + feed dateline that selects the next article in the displayed list. Hidden when there is no next.
+  - Focus management: the back button receives focus on mount via `useEffect` so keyboard users don't get stranded on the prior trigger. `Escape` (when not inside an input/textarea/contenteditable) returns to the edition.
+- **New CSS scope** `.edition-story` in `src/app/globals.css`. Neutralizes the reader's internal `<ScrollArea>` (`height: auto; overflow: visible`), drops the typography-toolbar's hairline border (the back-bar already provides one), and re-skins `ArticleHeader` in the editorial register: serif `--font-serif-display` on `<h1>`, rust accent on the feed eyebrow, edition rule color on the header underline. Reader content adopts `--edition-ink`.
+- **Modified** `src/components/layout/AppShell.tsx`. The desktop branching now:
+  - Renders `<EditionIssue>` when in edition mode with no article selected.
+  - Renders `<EditionStoryDetail>` (full-width, `hidden md:block`) when in edition mode with an article selected — passes `currentArticle`, `isArticleLoading`, `handleToggleStar`, `displayedArticles`, `selectedArticleId`, `handleSelectArticle`, and an `onBack` that clears `selectedArticleId` + `currentArticle`.
+  - Falls back to the three-pane `ResizablePanelGroup` only for filtered/starred/search modes (`selectedFeedId || isStarredView || search.results`). Selecting an article in edition mode no longer drops the user into three-pane.
+
+### What stayed stable
+
+- `ReadingPane`, `ArticleHeader`, `TypographySettings`, highlight semantics, reader-mode extraction, star/open-original/highlight popover — all untouched. Their behavior survives intact inside the new wrapper.
+- Article fetching (`/api/articles/[id]`), sanitization, `dangerouslySetInnerHTML` policy, server actions, Prisma, lib utilities, `package.json`, `package-lock.json` — untouched.
+- Mobile layout unchanged. Mobile reader is still the existing single-pane flow; the deep mobile pass is Phase 6.
+- Three-pane fallback fully reachable: clicking a sidebar feed, toggling Starred, or running a search restores the canonical three-pane shell. Nothing was removed.
+- All existing keyboard shortcuts (`j`/`k`, `s`, `m`, `r`, `Shift+R`, `o`/Enter) still operate via the unchanged `useKeyboardShortcuts` hook. The new `Escape` handler only fires when no editable element has focus, so it does not collide with input UX.
+
+### Validation results
+
+- `npm run lint` — clean.
+- `npm run test` — **184 passed, 1 skipped** (23 files).
+- `npm run build` — succeeds. `/` route ~138 kB.
+- `npm audit` — **0 vulnerabilities**.
+- `git diff --stat main..HEAD -- src/actions/ src/app/api/ src/lib/ prisma/ package.json package-lock.json` — empty. Backend invariant holds.
+
+### Browser observations (1440×900 desktop, headless Chrome)
+
+- **Desktop edition view** unchanged from Phase 4 — masthead + issue grid render as before.
+- **Click cover story** → the issue is replaced in-place by the editorial detail surface. Masthead stays. Back-bar appears with focus on the back button. Article title renders in serif (`--font-serif-display`), eyebrow is rust, dateline is mono — register matches the issue. Reader-mode toggle, Star, Open original, and the typography settings cog are all present and operable.
+- **Reader-mode toggle** flips state without leaving the editorial surface. Same behavior as canonical (`extractArticle`, fade-in cross-fade) — no regression.
+- **"Up next" module** at the end of the article correctly advances to the next article in the displayed list and re-mounts the detail surface for the new article.
+- **Back to edition** button (and `Escape`) clears `selectedArticleId` + `currentArticle`, restoring the issue grid in place. Issue scroll position is reset (re-mount), which is acceptable for this concept; preserving exact scroll position is a Phase 9 polish item.
+- **Three-pane fallback**: clicking the masthead "Starred" pill switches to the canonical sidebar/list/reader as before. Confirmed in `phase5-three-pane-fallback.png` (kept locally; not committed to the gallery).
+- **No console errors** during the smoke. `suppressHydrationWarning` on relative-time spans continues to silence the expected SSR/CSR difference.
+
+### Screenshots
+
+| File | Notes |
+| --- | --- |
+| `phase5-story-detail.png` | Desktop story detail at 1440×900: masthead preserved, sticky back-bar with rust "Back to edition" + `01 / 100` story-position stamp, serif article title in editorial register, "Up next" module at bottom. |
+| `phase5-story-detail-reader-mode.png` | Same surface with Reader mode toggled — verifies all reader-mode controls survive inside the editorial wrapper. |
+
+(Both under `docs/design-lab/screenshots/concepts/03-today-edition/`.)
+
+### Deviations from plan
+
+- The brief allowed "slide-over, drawer, or full-width story view layered from the issue". Implemented as a **full-width takeover within the main area** rather than a layered slide-over. Reasons: (1) the masthead already provides the layered "frame" continuity; (2) full-width gives the reader content the comfortable measure that a side-drawer would compress; (3) the existing `ReadingPane` uses an internal `<ScrollArea>` that fights any nested scrolling we'd need for a true overlay. A literal slide-over with the issue dimmed beneath is still on the table for Phase 9 polish if the takeover feels too abrupt.
+- `ArticleHeader` is restyled via `.edition-story` CSS scoping, not via a new `variant` prop. Keeps the shared component byte-identical and reversible — removing the `.edition-story` wrapper restores the canonical reader instantly.
+- Issue scroll position is not preserved on Back. Cheap to add later (cache `scrollTop` in a ref on the issue container) but out of scope for this phase.
+
+### Follow-ups carried into later phases
+
+- Phase 6: mobile reader inherits Phase 5 affordances where they translate; bottom tab bar provides the "back to edition" gesture.
+- Phase 7: empty/loading/error states for the detail surface (article fetch fails, reader extraction fails, etc.) styled to the editorial register.
+- Phase 8: a11y audit specifically on the detail — Escape-to-back, focus restoration on Back, `aria-current` on Up Next, contrast of the rust accent at small sizes inside the back-bar.
+- Optional Phase 9: preserve issue scroll position across Back; consider a literal slide-over with dimmed issue if the takeover feels jarring.
+- Phase 7: secondary states — empty edition reward, low-volume Pattern E, error skeleton, loading skeleton, multi-pattern layout grammar.
+- Phase 8: accessibility audit on the issue grid (landmarks, headings, focus order, contrast on rust on warm-dark).
 - Optional Phase 9: `emil-design-eng` polish on hover transitions, focus-visible rings, drop-cap rendering on the cover dek (currently no dek paragraph because article descriptions aren't in `ArticleWithFeed`).
 
 ## Risks and Tradeoffs
@@ -486,7 +553,8 @@ The concept ships as a candidate finalist if:
 | Mobile check (unchanged) | `phase4-mobile-check.png` | Mobile gated to existing layout; redesign in Phase 6. |
 | Desktop overview (Pattern A — Broadsheet) | TBD (Phase 9) | Cover, seconds, two sections, later tray closed. |
 | Desktop overview (Pattern D — Editorial vertical) | TBD (Phase 9) | Demonstrates layout grammar variety. |
-| Reader slide-over open | TBD (Phase 9) | Slide-over over the issue; issue dimmed beneath. |
+| Reader slide-over open | `phase5-story-detail.png` | Edition-native detail surface — sticky back-bar, serif title, story-position stamp, "Up next" — Phase 5. |
+| Reader detail in reader-mode | `phase5-story-detail-reader-mode.png` | Same surface with `extractArticle` reader-mode toggled on — Phase 5. |
 | Section ribbon close-up | TBD (Phase 9) | Hairline rule, eyebrow, item list — no card boxes. |
 | Later tray expanded | TBD (Phase 9) | Dense small-print recovery view. |
 | Empty edition | TBD (Phase 9) | "You finished today's edition" + Yesterday link. |
