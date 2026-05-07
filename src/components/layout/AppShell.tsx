@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Menu } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   ResizablePanelGroup,
@@ -37,6 +38,11 @@ import { useCommandPalette } from "@/hooks/use-command-palette";
 import { useSwipe } from "@/hooks/use-swipe";
 import { formatCustomRangeParam, type DateRange } from "@/lib/date-range";
 import { CommandPalette } from "@/components/CommandPalette";
+import { EditionMasthead } from "@/components/edition/EditionMasthead";
+import { EditionIssue } from "@/components/edition/EditionIssue";
+import { EditionStoryDetail } from "@/components/edition/EditionStoryDetail";
+import { EditionMobileMasthead } from "@/components/edition/EditionMobileMasthead";
+import { EditionMobileTabBar } from "@/components/edition/EditionMobileTabBar";
 
 interface AppShellProps {
   feeds: FeedWithCount[];
@@ -349,7 +355,7 @@ export function AppShell({
       : "All Articles";
 
   return (
-    <div className="h-dvh w-screen overflow-hidden">
+    <div className="edition-issue flex h-dvh w-screen flex-col overflow-hidden">
       <a
         href="#main-content"
         onClick={(e) => {
@@ -360,9 +366,107 @@ export function AppShell({
       >
         Skip to main content
       </a>
-      <main id="main-content" tabIndex={-1} className="h-full outline-none">
-      {/* Mobile: stacked single-pane layout */}
-      <div className="flex h-full flex-col md:hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+      <EditionMasthead
+        totalUnread={totalUnread}
+        starredCount={starredCount}
+        feedCount={feeds.length}
+        isRefreshing={isRefreshing || isPending}
+        isStarredView={isStarredView}
+        onRefreshAll={handleRefreshAll}
+        onMarkAllRead={handleMarkAllRead}
+        onOpenPalette={() => setPaletteOpen(true)}
+        onSelectStarred={handleSelectStarred}
+        dateRange={dateRange}
+        onDateRangeChange={handleDateRangeChange}
+        showDateControl={
+          !selectedFeedId && !isStarredView && !search.results
+        }
+      />
+      {!selectedFeedId &&
+        !isStarredView &&
+        !search.results &&
+        !selectedArticleId &&
+        mobileView !== "sidebar" && (
+          <EditionMobileMasthead
+            isRefreshing={isRefreshing || isPending}
+            onRefreshAll={handleRefreshAll}
+            onOpenPalette={() => setPaletteOpen(true)}
+            dateRange={dateRange}
+            onDateRangeChange={handleDateRangeChange}
+          />
+        )}
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="min-h-0 flex-1 outline-none"
+      >
+      {/* Mobile: edition-native layout when unfiltered + in default mode. */}
+      {(() => {
+        const inEditionMode =
+          !selectedFeedId && !isStarredView && !search.results;
+        if (!inEditionMode) return null;
+        if (mobileView === "sidebar") {
+          return (
+            <div className="flex h-full flex-col md:hidden pt-[env(safe-area-inset-top)] pb-[calc(env(safe-area-inset-bottom)+3.75rem)]">
+              <Sidebar
+                feeds={feeds}
+                folders={folders}
+                selectedFeedId={selectedFeedId}
+                totalUnread={totalUnread}
+                starredCount={starredCount}
+                onSelectFeed={handleSelectFeed}
+                onSelectStarred={handleSelectStarred}
+                onDeleteFeed={handleDeleteFeed}
+                onRefreshFeed={handleRefreshFeed}
+                onUpdateFeed={refresh}
+                onRefreshAll={handleRefreshAll}
+                onFeedAdded={refresh}
+                isStarredView={isStarredView}
+                isRefreshing={isRefreshing || isPending}
+              />
+            </div>
+          );
+        }
+        if (selectedArticleId) {
+          return (
+            <div className="h-full md:hidden">
+              <EditionStoryDetail
+                article={currentArticle}
+                isLoading={isArticleLoading}
+                onToggleStar={handleToggleStar}
+                onBack={() => {
+                  setSelectedArticleId(null);
+                  setCurrentArticle(null);
+                  setMobileView("list");
+                }}
+                selectedArticleId={selectedArticleId}
+                articles={displayedArticles}
+                onSelectArticle={handleSelectArticle}
+              />
+            </div>
+          );
+        }
+        return (
+          <div className="h-full md:hidden">
+            <EditionIssue
+              articles={displayedArticles}
+              selectedArticleId={selectedArticleId}
+              onSelectArticle={handleSelectArticle}
+              hasFeeds={feeds.length > 0}
+              onRefreshAll={handleRefreshAll}
+              isRefreshing={isRefreshing || isPending}
+            />
+          </div>
+        );
+      })()}
+
+      {/* Mobile: stacked single-pane layout (filter / starred / search fallback) */}
+      <div
+        className={cn(
+          "flex h-full flex-col md:hidden pt-[env(safe-area-inset-top)] pb-[calc(env(safe-area-inset-bottom)+3.75rem)]",
+          !selectedFeedId && !isStarredView && !search.results && "hidden",
+        )}
+      >
         <div className="flex h-14 shrink-0 items-center gap-2 border-b px-3">
           {mobileView === "sidebar" ? (
             <Button
@@ -453,11 +557,54 @@ export function AppShell({
         </div>
       </div>
 
-      {/* Desktop: three-pane resizable layout */}
+      {/* Desktop: Today Edition surfaces — issue front page or story detail */}
+      {(() => {
+        const inEditionMode =
+          !selectedFeedId && !isStarredView && !search.results;
+        if (!inEditionMode) return null;
+        if (selectedArticleId) {
+          return (
+            <div className="hidden h-full md:block">
+              <EditionStoryDetail
+                article={currentArticle}
+                isLoading={isArticleLoading}
+                onToggleStar={handleToggleStar}
+                onBack={() => {
+                  setSelectedArticleId(null);
+                  setCurrentArticle(null);
+                }}
+                selectedArticleId={selectedArticleId}
+                articles={displayedArticles}
+                onSelectArticle={handleSelectArticle}
+              />
+            </div>
+          );
+        }
+        return (
+          <div className="hidden h-full md:block">
+            <EditionIssue
+              articles={displayedArticles}
+              selectedArticleId={selectedArticleId}
+              onSelectArticle={handleSelectArticle}
+              hasFeeds={feeds.length > 0}
+              onRefreshAll={handleRefreshAll}
+              isRefreshing={isRefreshing || isPending}
+            />
+          </div>
+        );
+      })()}
+
+      {/* Desktop: three-pane resizable layout (filtered view / search) */}
       <ResizablePanelGroup
         orientation="horizontal"
         id="app-layout"
-        className="hidden md:flex"
+        className={cn(
+          "hidden md:flex",
+          !selectedFeedId &&
+            !isStarredView &&
+            !search.results &&
+            "md:hidden",
+        )}
       >
         <ResizablePanel
           id="sidebar"
@@ -525,6 +672,25 @@ export function AppShell({
         </ResizablePanel>
       </ResizablePanelGroup>
       </main>
+      <EditionMobileTabBar
+        active={mobileView === "sidebar" ? "feeds" : "today"}
+        isStarredView={isStarredView}
+        onSelectToday={() => {
+          if (selectedArticleId) {
+            setSelectedArticleId(null);
+            setCurrentArticle(null);
+          }
+          if (isStarredView || selectedFeedId) {
+            handleSelectFeed(null);
+          }
+          setMobileView("list");
+        }}
+        onSelectFeeds={() => {
+          setMobileView("sidebar");
+        }}
+        onSelectStarred={handleSelectStarred}
+        onOpenPalette={() => setPaletteOpen(true)}
+      />
       <CommandPalette
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
