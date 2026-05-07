@@ -156,9 +156,9 @@ export function Sidebar({
 
   return (
     <nav aria-label="Feeds" className="flex h-full flex-col">
-      <div className="flex h-11 items-center justify-between gap-2 border-b px-4">
-        <h1 className="text-sm font-semibold tracking-tight">Feed</h1>
-        <div className="flex items-center gap-0.5">
+      <div className="flex h-12 items-center justify-between gap-2 px-4 pt-1">
+        <h1 className="text-[13px] font-medium uppercase tracking-[0.16em] text-muted-foreground">Feed</h1>
+        <div className="flex items-center gap-0.5 opacity-60 transition-opacity duration-[var(--motion-fast)] ease-[var(--ease-out-quint)] focus-within:opacity-100 hover:opacity-100">
           <Button
             variant="ghost"
             size="icon"
@@ -194,10 +194,11 @@ export function Sidebar({
           <button
             onClick={() => onSelectFeed(null)}
             className={cn(
-              "flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+              "relative flex w-full cursor-pointer items-center gap-2 rounded-md py-1.5 pr-2 text-left text-sm transition-[color,background-color,padding-left] duration-[var(--motion-fast)] ease-[var(--ease-out-quint)] outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+              "before:absolute before:left-0 before:top-1/2 before:h-4 before:w-[2px] before:-translate-y-1/2 before:rounded-r-sm before:bg-primary before:transition-opacity before:duration-[var(--motion-fast)] before:ease-[var(--ease-out-quint)]",
               !selectedFeedId && !isStarredView
-                ? "bg-accent text-accent-foreground"
-                : "hover:bg-accent/50 text-foreground"
+                ? "bg-accent/40 text-foreground pl-3 before:opacity-100"
+                : "pl-2 text-foreground hover:bg-accent/30 before:opacity-0"
             )}
           >
             <Newspaper className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -213,10 +214,11 @@ export function Sidebar({
           <button
             onClick={onSelectStarred}
             className={cn(
-              "flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+              "relative flex w-full cursor-pointer items-center gap-2 rounded-md py-1.5 pr-2 text-left text-sm transition-[color,background-color,padding-left] duration-[var(--motion-fast)] ease-[var(--ease-out-quint)] outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+              "before:absolute before:left-0 before:top-1/2 before:h-4 before:w-[2px] before:-translate-y-1/2 before:rounded-r-sm before:bg-primary before:transition-opacity before:duration-[var(--motion-fast)] before:ease-[var(--ease-out-quint)]",
               isStarredView
-                ? "bg-accent text-accent-foreground"
-                : "hover:bg-accent/50 text-foreground"
+                ? "bg-accent/40 text-foreground pl-3 before:opacity-100"
+                : "pl-2 text-foreground hover:bg-accent/30 before:opacity-0"
             )}
           >
             <Star className="h-4 w-4 shrink-0 text-star" />
@@ -336,7 +338,7 @@ export function Sidebar({
         </div>
       </ScrollArea>
 
-      <div className="flex items-center gap-1 border-t px-3 py-1.5">
+      <div className="flex items-center gap-1 px-3 py-2 opacity-50 transition-opacity duration-[var(--motion-fast)] ease-[var(--ease-out-quint)] focus-within:opacity-100 hover:opacity-100">
         <Link
           href="/health"
           className={cn(
@@ -346,7 +348,7 @@ export function Sidebar({
           aria-label="Feed health dashboard"
           title="Feed health dashboard"
         >
-          <Activity className="h-4 w-4" aria-hidden="true" />
+          <Activity className="h-3.5 w-3.5" aria-hidden="true" />
         </Link>
         <Link
           href="/stats"
@@ -357,7 +359,7 @@ export function Sidebar({
           aria-label="Reading stats"
           title="Reading stats"
         >
-          <BarChart3 className="h-4 w-4" aria-hidden="true" />
+          <BarChart3 className="h-3.5 w-3.5" aria-hidden="true" />
         </Link>
         <Link
           href="/settings"
@@ -368,7 +370,7 @@ export function Sidebar({
           aria-label="Settings"
           title="Settings"
         >
-          <Settings className="h-4 w-4" aria-hidden="true" />
+          <Settings className="h-3.5 w-3.5" aria-hidden="true" />
         </Link>
       </div>
 

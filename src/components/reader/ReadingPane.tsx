@@ -187,24 +187,31 @@ export function ReadingPane({ article, isLoading = false, onToggleStar }: Readin
       return <ReadingPaneSkeleton maxWidth={config.maxWidth} />;
     }
     return (
-      <div role="region" aria-label="Reading pane" className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center text-muted-foreground">
-        <BookOpen className="h-8 w-8" aria-hidden="true" />
-        <div className="space-y-1">
-          <p className="text-sm font-medium text-foreground">Nothing selected</p>
-          <p className="text-xs">Pick an article from the list to start reading.</p>
+      <div role="region" aria-label="Reading pane" className="flex h-full flex-col items-center justify-center gap-4 px-8 text-center">
+        <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground/80">
+          Reading lamp
+        </span>
+        <BookOpen className="h-6 w-6 text-muted-foreground/70" aria-hidden="true" />
+        <div className="space-y-1.5 max-w-[32ch]">
+          <p className="text-[15px] font-semibold tracking-tight text-foreground">
+            Nothing selected
+          </p>
+          <p className="text-[13px] leading-relaxed text-muted-foreground">
+            Pick an article from the list to start reading.
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div role="region" aria-label="Reading pane" className="flex h-full flex-col">
-      <div className="flex h-8 items-center justify-end gap-1 border-b px-3">
+    <div role="region" aria-label="Reading pane" className="relative flex h-full flex-col">
+      <div className="pointer-events-none absolute right-3 top-3 z-30 opacity-60 transition-opacity duration-[var(--motion-fast)] ease-[var(--ease-out-quint)] hover:opacity-100 focus-within:opacity-100 [&>*]:pointer-events-auto">
         <TypographySettings config={config} onUpdate={update} />
       </div>
       <ScrollArea className="flex-1">
         <article
-          className="mx-auto px-8 py-8"
+          className="mx-auto px-5 pb-16 pt-8 sm:px-8 sm:pt-14"
           style={{ maxWidth: `${config.maxWidth}px` }}
         >
           <ArticleHeader
@@ -229,7 +236,7 @@ export function ReadingPane({ article, isLoading = false, onToggleStar }: Readin
             key={`${article.id}:${readerMode ? "reader" : "feed"}`}
             ref={contentRef}
             onMouseUp={handleMouseUp}
-            className="article-content mt-6 animate-in fade-in-0 duration-[var(--motion-base)] ease-[var(--ease-out-quint)]"
+            className="article-content mt-2 animate-in fade-in-0 duration-[var(--motion-base)] ease-[var(--ease-out-quint)]"
             style={{
               fontSize: `${config.fontSize}px`,
               lineHeight: config.lineHeight,
@@ -240,11 +247,13 @@ export function ReadingPane({ article, isLoading = false, onToggleStar }: Readin
             }}
           />
           {highlights.length > 0 && !readerMode && (
-            <div className="mt-10 border-t border-border pt-6">
-              <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Highlights ({highlights.length})
+            <div className="mt-14 border-t border-border/50 pt-8">
+              <h3 className="mb-5 flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                <span>Highlights</span>
+                <span aria-hidden="true" className="h-px flex-1 bg-border/50" />
+                <span className="tabular-nums text-muted-foreground/70">{highlights.length}</span>
               </h3>
-              <ul className="flex flex-col gap-2">
+              <ul className="flex flex-col gap-5">
                 {highlights
                   .slice()
                   .sort((a, b) => a.textOffset - b.textOffset)
@@ -265,7 +274,7 @@ export function ReadingPane({ article, isLoading = false, onToggleStar }: Readin
         <button
           type="button"
           onClick={saveHighlight}
-          className="fixed z-50 flex items-center gap-1 rounded-md border border-border bg-popover px-2 py-1 text-xs font-medium text-popover-foreground shadow-md hover:bg-accent"
+          className="fixed z-50 flex items-center gap-1.5 rounded-full border border-border/60 bg-popover px-3 py-1.5 text-[12px] font-medium text-popover-foreground shadow-[0_8px_24px_-12px_rgba(0,0,0,0.55)] ring-1 ring-foreground/5 transition-colors duration-[var(--motion-fast)] ease-[var(--ease-out-quint)] hover:bg-accent hover:text-foreground"
           style={{
             top: selection.rect.top - 36,
             left: selection.rect.left + selection.rect.width / 2 - 50,
@@ -288,42 +297,41 @@ function ReadingPaneSkeleton({ maxWidth }: { maxWidth: number }) {
       aria-live="polite"
     >
       <span className="sr-only">Loading article…</span>
-      <div className="flex h-8 items-center justify-end gap-1 border-b px-3" />
       <div className="flex-1 overflow-hidden">
         <div
-          className="mx-auto animate-pulse px-8 py-8 [animation-duration:1.6s]"
+          className="mx-auto animate-pulse px-5 pb-16 pt-8 [animation-duration:1.6s] sm:px-8 sm:pt-14"
           style={{ maxWidth: `${maxWidth}px` }}
         >
-          <div className="space-y-4 border-b pb-6">
-            <div className="space-y-2">
-              <div className="h-3 w-24 rounded bg-muted" />
+          <div className="space-y-5 pb-6">
+            <div className="space-y-3">
+              <div className="h-2.5 w-20 rounded-full bg-foreground/10" />
               <div className="space-y-2">
-                <div className="h-7 w-11/12 rounded bg-muted" />
-                <div className="h-7 w-3/5 rounded bg-muted" />
+                <div className="h-7 w-11/12 rounded-md bg-foreground/12" />
+                <div className="h-7 w-3/5 rounded-md bg-foreground/12" />
               </div>
             </div>
             <div className="flex gap-2">
-              <div className="h-3 w-20 rounded bg-muted/70" />
-              <div className="h-3 w-24 rounded bg-muted/70" />
-              <div className="h-3 w-16 rounded bg-muted/70" />
+              <div className="h-3 w-20 rounded-full bg-foreground/8" />
+              <div className="h-3 w-24 rounded-full bg-foreground/8" />
+              <div className="h-3 w-16 rounded-full bg-foreground/8" />
             </div>
             <div className="flex gap-2">
-              <div className="h-8 w-28 rounded-md bg-muted/80" />
-              <div className="h-8 w-16 rounded-md bg-muted/60" />
-              <div className="h-8 w-28 rounded-md bg-muted/40" />
+              <div className="h-8 w-28 rounded-full bg-foreground/10" />
+              <div className="h-8 w-16 rounded-full bg-foreground/8" />
+              <div className="h-8 w-28 rounded-full bg-foreground/6" />
             </div>
           </div>
           <div className="mt-6 space-y-3">
-            <div className="h-4 w-full rounded bg-muted/70" />
-            <div className="h-4 w-11/12 rounded bg-muted/70" />
-            <div className="h-4 w-10/12 rounded bg-muted/70" />
-            <div className="h-4 w-full rounded bg-muted/70" />
-            <div className="h-4 w-9/12 rounded bg-muted/70" />
+            <div className="h-3.5 w-full rounded bg-foreground/8" />
+            <div className="h-3.5 w-11/12 rounded bg-foreground/8" />
+            <div className="h-3.5 w-10/12 rounded bg-foreground/8" />
+            <div className="h-3.5 w-full rounded bg-foreground/8" />
+            <div className="h-3.5 w-9/12 rounded bg-foreground/8" />
           </div>
           <div className="mt-6 space-y-3">
-            <div className="h-4 w-full rounded bg-muted/70" />
-            <div className="h-4 w-11/12 rounded bg-muted/70" />
-            <div className="h-4 w-7/12 rounded bg-muted/70" />
+            <div className="h-3.5 w-full rounded bg-foreground/8" />
+            <div className="h-3.5 w-11/12 rounded bg-foreground/8" />
+            <div className="h-3.5 w-7/12 rounded bg-foreground/8" />
           </div>
         </div>
       </div>
@@ -354,9 +362,9 @@ function HighlightItem({ highlight, onDelete, onSaveNote }: HighlightItemProps) 
   }
 
   return (
-    <li className="group flex flex-col gap-2 rounded-md border border-border bg-card p-3 text-sm">
+    <li className="group flex flex-col gap-2 border-l-2 border-star/60 pl-4 text-sm">
       <div className="flex items-start gap-2">
-        <span className="flex-1 italic text-foreground">“{highlight.text}”</span>
+        <span className="flex-1 italic leading-[1.55] text-foreground/90">“{highlight.text}”</span>
         <button
           type="button"
           onClick={startEdit}
