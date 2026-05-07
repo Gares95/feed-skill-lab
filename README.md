@@ -16,10 +16,11 @@ The lab preserves Feed's data model, server actions, Prisma schema, API routes, 
 | Track | Status |
 |---|---|
 | Incremental polish | Complete |
-| Radical concepts | Next |
+| Radical concepts | 3 candidate finalists complete |
+| Comparison / selection | Next |
 | Hosted demos | Deferred |
 
-The current default branch is the **polished baseline** — the result of running an incremental design-skill-guided polish track over the v1.0.0 baseline. The next phase is radical UI concept exploration on dedicated `concept/*` branches.
+The current default branch is the **polished baseline** — the result of running an incremental design-skill-guided polish track over the v1.0.0 baseline. The first radical concept set is complete. The next phase is comparison and selection: deciding whether to pick a finalist, mine pieces from multiple concepts, or create a synthesis branch.
 
 ## Polished Baseline
 
@@ -54,7 +55,8 @@ See [`docs/design-lab/initial-design-skill-audit.md`](docs/design-lab/initial-de
 | Track | Status | Purpose |
 |---|---|---|
 | Incremental polish | Complete | Make the baseline UI more refined and usable |
-| Radical concepts | Planned / next | Explore substantially different UI directions |
+| Radical concepts | Initial set complete — three candidate finalist concepts preserved as branches and PRs | Explore substantially different UI directions |
+| Comparison / selection | Next | Compare concepts side-by-side and decide what to mine, preserve, or upstream |
 | Selected upstreaming | Later | Move proven stable improvements back to canonical Feed |
 
 ## Radical Concepts Gallery
@@ -62,9 +64,8 @@ See [`docs/design-lab/initial-design-skill-audit.md`](docs/design-lab/initial-de
 | Concept | Branch | PR | Status | Screenshot | Notes |
 |---|---|---|---|---|---|
 | Impeccable Redesign / Reading Lamp | `concept/01-impeccable-redesign` | [#1](https://github.com/Gares95/feed-skill-lab/pull/1) | Candidate finalist | [`docs/design-lab/gallery/01-impeccable-redesign.png`](docs/design-lab/gallery/01-impeccable-redesign.png) | Warm, editorial, reader-first redesign generated through Impeccable. |
-| Command Center | `concept/02-command-center` | TBD | Candidate finalist | [`docs/design-lab/gallery/02-command-center.png`](docs/design-lab/gallery/02-command-center.png) | Fast, keyboard-first information cockpit driven by `redesign-existing-projects`. |
+| Command Center | `concept/02-command-center` | [#2](https://github.com/Gares95/feed-skill-lab/pull/2) | Candidate finalist | [`docs/design-lab/gallery/02-command-center.png`](docs/design-lab/gallery/02-command-center.png) | Fast, keyboard-first information cockpit driven by `redesign-existing-projects`. |
 | Today Edition | `concept/03-today-edition` | [#3](https://github.com/Gares95/feed-skill-lab/pull/3) | Candidate finalist | [`docs/design-lab/gallery/03-today-edition.png`](docs/design-lab/gallery/03-today-edition.png) | Browse-first local daily edition driven by `redesign-existing-projects`, `design-taste-frontend`, and `gpt-taste`. |
-| Magazine Dashboard | `concept/04-magazine-dashboard` | TBD | Planned | TBD | More visual discovery direction |
 
 ## Concept 01 — Impeccable Redesign / Reading Lamp
 
@@ -89,6 +90,7 @@ The second **radical** concept on the post-polish track, branched from the polis
 - **What's preserved.** Feed's data model, server actions, Prisma schema, API routes, SQLite-backed persistence, sanitization, safe-fetch, OPML, and core RSS/Atom behavior are unchanged. The concept lives entirely in the design surface.
 - **What's not preserved.** The always-three-pane shell as identity, the always-visible reader, the always-visible feed tree, the cool indigo accent, and the dialog-first secondary surface register.
 - **Status.** **Candidate finalist** — kept on its branch for side-by-side comparison against Concept 01 and any future concept before any merge to `main` or upstream call. **Not** automatically intended to merge.
+- **PR.** [#2](https://github.com/Gares95/feed-skill-lab/pull/2).
 - **Read more.** The full concept doc lives on the concept branch at [`docs/design-lab/concepts/02-command-center.md`](https://github.com/Gares95/feed-skill-lab/blob/concept/02-command-center/docs/design-lab/concepts/02-command-center.md), with per-phase implementation notes, screenshots, validation results, and follow-ups.
 
 ## Concept 03 — Today Edition
@@ -146,6 +148,7 @@ These surfaces are intentionally identical to canonical Feed and follow it as `u
 
 - [`docs/design-lab/initial-design-skill-audit.md`](docs/design-lab/initial-design-skill-audit.md) — the original design-skill audit and per-branch implementation notes for the polish track.
 - `docs/design-lab/concepts/` — per-concept design notes (added when each `concept/*` branch lands).
+- Concept comparison doc — planned next.
 
 ## License
 
