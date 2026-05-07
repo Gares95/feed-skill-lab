@@ -149,6 +149,7 @@ These surfaces are intentionally identical to canonical Feed and follow it as `u
 - [`docs/design-lab/initial-design-skill-audit.md`](docs/design-lab/initial-design-skill-audit.md) — the original design-skill audit and per-branch implementation notes for the polish track.
 - `docs/design-lab/concepts/` — per-concept design notes (added when each `concept/*` branch lands).
 - [`docs/design-lab/concepts/comparison.md`](docs/design-lab/concepts/comparison.md) — side-by-side comparison of the polished baseline and the three radical concepts, with a mining/selection framework.
+- [`docs/design-lab/concepts/decision.md`](docs/design-lab/concepts/decision.md) — current decision on the concept set: preserve all three as public experiments; no full merge; no upstreaming yet.
 - Concept comparison doc — planned next.
 
 ## License
