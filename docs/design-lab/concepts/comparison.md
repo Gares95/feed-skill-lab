@@ -14,6 +14,10 @@ concept doc:
 The goal is *comparison*, not selection. Selection is the next phase and
 is described under [Next actions](#next-actions).
 
+The current verdict on this set lives in
+[`decision.md`](decision.md) — kept as a separate dated record so this
+doc stays purely analytical.
+
 ## Baseline
 
 `lab-polish-v1` is a careful, incremental polish of the original Feed
