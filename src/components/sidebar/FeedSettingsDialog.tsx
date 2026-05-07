@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Settings2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -78,17 +79,29 @@ export function FeedSettingsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent onClick={(e) => e.stopPropagation()}>
+      <DialogContent
+        onClick={(e) => e.stopPropagation()}
+        className="sm:max-w-md"
+      >
         <DialogHeader>
-          <DialogTitle>Feed settings</DialogTitle>
-          <DialogDescription>
+          <span className="cockpit-mono inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] text-[var(--cockpit-accent)]/85">
+            <Settings2 className="h-3 w-3" aria-hidden="true" />
+            Feed config
+          </span>
+          <DialogTitle className="text-[15px] tracking-[-0.01em]">
+            Feed settings
+          </DialogTitle>
+          <DialogDescription className="text-[12px]">
             Customize this feed&apos;s name and refresh schedule.
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-4 py-2">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="feed-title" className="text-xs text-muted-foreground">
+            <label
+              htmlFor="feed-title"
+              className="cockpit-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground"
+            >
               Name
             </label>
             <Input
@@ -102,9 +115,9 @@ export function FeedSettingsDialog({
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="feed-interval"
-              className="text-xs text-muted-foreground"
+              className="cockpit-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground"
             >
-              Refresh interval (minutes)
+              Refresh interval · minutes
             </label>
             <Input
               id="feed-interval"
@@ -113,14 +126,18 @@ export function FeedSettingsDialog({
               placeholder="Default"
               value={interval}
               onChange={(e) => setInterval(e.target.value)}
+              className="font-mono text-[12.5px]"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[11px] text-muted-foreground">
               Leave blank to use the global default.
             </p>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="feed-folder" className="text-xs text-muted-foreground">
+            <label
+              htmlFor="feed-folder"
+              className="cockpit-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground"
+            >
               Folder
             </label>
             <select
@@ -138,7 +155,14 @@ export function FeedSettingsDialog({
             </select>
           </div>
 
-          {error && <p className="text-xs text-destructive">{error}</p>}
+          {error && (
+            <p
+              role="alert"
+              className="cockpit-mono inline-flex items-center gap-1.5 rounded-sm border border-destructive/40 bg-[color-mix(in_oklch,var(--destructive)_10%,transparent)] px-2 py-1 text-[11px] text-destructive"
+            >
+              {error}
+            </p>
+          )}
         </div>
 
         <DialogFooter>

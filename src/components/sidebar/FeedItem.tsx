@@ -125,10 +125,16 @@ export function FeedItem({
           </AlertDialogTrigger>
           <AlertDialogContent onClick={(e: React.MouseEvent) => e.stopPropagation()}>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete &ldquo;{title}&rdquo;?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This will permanently delete this feed and all its articles. This
-                action cannot be undone.
+              <span className="cockpit-mono inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] text-destructive/85">
+                <Trash2 className="h-3 w-3" aria-hidden="true" />
+                Destructive
+              </span>
+              <AlertDialogTitle className="text-[15px] tracking-[-0.01em]">
+                Delete &ldquo;{title}&rdquo;?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-[12px]">
+                Permanently removes this feed and all its articles. This action
+                cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
